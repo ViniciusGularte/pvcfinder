@@ -3787,21 +3787,7 @@
         const primaryValueText = formatMarketNumber(comparison.unitValue) + " em";
         const detailTitle = buildMarketValueTitle(comparison.unitValue);
         const unitLabel = comparison.label || "item";
-        let deltaClass = "neutral";
-        let deltaText = "market baseline unavailable";
-
-        if (Number.isFinite(listing.marketAverageUnit) && listing.marketAverageUnit > 0) {
-          const ratio = (comparison.unitValue - listing.marketAverageUnit) / listing.marketAverageUnit;
-          if (Math.abs(ratio) < 0.03) {
-            deltaText = "near market avg";
-          } else if (ratio < 0) {
-            deltaClass = "good";
-            deltaText = formatPercent(Math.abs(ratio)) + " below avg";
-          } else {
-            deltaClass = "bad";
-            deltaText = formatPercent(ratio) + " above avg";
-          }
-        }
+        // Temporarily disable market-vs-average copy in the card UI.
 
         return [
           '<div class="normalized-price" title="' +
@@ -3812,11 +3798,6 @@
             "</span>",
           '  <span class="normalized-price-value">' +
             escapeHtml(primaryValueText) +
-            "</span>",
-          '  <span class="normalized-price-delta ' +
-            deltaClass +
-            '">' +
-            escapeHtml(deltaText) +
             "</span>",
           "</div>",
         ].join("");
