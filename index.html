@@ -1463,92 +1463,136 @@
       }
 
       .card-price {
-        padding: 10px 16px;
-        font-size: 12px;
-        line-height: 1.7;
-        color: var(--text);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+        padding: 12px 16px 14px;
       }
 
-      .price-segment {
+      .price-panel {
+        border: 1px solid var(--border);
+        background:
+          linear-gradient(
+            180deg,
+            rgba(36, 25, 16, 0.98),
+            rgba(16, 12, 8, 0.98)
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.02) 0 8px,
+            transparent 8px 16px
+          );
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .trade-topline {
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+        background: rgba(8, 6, 4, 0.32);
+      }
+
+      .trade-kicker {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-      }
-
-      .price-arrow {
-        color: var(--border);
-      }
-
-      .price-note {
-        color: var(--text);
-        font-size: 10px;
-      }
-
-      .price-result {
-        color: var(--text-bright);
-      }
-
-      .card-market {
-        padding: 0 16px 10px;
-        display: grid;
-        gap: 4px;
-      }
-
-      .market-line,
-      .market-subline {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .market-kicker {
-        color: var(--accent);
         font-size: 6px;
         line-height: 1.8;
-      }
-
-      .market-values {
         color: var(--text-bright);
-        font-size: 11px;
-        line-height: 1.6;
       }
 
-      .market-piece {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
+      .trade-kicker.trade-sell {
+        color: var(--accent);
       }
 
-      .market-subline {
-        color: var(--text);
+      .trade-kicker.trade-buy {
+        color: var(--diamond);
+      }
+
+      .trade-kicker.trade-both {
+        color: var(--text-bright);
+      }
+
+      .trade-helper {
+        color: var(--text-muted);
         font-size: 10px;
+        line-height: 1.4;
+      }
+
+      .price-flow {
+        padding: 12px 10px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      .price-side {
+        min-width: 0;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        background: rgba(8, 6, 4, 0.34);
+        padding: 8px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .price-side-label {
+        color: var(--text-ghost);
+        font-size: 8px;
         line-height: 1.7;
       }
 
-      .market-dot {
-        color: var(--border-mid);
+      .price-side-body {
+        display: grid;
+        gap: 6px;
       }
 
-      .market-good {
-        color: var(--emerald);
+      .price-side-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        color: var(--text-bright);
+        font-size: 13px;
+        line-height: 1.4;
       }
 
-      .market-bad {
-        color: var(--stock-low);
+      .price-side-row-icon {
+        flex: 0 0 auto;
       }
 
-      .price-result-amount {
+      .price-side-row-copy {
+        min-width: 0;
+        word-break: break-word;
+      }
+
+      .price-side-row-note {
+        display: block;
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.4;
+      }
+
+      .price-side-row.result {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .price-side-row-amount {
         color: var(--text-bright);
         font-weight: 700;
       }
 
+      .price-flow-arrow {
+        align-self: center;
+        color: var(--accent);
+        font-size: 16px;
+        text-shadow: 0 0 18px rgba(232, 118, 10, 0.28);
+      }
+
       .card-enchants {
-        padding: 0 16px 10px;
+        padding: 0 16px 12px;
         color: var(--enchant);
         font-size: 10px;
         font-style: italic;
@@ -1560,28 +1604,78 @@
       }
 
       .card-shulker {
-        padding: 0 16px 10px;
+        padding: 0 16px 12px;
+      }
+
+      .shulker-summary {
+        border: 1px solid rgba(192, 132, 252, 0.28);
+        background: rgba(36, 24, 16, 0.48);
+        padding: 8px 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .shulker-summary-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .shulker-summary-label {
+        color: var(--shulker);
+        font-size: 6px;
+        line-height: 1.8;
+      }
+
+      .shulker-summary-count {
+        color: var(--text-muted);
+        font-size: 10px;
+      }
+
+      .shulker-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .shulker-chip {
+        border: 1px solid rgba(192, 132, 252, 0.22);
+        background: rgba(8, 6, 4, 0.34);
+        color: var(--text);
+        padding: 4px 6px;
+        font-size: 10px;
+        line-height: 1.5;
+      }
+
+      .shulker-chip-amount {
+        color: var(--accent);
+        font-weight: 700;
       }
 
       .shulker-toggle {
-        border: 0;
-        background: transparent;
-        color: var(--text);
+        border: 1px solid var(--border);
+        background: rgba(8, 6, 4, 0.34);
+        color: var(--text-bright);
         font-size: 10px;
-        padding: 0;
-        line-height: 1.7;
-        transition: color 120ms ease;
+        padding: 6px 10px;
+        line-height: 1.5;
+        transition:
+          color 120ms ease,
+          border-color 120ms ease,
+          background 120ms ease;
       }
 
       .shulker-toggle:hover {
         color: var(--accent);
+        border-color: var(--accent);
+        background: rgba(26, 18, 9, 0.54);
       }
 
       .shulker-panel {
         max-height: 0;
         overflow: hidden;
         transition: max-height 220ms ease;
-        margin-left: 4px;
       }
 
       .shulker-panel.open {
@@ -1591,7 +1685,7 @@
       .shulker-list {
         margin-top: 8px;
         background: var(--bg);
-        border-left: 3px solid var(--border);
+        border-left: 3px solid rgba(192, 132, 252, 0.3);
         padding: 8px 12px;
         display: grid;
         gap: 6px;
@@ -1616,7 +1710,7 @@
       }
 
       .card-footer {
-        padding: 10px 16px 14px;
+        padding: 12px 16px 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1650,10 +1744,15 @@
 
       .map-button {
         flex: 0 0 auto;
-        border: 1px solid var(--border);
-        background: rgba(26, 18, 9, 0.98);
+        border: 1px solid var(--border-mid);
+        background:
+          linear-gradient(
+            180deg,
+            rgba(39, 28, 18, 0.98),
+            rgba(22, 16, 11, 0.98)
+          );
         color: var(--text-bright);
-        padding: 5px 12px;
+        padding: 7px 12px;
         font-size: 10px;
         transition:
           background 120ms ease,
@@ -1663,9 +1762,25 @@
       }
 
       .map-button:hover {
-        background: var(--border);
+        background: rgba(61, 42, 27, 0.98);
         border-color: var(--accent);
         color: var(--accent);
+      }
+
+      .results-tail {
+        min-height: 1px;
+        margin-top: 16px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.8;
+      }
+
+      .results-tail.visible {
+        display: flex;
       }
 
       mark.hit {
@@ -1923,6 +2038,15 @@
         .card-header {
           display: flex;
           flex-direction: column-reverse;
+        }
+
+        .price-flow {
+          grid-template-columns: 1fr;
+        }
+
+        .price-flow-arrow {
+          justify-self: center;
+          transform: rotate(90deg);
         }
 
         .card-footer {
@@ -2221,6 +2345,7 @@
           </div>
 
           <div class="results-grid" id="resultsGrid" aria-live="polite"></div>
+          <div class="results-tail" id="resultsTail" aria-hidden="true"></div>
         </section>
       </main>
 
@@ -2235,6 +2360,7 @@
         loadingDuration: 1800,
         loadingPause: 300,
         searchDebounce: 150,
+        pageSize: 100,
       };
 
       const emojiEntries = [
@@ -2383,6 +2509,7 @@
         includeShulkerToggle: document.getElementById("includeShulkerToggle"),
         resultsMeta: document.getElementById("resultsMeta"),
         resultsGrid: document.getElementById("resultsGrid"),
+        resultsTail: document.getElementById("resultsTail"),
         errorState: document.getElementById("errorState"),
         errorCopy: document.getElementById("errorCopy"),
         retryButton: document.getElementById("retryButton"),
@@ -2408,6 +2535,8 @@
           productStats: {},
         },
         filtered: [],
+        visibleCount: 0,
+        lastResultsKey: "",
         loadingStartedAt: performance.now(),
         loadingFinished: false,
         loadingResolved: false,
@@ -2416,6 +2545,7 @@
 
       let searchTimer = null;
       let relativeTimeTimer = null;
+      let resultsObserver = null;
 
       init();
 
@@ -2426,6 +2556,7 @@
         syncSortChips();
         syncSearchScopeChips();
         syncIntentChips();
+        initInfiniteScroll();
         tickLoadingBar();
         loadData();
       }
@@ -2553,11 +2684,46 @@
 
           const isOpen = panel.classList.toggle("open");
           toggle.textContent = isOpen
-            ? "▼  CONTENTS  (" + toggle.getAttribute("data-count") + " items)"
-            : "▶  VIEW CONTENTS  (" +
-              toggle.getAttribute("data-count") +
-              " items)";
+            ? "▼  CLOSE FULL LIST"
+            : "▶  OPEN FULL LIST";
         });
+      }
+
+      function initInfiniteScroll() {
+        if (!refs.resultsTail) {
+          return;
+        }
+
+        if (!("IntersectionObserver" in window)) {
+          window.addEventListener(
+            "scroll",
+            () => {
+              const nearBottom =
+                window.innerHeight + window.scrollY >=
+                document.documentElement.scrollHeight - 900;
+              if (nearBottom) {
+                loadMoreResults();
+              }
+            },
+            { passive: true },
+          );
+          return;
+        }
+
+        resultsObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                loadMoreResults();
+              }
+            });
+          },
+          {
+            rootMargin: "360px 0px 360px 0px",
+          },
+        );
+
+        resultsObserver.observe(refs.resultsTail);
       }
 
       function initSkyMode() {
@@ -2628,6 +2794,8 @@
           refs.errorCopy.textContent =
             "The local /api/shops function could not load the PVC market data.";
           refs.resultsGrid.innerHTML = "";
+          refs.resultsTail.classList.remove("visible");
+          refs.resultsTail.textContent = "";
           refs.emptyState.classList.add("hidden");
           refs.soldOutState.classList.add("hidden");
           refs.resultsMeta.classList.remove("visible");
@@ -2784,9 +2952,34 @@
 
         const filtered = filterAndSortListings();
         state.filtered = filtered;
+        syncVisibleWindow(filtered);
         renderResultsMeta(filtered);
         renderStates(filtered);
         renderGrid(filtered);
+      }
+
+      function syncVisibleWindow(listings) {
+        const nextKey = buildResultsKey(listings);
+        if (state.lastResultsKey !== nextKey) {
+          state.lastResultsKey = nextKey;
+          state.visibleCount = Math.min(CONFIG.pageSize, listings.length);
+        } else if (!state.visibleCount && listings.length) {
+          state.visibleCount = Math.min(CONFIG.pageSize, listings.length);
+        }
+      }
+
+      function buildResultsKey(listings) {
+        return [
+          state.query,
+          state.sort,
+          state.searchScope,
+          state.tradeIntent,
+          state.inStockOnly ? "1" : "0",
+          state.includeShulker ? "1" : "0",
+          listings.length,
+          listings[0] ? listings[0].id : "",
+          listings[listings.length - 1] ? listings[listings.length - 1].id : "",
+        ].join("::");
       }
 
       function renderResultsMeta(listings) {
@@ -2902,13 +3095,54 @@
       function renderGrid(listings) {
         if (!listings.length) {
           refs.resultsGrid.innerHTML = "";
+          renderResultsTail(0, 0);
           return;
         }
 
         const terms = tokenize(state.query);
-        refs.resultsGrid.innerHTML = listings
+        const visibleListings = listings.slice(0, state.visibleCount || CONFIG.pageSize);
+        refs.resultsGrid.innerHTML = visibleListings
           .map((listing, index) => buildCardMarkup(listing, index, terms))
           .join("");
+        renderResultsTail(visibleListings.length, listings.length);
+      }
+
+      function renderResultsTail(visibleCount, totalCount) {
+        if (!refs.resultsTail) {
+          return;
+        }
+
+        if (!totalCount) {
+          refs.resultsTail.classList.remove("visible");
+          refs.resultsTail.textContent = "";
+          return;
+        }
+
+        const hasMore = visibleCount < totalCount;
+        refs.resultsTail.textContent = hasMore
+          ? "Showing " +
+            formatNumber(visibleCount) +
+            " of " +
+            formatNumber(totalCount) +
+            " items. Scroll for more."
+          : "Showing all " + formatNumber(totalCount) + " items.";
+        refs.resultsTail.classList.add("visible");
+      }
+
+      function loadMoreResults() {
+        if (!state.filtered.length) {
+          return;
+        }
+
+        if (state.visibleCount >= state.filtered.length) {
+          return;
+        }
+
+        state.visibleCount = Math.min(
+          state.visibleCount + CONFIG.pageSize,
+          state.filtered.length,
+        );
+        renderGrid(state.filtered);
       }
 
       function filterAndSortListings() {
@@ -2999,17 +3233,15 @@
         const stockBadge = getStockBadge(listing.stock);
         const specialBadges = [];
         const comparison = listing.activeComparison || buildActiveComparison(listing, terms);
+        const avatarFallbacks = listing.avatarFallbacks
+          .map((url) => escapeAttribute(url))
+          .join("|");
+        const tradeMode = getCardTradeMode(listing);
 
         if (listing.enchants.length) {
           specialBadges.push(
             '<span class="badge enchanted pixel">✦ ENCHANTED</span>',
           );
-        }
-
-        if (state.query && listing.activeMatchIntent === "buy") {
-          specialBadges.push('<span class="badge trade-buy pixel">BUYING</span>');
-        } else if (state.query && state.tradeIntent === "sell") {
-          specialBadges.push('<span class="badge trade-sell pixel">SELLING</span>');
         }
 
         if (listing.isShulker) {
@@ -3035,7 +3267,6 @@
         const shulkerSection = listing.shulkerContents.length
           ? buildShulkerSection(listing, terms)
           : "";
-        const marketSection = buildMarketSection(listing, comparison);
 
         const enchantsSection = listing.enchants.length
           ? '<div class="card-enchants">✦ ' +
@@ -3059,9 +3290,9 @@
           '      <div class="player-head" aria-hidden="true">',
           '        <img src="' +
             escapeAttribute(listing.avatarUrl) +
-            '" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'' +
-            escapeAttribute(getAvatarUrl("MHF_Steve")) +
-            '\';" />',
+            '" data-avatar-fallbacks="' +
+            avatarFallbacks +
+            '" data-avatar-index="0" alt="" loading="lazy" decoding="async" onerror="window.handleAvatarError(this)" />',
           "      </div>",
           '      <div class="item-emoji" aria-hidden="true">' +
             escapeHtml(listing.emoji) +
@@ -3085,9 +3316,8 @@
           "  </div>",
           '  <div class="card-divider"></div>',
           '  <div class="card-price">' +
-            buildPriceLine(listing, terms) +
+            buildPriceLine(listing, terms, tradeMode, comparison) +
             "</div>",
-          marketSection,
           enchantsSection,
           shulkerSection,
           '  <div class="card-footer">',
@@ -3112,106 +3342,139 @@
         ].join("");
       }
 
-      function buildPriceLine(listing, terms) {
-        const paymentMarkup = listing.paymentParts
-          .map((part) => {
-            const icon =
-              '<span style="color:' +
-              part.color +
-              '">' +
-              escapeHtml(part.icon) +
-              "</span>";
-            const label =
-              '<span style="color:' +
-              part.color +
-              '">' +
-              highlightText(part.text, terms) +
-              "</span>";
-            const note = part.note
-              ? ' <span class="price-note">' +
-                highlightText(part.note, terms) +
-                "</span>"
-              : "";
-            return (
-              '<span class="price-segment">' +
-              icon +
-              " " +
-              label +
-              note +
-              "</span>"
-            );
-          })
-          .join(' <span class="price-arrow">+</span> ');
-
-        const resultPart =
-          '<span class="price-result">' +
-          '<span class="price-result-amount">' +
-          escapeHtml(String(listing.resultAmount)) +
-          "×</span> " +
-          highlightText(listing.displayName, terms) +
-          "</span>";
-
-        return (
-          paymentMarkup + ' <span class="price-arrow">→</span> ' + resultPart
+      function buildPriceLine(listing, terms, tradeMode, comparison) {
+        const copy = getTradeModeCopy(tradeMode, comparison);
+        const paymentRows = listing.paymentParts
+          .map((part) => buildPriceSideRow(part.icon, part.color, part.text, part.note, terms))
+          .join("");
+        const resultRow = buildPriceSideRow(
+          listing.emoji,
+          "var(--text-bright)",
+          listing.resultAmount + "× " + listing.displayName,
+          "",
+          terms,
+          true,
         );
-      }
-
-      function buildMarketSection(listing, comparison) {
-        if (!Number.isFinite(listing.paymentMarketValue)) {
-          return "";
-        }
-
-        const totalPieces = buildMarketValuePieces(listing.paymentMarketValue);
-        const subParts = [];
-
-        if (Number.isFinite(comparison.unitValue)) {
-          subParts.push(
-            "≈ " +
-              formatMarketNumber(comparison.unitValue) +
-              " em / " +
-              comparison.label,
-          );
-        }
-
-        if (
-          listing.marketSampleCount > 1 &&
-          Number.isFinite(listing.marketAverageTotal) &&
-          Number.isFinite(listing.marketDeltaRatio)
-        ) {
-          const deltaClass =
-            listing.marketDeltaRatio <= 0 ? "market-good" : "market-bad";
-          const direction =
-            listing.marketDeltaRatio <= 0 ? "below avg" : "above avg";
-
-          subParts.push(
-            '<span class="' +
-              deltaClass +
-              '">' +
-              formatPercent(Math.abs(listing.marketDeltaRatio)) +
-              " " +
-              direction +
-              "</span>",
-          );
-        }
 
         return [
-          '<div class="card-market">',
-          '  <div class="market-line">',
-          '    <span class="market-kicker pixel-font">MARKET</span>',
-          '    <span class="market-values">' + totalPieces.join('<span class="market-dot">·</span>') + "</span>",
+          '<div class="price-panel">',
+          '  <div class="trade-topline">',
+          '    <span class="trade-kicker pixel-font trade-' +
+            escapeAttribute(tradeMode) +
+            '">' +
+            escapeHtml(copy.title) +
+            "</span>",
+          '    <span class="trade-helper">' +
+            escapeHtml(copy.helper) +
+            "</span>",
           "  </div>",
-          subParts.length
-            ? '  <div class="market-subline">' +
-              subParts.join('<span class="market-dot">·</span>') +
-              "</div>"
+          '  <div class="price-flow">',
+          '    <div class="price-side">',
+          '      <div class="price-side-label pixel-font">' +
+            escapeHtml(copy.leftLabel) +
+            "</div>",
+          '      <div class="price-side-body">' + paymentRows + "</div>",
+          "    </div>",
+          '    <div class="price-flow-arrow" aria-hidden="true">→</div>',
+          '    <div class="price-side">',
+          '      <div class="price-side-label pixel-font">' +
+            escapeHtml(copy.rightLabel) +
+            "</div>",
+          '      <div class="price-side-body">' + resultRow + "</div>",
+          "    </div>",
+          "  </div>",
+          "</div>",
+        ].join("");
+      }
+
+      function getCardTradeMode(listing) {
+        if (state.tradeIntent === "buy") {
+          return "buy";
+        }
+
+        if (state.tradeIntent === "sell") {
+          return "sell";
+        }
+
+        if (state.query && listing.activeMatchIntent === "buy") {
+          return "buy";
+        }
+
+        if (state.query && listing.activeMatchIntent === "both") {
+          return "both";
+        }
+
+        return "sell";
+      }
+
+      function getTradeModeCopy(tradeMode, comparison) {
+        if (tradeMode === "buy") {
+          return {
+            title: "SHOP BUYS",
+            helper: comparison && comparison.label === "wanted item"
+              ? "give this item"
+              : "shop wants this",
+            leftLabel: "YOU GIVE",
+            rightLabel: "YOU GET",
+          };
+        }
+
+        if (tradeMode === "both") {
+          return {
+            title: "SHOP TRADES",
+            helper: "matches both sides",
+            leftLabel: "YOU PAY",
+            rightLabel: "YOU GET",
+          };
+        }
+
+        return {
+          title: "SHOP SELLS",
+          helper: "pay this, get item",
+          leftLabel: "YOU PAY",
+          rightLabel: "YOU GET",
+        };
+      }
+
+      function buildPriceSideRow(icon, color, text, note, terms, isResult) {
+        return [
+          '<div class="price-side-row' + (isResult ? " result" : "") + '">',
+          '  <span class="price-side-row-icon" style="color:' +
+            color +
+            '">' +
+            escapeHtml(icon) +
+            "</span>",
+          '  <span class="price-side-row-copy">',
+          isResult
+            ? highlightResultAmount(text, terms)
+            : highlightText(text, terms),
+          note
+            ? '<span class="price-side-row-note">' +
+              highlightText(note, terms) +
+              "</span>"
             : "",
+          "  </span>",
           "</div>",
         ].join("");
       }
 
       function buildShulkerSection(listing, terms) {
         const buttonLabel =
-          "▶  VIEW CONTENTS  (" + listing.shulkerContents.length + " items)";
+          "▶  OPEN FULL LIST";
+        const previewEntries = listing.shulkerContents.slice(0, 3);
+        const previewMarkup = previewEntries
+          .map((entry) => {
+            return (
+              '<span class="shulker-chip">' +
+              '<span class="shulker-chip-amount">' +
+              highlightText(entry.amountLabel, terms) +
+              "</span> " +
+              highlightText(entry.name, terms) +
+              "</span>"
+            );
+          })
+          .join("");
+        const moreCount = Math.max(0, listing.shulkerContents.length - previewEntries.length);
         const rows = listing.shulkerContents
           .map((entry) => {
             return (
@@ -3229,6 +3492,21 @@
 
         return [
           '<div class="card-shulker">',
+          '  <div class="shulker-summary">',
+          '    <div class="shulker-summary-top">',
+          '      <span class="shulker-summary-label pixel-font">▣ INSIDE BOX</span>',
+          '      <span class="shulker-summary-count">' +
+            escapeHtml(String(listing.shulkerContents.length)) +
+            " item lines</span>",
+          "    </div>",
+          '    <div class="shulker-preview">' +
+            previewMarkup +
+            (moreCount
+              ? '<span class="shulker-chip">+' +
+                escapeHtml(String(moreCount)) +
+                " more</span>"
+              : "") +
+            "</div>",
           '  <button class="shulker-toggle" type="button" data-count="' +
             listing.shulkerContents.length +
             '" data-shulker-toggle="' +
@@ -3240,6 +3518,7 @@
             escapeAttribute(listing.id) +
             '">',
           '    <div class="shulker-list">' + rows + "</div>",
+          "  </div>",
           "  </div>",
           "</div>",
         ].join("");
@@ -3429,6 +3708,7 @@
               shulkerContents,
             });
             const avatarName = normalizeAvatarName(shopOwner);
+            const avatarSources = getAvatarSources(shopOwner, avatarName);
 
             listings.push({
               id: "card-" + shopIndex + "-" + recipeIndex,
@@ -3443,7 +3723,8 @@
               displayNameNorm: normalizeForSearch(displayName),
               emoji: getEmoji(resultItem.type || ""),
               avatarName,
-              avatarUrl: getAvatarUrl(avatarName),
+              avatarUrl: avatarSources[0],
+              avatarFallbacks: avatarSources,
               stock: numberOrZero(recipe.stock),
               enchants,
               enchantKey,
@@ -3982,20 +4263,74 @@
 
       function normalizeAvatarName(value) {
         const raw = String(value || "").trim();
-        const hasBedrockPrefix = raw.startsWith(".");
         const cleaned = raw
           .replace(/[^A-Za-z0-9_]/g, "")
           .slice(0, 16);
 
-        if (!cleaned) {
-          return "MHF_Steve";
+        return cleaned || "MHF_Steve";
+      }
+
+      function getAvatarSources(ownerName, avatarName) {
+        const normalized = avatarName || "MHF_Steve";
+        const rawOwner = String(ownerName || "").trim();
+        const looksBedrock = rawOwner.startsWith(".");
+        const bedrockName = rawOwner.replace(/^\.+/, "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16);
+        const sources = [];
+
+        if (looksBedrock && bedrockName) {
+          sources.push(
+            "https://api.mcheads.org/head/" +
+              encodeURIComponent("." + bedrockName) +
+              "/64",
+          );
         }
 
-        return hasBedrockPrefix ? "." + cleaned : cleaned;
+        sources.push(
+          "https://minotar.net/helm/" +
+            encodeURIComponent(normalized) +
+            "/64.png",
+        );
+        sources.push(
+          "https://mc-heads.net/avatar/" +
+            encodeURIComponent(normalized) +
+            "/64/nohelm.png",
+        );
+        sources.push(
+          "https://api.mcheads.org/head/" +
+            encodeURIComponent(normalized) +
+            "/64",
+        );
+        sources.push(
+          "https://minotar.net/helm/MHF_Steve/64.png",
+        );
+
+        return Array.from(new Set(sources));
       }
 
       function getAvatarUrl(name) {
-        return "https://api.mcheads.org/head/" + encodeURIComponent(name) + "/64";
+        return getAvatarSources(name, normalizeAvatarName(name))[0];
+      }
+
+      function handleAvatarError(image) {
+        if (!image) {
+          return;
+        }
+
+        const fallbacks = String(
+          image.getAttribute("data-avatar-fallbacks") || "",
+        )
+          .split("|")
+          .filter(Boolean);
+        const currentIndex = numberOrZero(image.getAttribute("data-avatar-index"));
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex >= fallbacks.length) {
+          image.onerror = null;
+          return;
+        }
+
+        image.setAttribute("data-avatar-index", String(nextIndex));
+        image.src = fallbacks[nextIndex];
       }
 
       function parseShulkerContents(lore) {
@@ -4212,6 +4547,21 @@
 
         html += escapeHtml(value.slice(cursor));
         return html;
+      }
+
+      function highlightResultAmount(text, terms) {
+        const value = String(text || "");
+        const match = value.match(/^(\d+×)\s*(.*)$/);
+        if (!match) {
+          return highlightText(value, terms);
+        }
+
+        return (
+          '<span class="price-side-row-amount">' +
+          escapeHtml(match[1]) +
+          "</span> " +
+          highlightText(match[2], terms)
+        );
       }
 
       function animateCount(node, target) {
