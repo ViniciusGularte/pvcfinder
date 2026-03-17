@@ -138,7 +138,7 @@
 
     .backdrop-sky-day {
       background:
-        linear-gradient(180deg, #7cc1f5 0%, #9dd8ff 34%, #e7c47e 68%, rgba(45, 27, 15, 0.86) 100%);
+        linear-gradient(180deg, #5c8db8 0%, #7cb0db 32%, #d8a968 68%, rgba(38, 23, 13, 0.9) 100%);
       opacity: 1;
     }
 
@@ -240,10 +240,20 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at 50% 46%, rgba(255, 219, 149, 0.2), transparent 36%),
-        linear-gradient(180deg, transparent 0%, rgba(8, 6, 4, 0.16) 58%, rgba(8, 6, 4, 0.74) 100%);
-      opacity: 0.84;
+        radial-gradient(circle at 50% 46%, rgba(255, 219, 149, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(8, 6, 4, 0.06) 0%, rgba(8, 6, 4, 0.22) 46%, rgba(8, 6, 4, 0.78) 100%);
+      opacity: 0.92;
       transition: opacity 900ms ease;
+    }
+
+    .backdrop-readability {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0.44) 32%, rgba(0, 0, 0, 0.64) 100%),
+        radial-gradient(circle at center, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.22) 72%);
+      transition: opacity 900ms ease;
+      opacity: 0.72;
     }
 
     .backdrop-layer {
@@ -307,12 +317,20 @@
     }
 
     body[data-sky-mode="day"] .backdrop-sun {
-      opacity: 0.96;
+      opacity: 0.84;
       transform: translateX(-50%) translateY(0);
     }
 
     body[data-sky-mode="day"] .backdrop-cloud {
-      opacity: 0.16;
+      opacity: 0.11;
+    }
+
+    body[data-sky-mode="day"] .backdrop-haze {
+      opacity: 0.98;
+    }
+
+    body[data-sky-mode="day"] .backdrop-readability {
+      opacity: 0.84;
     }
 
     body[data-sky-mode="night"] .backdrop-sky-day {
@@ -340,6 +358,10 @@
 
     body[data-sky-mode="night"] .backdrop-haze {
       opacity: 0.42;
+    }
+
+    body[data-sky-mode="night"] .backdrop-readability {
+      opacity: 0.6;
     }
 
     body[data-sky-mode="night"] .backdrop-far,
@@ -371,6 +393,10 @@
 
     body[data-sky-mode="auto"] .backdrop-haze {
       animation: autoHaze 72s ease-in-out infinite;
+    }
+
+    body[data-sky-mode="auto"] .backdrop-readability {
+      animation: autoReadability 72s ease-in-out infinite;
     }
 
     .app-shell {
@@ -1375,11 +1401,22 @@
     @keyframes autoHaze {
       0%,
       36% {
-        opacity: 0.84;
+        opacity: 0.98;
       }
       50%,
       100% {
         opacity: 0.42;
+      }
+    }
+
+    @keyframes autoReadability {
+      0%,
+      36% {
+        opacity: 0.84;
+      }
+      50%,
+      100% {
+        opacity: 0.6;
       }
     }
 
@@ -1518,6 +1555,7 @@
     <div class="backdrop-layer backdrop-mid"></div>
     <div class="backdrop-layer backdrop-forest"></div>
     <div class="backdrop-ground"></div>
+    <div class="backdrop-readability"></div>
   </div>
   <canvas class="particles-canvas" id="particles" aria-hidden="true"></canvas>
 
