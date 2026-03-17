@@ -8,6 +8,8 @@
     name="description"
     content="Search items, compare prices, and find sellers across Peaceful Vanilla Club."
   >
+  <link rel="icon" type="image/png" href="assets/pvc-logo.png">
+  <link rel="apple-touch-icon" href="assets/pvc-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -128,44 +130,120 @@
       overflow: hidden;
     }
 
+    .backdrop-sky {
+      position: absolute;
+      inset: 0;
+      transition: opacity 900ms ease;
+    }
+
+    .backdrop-sky-day {
+      background:
+        linear-gradient(180deg, #7cc1f5 0%, #9dd8ff 34%, #e7c47e 68%, rgba(45, 27, 15, 0.86) 100%);
+      opacity: 1;
+    }
+
+    .backdrop-sky-night {
+      background:
+        linear-gradient(180deg, #050b17 0%, #12203b 34%, #291c44 68%, rgba(9, 7, 11, 0.98) 100%);
+      opacity: 0;
+    }
+
+    .backdrop-stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 10% 18%, rgba(255, 255, 255, 0.95) 0 1px, transparent 1.4px),
+        radial-gradient(circle at 28% 12%, rgba(174, 232, 255, 0.92) 0 1px, transparent 1.4px),
+        radial-gradient(circle at 48% 20%, rgba(255, 255, 255, 0.92) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 64% 10%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.4px),
+        radial-gradient(circle at 82% 22%, rgba(157, 224, 255, 0.88) 0 1px, transparent 1.6px),
+        radial-gradient(circle at 16% 30%, rgba(255, 255, 255, 0.88) 0 1px, transparent 1.4px),
+        radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.95) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 58% 34%, rgba(255, 255, 255, 0.92) 0 1px, transparent 1.4px),
+        radial-gradient(circle at 78% 30%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.4px);
+      opacity: 0;
+      transition: opacity 900ms ease;
+    }
+
+    .backdrop-moon,
     .backdrop-sun {
       position: absolute;
-      top: 12%;
+      transition: opacity 900ms ease, transform 1200ms ease, filter 1200ms ease;
+    }
+
+    .backdrop-sun {
+      top: 11%;
       left: 50%;
       width: 96px;
       height: 96px;
       transform: translateX(-50%);
       background:
-        linear-gradient(180deg, rgba(255, 204, 106, 0.96), rgba(232, 118, 10, 0.92));
+        linear-gradient(180deg, rgba(255, 216, 123, 0.98), rgba(232, 118, 10, 0.94));
       box-shadow:
         0 0 0 8px rgba(255, 190, 92, 0.06),
-        0 0 48px rgba(232, 118, 10, 0.24);
-      opacity: 0.9;
+        0 0 60px rgba(232, 118, 10, 0.28);
+      opacity: 0.96;
+    }
+
+    .backdrop-moon {
+      top: 13%;
+      left: 72%;
+      width: 72px;
+      height: 72px;
+      background:
+        linear-gradient(180deg, rgba(220, 236, 255, 0.98), rgba(115, 169, 229, 0.92));
+      box-shadow:
+        0 0 0 6px rgba(122, 188, 255, 0.06),
+        0 0 42px rgba(103, 232, 249, 0.18);
+      opacity: 0;
+      transform: translateY(14px);
     }
 
     .backdrop-cloud {
       position: absolute;
       height: 16px;
-      background: rgba(233, 240, 248, 0.08);
+      background: rgba(243, 248, 255, 0.15);
       box-shadow:
-        16px 0 0 rgba(233, 240, 248, 0.08),
-        32px 0 0 rgba(233, 240, 248, 0.08),
-        8px -8px 0 rgba(233, 240, 248, 0.08),
-        24px -8px 0 rgba(233, 240, 248, 0.08),
-        40px -8px 0 rgba(233, 240, 248, 0.08);
-      filter: blur(0.2px);
+        16px 0 0 rgba(243, 248, 255, 0.15),
+        32px 0 0 rgba(243, 248, 255, 0.15),
+        8px -8px 0 rgba(243, 248, 255, 0.15),
+        24px -8px 0 rgba(243, 248, 255, 0.15),
+        40px -8px 0 rgba(243, 248, 255, 0.15);
+      filter: blur(0.15px);
+      opacity: 0.16;
+      transition: opacity 900ms ease;
     }
 
     .backdrop-cloud-a {
       top: 18%;
-      left: 18%;
+      left: -6%;
       width: 16px;
+      animation: driftCloudA 78s linear infinite;
     }
 
     .backdrop-cloud-b {
-      top: 24%;
-      right: 24%;
+      top: 25%;
+      left: 54%;
       width: 16px;
+      animation: driftCloudB 98s linear infinite;
+    }
+
+    .backdrop-cloud-c {
+      top: 31%;
+      left: 16%;
+      width: 16px;
+      animation: driftCloudC 88s linear infinite;
+      animation-delay: -24s;
+    }
+
+    .backdrop-haze {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 46%, rgba(255, 219, 149, 0.2), transparent 36%),
+        linear-gradient(180deg, transparent 0%, rgba(8, 6, 4, 0.16) 58%, rgba(8, 6, 4, 0.74) 100%);
+      opacity: 0.84;
+      transition: opacity 900ms ease;
     }
 
     .backdrop-layer {
@@ -173,22 +251,35 @@
       left: -5vw;
       right: -5vw;
       background-repeat: no-repeat;
+      transition: filter 900ms ease, opacity 900ms ease;
     }
 
     .backdrop-far {
-      bottom: 21vh;
-      height: 28vh;
-      background: linear-gradient(180deg, rgba(39, 58, 29, 0.78), rgba(20, 31, 16, 0.96));
-      opacity: 0.58;
-      clip-path: polygon(0 100%, 0 62%, 8% 62%, 8% 48%, 16% 48%, 16% 56%, 23% 56%, 23% 42%, 32% 42%, 32% 52%, 40% 52%, 40% 36%, 49% 36%, 49% 46%, 57% 46%, 57% 30%, 66% 30%, 66% 54%, 75% 54%, 75% 40%, 84% 40%, 84% 50%, 92% 50%, 92% 60%, 100% 60%, 100% 100%);
+      bottom: 22vh;
+      height: 26vh;
+      background: linear-gradient(180deg, rgba(46, 72, 34, 0.72), rgba(20, 31, 16, 0.94));
+      opacity: 0.5;
+      clip-path: polygon(0 100%, 0 64%, 8% 64%, 8% 52%, 15% 52%, 15% 59%, 23% 59%, 23% 44%, 31% 44%, 31% 54%, 39% 54%, 39% 37%, 49% 37%, 49% 47%, 57% 47%, 57% 31%, 66% 31%, 66% 54%, 75% 54%, 75% 41%, 84% 41%, 84% 52%, 92% 52%, 92% 60%, 100% 60%, 100% 100%);
+      animation: layerDriftFar 120s ease-in-out infinite alternate;
     }
 
     .backdrop-mid {
       bottom: 16vh;
       height: 30vh;
-      background: linear-gradient(180deg, rgba(54, 84, 36, 0.92), rgba(27, 43, 18, 0.98));
-      opacity: 0.82;
-      clip-path: polygon(0 100%, 0 70%, 10% 70%, 10% 54%, 18% 54%, 18% 66%, 27% 66%, 27% 44%, 37% 44%, 37% 58%, 46% 58%, 46% 34%, 56% 34%, 56% 50%, 64% 50%, 64% 28%, 74% 28%, 74% 60%, 82% 60%, 82% 42%, 90% 42%, 90% 52%, 100% 52%, 100% 100%);
+      background: linear-gradient(180deg, rgba(58, 98, 40, 0.92), rgba(29, 48, 19, 0.98));
+      opacity: 0.84;
+      clip-path: polygon(0 100%, 0 70%, 8% 70%, 8% 58%, 16% 58%, 16% 67%, 24% 67%, 24% 46%, 34% 46%, 34% 60%, 43% 60%, 43% 36%, 53% 36%, 53% 51%, 63% 51%, 63% 30%, 73% 30%, 73% 61%, 82% 61%, 82% 43%, 90% 43%, 90% 53%, 100% 53%, 100% 100%);
+      animation: layerDriftMid 88s ease-in-out infinite alternate;
+    }
+
+    .backdrop-forest {
+      bottom: 14vh;
+      height: 22vh;
+      background:
+        linear-gradient(180deg, rgba(30, 50, 24, 0.96), rgba(18, 29, 15, 0.98));
+      opacity: 0.88;
+      clip-path: polygon(0 100%, 0 66%, 4% 66%, 4% 52%, 8% 52%, 8% 66%, 12% 66%, 12% 48%, 16% 48%, 16% 66%, 22% 66%, 22% 44%, 27% 44%, 27% 66%, 33% 66%, 33% 50%, 38% 50%, 38% 66%, 44% 66%, 44% 46%, 49% 46%, 49% 66%, 55% 66%, 55% 51%, 60% 51%, 60% 66%, 67% 66%, 67% 43%, 72% 43%, 72% 66%, 79% 66%, 79% 49%, 84% 49%, 84% 66%, 90% 66%, 90% 45%, 95% 45%, 95% 66%, 100% 66%, 100% 100%);
+      animation: layerDriftForest 64s ease-in-out infinite alternate;
     }
 
     .backdrop-ground {
@@ -198,11 +289,88 @@
       bottom: 0;
       height: 24vh;
       background:
-        linear-gradient(180deg, rgba(133, 190, 84, 0.95) 0 10px, rgba(79, 121, 49, 0.98) 10px 22px, rgba(100, 61, 30, 0.98) 22px 70%, rgba(56, 35, 18, 1) 70% 100%),
-        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.16) 0 8px, rgba(255, 255, 255, 0.03) 8px 16px),
-        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 8px, transparent 8px 16px);
+        linear-gradient(180deg, rgba(148, 211, 87, 0.97) 0 10px, rgba(91, 141, 50, 0.99) 10px 22px, rgba(112, 70, 36, 0.98) 22px 70%, rgba(56, 35, 18, 1) 70% 100%),
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.17) 0 8px, rgba(255, 255, 255, 0.04) 8px 16px),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.13) 0 8px, transparent 8px 16px);
       background-blend-mode: normal, overlay, overlay;
-      border-top: 2px solid rgba(186, 227, 117, 0.34);
+      border-top: 2px solid rgba(201, 243, 126, 0.42);
+    }
+
+    body[data-sky-mode="day"] .backdrop-sky-day {
+      opacity: 1;
+    }
+
+    body[data-sky-mode="day"] .backdrop-sky-night,
+    body[data-sky-mode="day"] .backdrop-stars,
+    body[data-sky-mode="day"] .backdrop-moon {
+      opacity: 0;
+    }
+
+    body[data-sky-mode="day"] .backdrop-sun {
+      opacity: 0.96;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    body[data-sky-mode="day"] .backdrop-cloud {
+      opacity: 0.16;
+    }
+
+    body[data-sky-mode="night"] .backdrop-sky-day {
+      opacity: 0.06;
+    }
+
+    body[data-sky-mode="night"] .backdrop-sky-night,
+    body[data-sky-mode="night"] .backdrop-stars {
+      opacity: 1;
+    }
+
+    body[data-sky-mode="night"] .backdrop-sun {
+      opacity: 0;
+      transform: translateX(-50%) translateY(16px);
+    }
+
+    body[data-sky-mode="night"] .backdrop-moon {
+      opacity: 0.94;
+      transform: translateY(0);
+    }
+
+    body[data-sky-mode="night"] .backdrop-cloud {
+      opacity: 0.08;
+    }
+
+    body[data-sky-mode="night"] .backdrop-haze {
+      opacity: 0.42;
+    }
+
+    body[data-sky-mode="night"] .backdrop-far,
+    body[data-sky-mode="night"] .backdrop-mid,
+    body[data-sky-mode="night"] .backdrop-forest,
+    body[data-sky-mode="night"] .backdrop-ground {
+      filter: brightness(0.76) saturate(0.92);
+    }
+
+    body[data-sky-mode="auto"] .backdrop-sky-day {
+      animation: autoDayFade 72s ease-in-out infinite;
+    }
+
+    body[data-sky-mode="auto"] .backdrop-sky-night {
+      animation: autoNightFade 72s ease-in-out infinite;
+    }
+
+    body[data-sky-mode="auto"] .backdrop-stars {
+      animation: autoNightFade 72s ease-in-out infinite;
+    }
+
+    body[data-sky-mode="auto"] .backdrop-sun {
+      animation: autoSunTraverse 72s ease-in-out infinite;
+    }
+
+    body[data-sky-mode="auto"] .backdrop-moon {
+      animation: autoMoonTraverse 72s ease-in-out infinite;
+    }
+
+    body[data-sky-mode="auto"] .backdrop-haze {
+      animation: autoHaze 72s ease-in-out infinite;
     }
 
     .app-shell {
@@ -324,7 +492,7 @@
     .header-status {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
       min-width: 0;
     }
 
@@ -350,6 +518,51 @@
       color: var(--text-muted);
       font-size: 10px;
       white-space: nowrap;
+    }
+
+    .sky-cycle-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(36, 25, 16, 0.94), rgba(20, 14, 10, 0.96));
+      color: var(--text);
+      transition: border-color 140ms ease, box-shadow 140ms ease, color 140ms ease, transform 140ms ease;
+    }
+
+    .sky-cycle-button:hover {
+      border-color: var(--accent);
+      color: var(--text-bright);
+      box-shadow: 0 0 0 1px rgba(232, 118, 10, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .sky-cycle-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .sky-cycle-copy {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .sky-cycle-kicker {
+      font-size: 6px;
+      color: var(--text-ghost);
+    }
+
+    .sky-cycle-label {
+      font-size: 10px;
+      color: var(--text-bright);
+      line-height: 1;
     }
 
     .hero {
@@ -1051,6 +1264,125 @@
       }
     }
 
+    @keyframes driftCloudA {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(36vw);
+      }
+    }
+
+    @keyframes driftCloudB {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-28vw);
+      }
+    }
+
+    @keyframes driftCloudC {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(22vw);
+      }
+    }
+
+    @keyframes layerDriftFar {
+      from {
+        transform: translateX(-1.2vw);
+      }
+      to {
+        transform: translateX(1.2vw);
+      }
+    }
+
+    @keyframes layerDriftMid {
+      from {
+        transform: translateX(0.8vw);
+      }
+      to {
+        transform: translateX(-1vw);
+      }
+    }
+
+    @keyframes layerDriftForest {
+      from {
+        transform: translateX(-0.7vw);
+      }
+      to {
+        transform: translateX(0.9vw);
+      }
+    }
+
+    @keyframes autoDayFade {
+      0%,
+      36% {
+        opacity: 1;
+      }
+      50%,
+      100% {
+        opacity: 0.08;
+      }
+    }
+
+    @keyframes autoNightFade {
+      0%,
+      36% {
+        opacity: 0;
+      }
+      50%,
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes autoSunTraverse {
+      0% {
+        opacity: 0.95;
+        transform: translateX(-50%) translateY(0);
+      }
+      38% {
+        opacity: 0.92;
+        transform: translateX(22vw) translateY(3vh);
+      }
+      52%,
+      100% {
+        opacity: 0;
+        transform: translateX(28vw) translateY(8vh);
+      }
+    }
+
+    @keyframes autoMoonTraverse {
+      0%,
+      34% {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      48% {
+        opacity: 0.7;
+        transform: translateY(4px);
+      }
+      100% {
+        opacity: 0.94;
+        transform: translateY(-2px) translateX(-16vw);
+      }
+    }
+
+    @keyframes autoHaze {
+      0%,
+      36% {
+        opacity: 0.84;
+      }
+      50%,
+      100% {
+        opacity: 0.42;
+      }
+    }
+
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -1135,6 +1467,10 @@
         display: none;
       }
 
+      .sky-cycle-kicker {
+        display: none;
+      }
+
       .hero-title {
         font-size: 10px;
         letter-spacing: 3px;
@@ -1167,13 +1503,20 @@
     }
   </style>
 </head>
-<body>
+<body data-sky-mode="auto">
   <div class="minecraft-backdrop" aria-hidden="true">
+    <div class="backdrop-sky backdrop-sky-day"></div>
+    <div class="backdrop-sky backdrop-sky-night"></div>
+    <div class="backdrop-stars"></div>
+    <div class="backdrop-moon"></div>
     <div class="backdrop-sun"></div>
     <div class="backdrop-cloud backdrop-cloud-a"></div>
     <div class="backdrop-cloud backdrop-cloud-b"></div>
+    <div class="backdrop-cloud backdrop-cloud-c"></div>
+    <div class="backdrop-haze"></div>
     <div class="backdrop-layer backdrop-far"></div>
     <div class="backdrop-layer backdrop-mid"></div>
+    <div class="backdrop-layer backdrop-forest"></div>
     <div class="backdrop-ground"></div>
   </div>
   <canvas class="particles-canvas" id="particles" aria-hidden="true"></canvas>
@@ -1182,7 +1525,7 @@
     <div class="loading-stack">
       <img
         class="loading-logo"
-        src="https://www.peacefulvanilla.club/wp-content/uploads/logo-peaceful-vanilla-club-best-minecraft-vanilla-server.png"
+        src="assets/pvc-logo.png"
         alt="PVC"
       >
       <div class="loading-bar" aria-hidden="true">
@@ -1198,7 +1541,7 @@
         <div class="brand">
           <img
             class="brand-logo"
-            src="https://www.peacefulvanilla.club/wp-content/uploads/logo-peaceful-vanilla-club-best-minecraft-vanilla-server.png"
+            src="assets/pvc-logo.png"
             alt="PVC"
           >
           <span class="brand-separator">|</span>
@@ -1210,6 +1553,13 @@
             <span class="live-dot" aria-hidden="true"></span>
             <span>LIVE</span>
           </div>
+          <button class="sky-cycle-button" id="skyCycleButton" type="button" aria-label="Cycle sky mode" title="Sky mode: Auto">
+            <span class="sky-cycle-icon" id="skyCycleIcon" aria-hidden="true">◐</span>
+            <span class="sky-cycle-copy">
+              <span class="sky-cycle-kicker pixel-font">SKY</span>
+              <span class="sky-cycle-label" id="skyCycleLabel">AUTO</span>
+            </span>
+          </button>
           <div class="updated-text" id="updatedText">synced --</div>
         </div>
       </div>
@@ -1302,14 +1652,13 @@ but are currently empty.</div>
         <div class="results-grid" id="resultsGrid" aria-live="polite"></div>
       </section>
 
-      <div class="footer-note">Live data source: Peaceful Vanilla Club shop dump</div>
+      <div class="footer-note">Live data source: local cached /api/shops proxy for the Peaceful Vanilla Club dump</div>
     </main>
   </div>
 
   <script>
     const CONFIG = {
-      dataUrl: "https://web.peacefulvanilla.club/shops/data.json",
-      corsProxyUrl: "https://corsproxy.io/?url=",
+      dataUrl: "/api/shops",
       loadingDuration: 1800,
       loadingPause: 300,
       searchDebounce: 150
@@ -1410,6 +1759,9 @@ but are currently empty.</div>
       itemsStat: document.getElementById("itemsStat"),
       stockStat: document.getElementById("stockStat"),
       updatedText: document.getElementById("updatedText"),
+      skyCycleButton: document.getElementById("skyCycleButton"),
+      skyCycleIcon: document.getElementById("skyCycleIcon"),
+      skyCycleLabel: document.getElementById("skyCycleLabel"),
       sortChips: document.getElementById("sortChips"),
       inStockOnlyToggle: document.getElementById("inStockOnlyToggle"),
       includeShulkerToggle: document.getElementById("includeShulkerToggle"),
@@ -1427,6 +1779,7 @@ but are currently empty.</div>
     const state = {
       query: "",
       sort: "relevance",
+      skyMode: "auto",
       inStockOnly: true,
       includeShulker: true,
       lastDumpedAt: null,
@@ -1445,6 +1798,7 @@ but are currently empty.</div>
     init();
 
     function init() {
+      initSkyMode();
       initParticles();
       bindEvents();
       tickLoadingBar();
@@ -1468,6 +1822,8 @@ but are currently empty.</div>
         renderAll();
         refs.searchInput.focus();
       });
+
+      refs.skyCycleButton.addEventListener("click", cycleSkyMode);
 
       refs.sortChips.addEventListener("click", (event) => {
         const button = event.target.closest("[data-sort]");
@@ -1547,9 +1903,54 @@ but are currently empty.</div>
       });
     }
 
+    function initSkyMode() {
+      const savedMode = readSavedSkyMode();
+      applySkyMode(savedMode, false);
+    }
+
+    function cycleSkyMode() {
+      const modes = ["auto", "day", "night"];
+      const currentIndex = modes.indexOf(state.skyMode);
+      const nextMode = modes[(currentIndex + 1) % modes.length];
+      applySkyMode(nextMode, true);
+    }
+
+    function applySkyMode(mode, persist) {
+      const safeMode = ["auto", "day", "night"].includes(mode) ? mode : "auto";
+      const labelMap = {
+        auto: { label: "AUTO", icon: "◐", title: "Sky mode: Auto cycle" },
+        day: { label: "DAY", icon: "☀", title: "Sky mode: Day" },
+        night: { label: "NIGHT", icon: "☾", title: "Sky mode: Night" }
+      };
+      const current = labelMap[safeMode];
+
+      state.skyMode = safeMode;
+      document.body.dataset.skyMode = safeMode;
+      refs.skyCycleLabel.textContent = current.label;
+      refs.skyCycleIcon.textContent = current.icon;
+      refs.skyCycleButton.setAttribute("title", current.title);
+      refs.skyCycleButton.setAttribute("aria-label", current.title);
+
+      if (persist) {
+        try {
+          window.localStorage.setItem("pvc-sky-mode", safeMode);
+        } catch (error) {
+          console.warn("Could not persist sky mode.", error);
+        }
+      }
+    }
+
+    function readSavedSkyMode() {
+      try {
+        return window.localStorage.getItem("pvc-sky-mode") || "auto";
+      } catch (error) {
+        return "auto";
+      }
+    }
+
     async function loadData() {
       try {
-        const payload = await fetchShopPayload();
+        const payload = await fetchJsonUrl(CONFIG.dataUrl);
         state.shops = Array.isArray(payload.data) ? payload.data : [];
         state.lastDumpedAt = payload.information && payload.information.timeDumped
           ? new Date(payload.information.timeDumped)
@@ -1562,29 +1963,13 @@ but are currently empty.</div>
       } catch (error) {
         console.error("PVC Shop Browser failed to load:", error);
         state.loadingError = true;
-        refs.errorCopy.textContent = "Tried corsproxy.io first and then the direct PVC endpoint, but neither returned shop data.";
+        refs.errorCopy.textContent = "The local /api/shops function could not load the PVC market data.";
         refs.resultsGrid.innerHTML = "";
         refs.emptyState.classList.add("hidden");
         refs.soldOutState.classList.add("hidden");
         refs.resultsMeta.classList.remove("visible");
         refs.errorState.classList.remove("hidden");
         await resolveLoading();
-      }
-    }
-
-    async function fetchShopPayload() {
-      try {
-        const proxyUrl = CONFIG.corsProxyUrl + encodeURIComponent(CONFIG.dataUrl);
-        return await fetchJsonUrl(proxyUrl);
-      } catch (proxyError) {
-        console.warn("corsproxy.io fetch failed, trying direct PVC endpoint.", proxyError);
-
-        try {
-          return await fetchJsonUrl(CONFIG.dataUrl);
-        } catch (directError) {
-          directError.proxyError = proxyError;
-          throw directError;
-        }
       }
     }
 
