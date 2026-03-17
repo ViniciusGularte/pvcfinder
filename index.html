@@ -19,11 +19,11 @@
     <style>
       :root {
         --bg: #080604;
-        --surface: #15100b;
-        --surface2: #21170f;
-        --surface3: #2b1d13;
-        --border: #6b4322;
-        --border-mid: #9a6334;
+        --surface: #0f0b08;
+        --surface2: #1a1209;
+        --surface3: #241810;
+        --border: #5a3418;
+        --border-mid: #7b4b25;
         --border-glow: #e8760a;
         --accent: #e8760a;
         --accent-dim: #b85a00;
@@ -31,9 +31,9 @@
         --emerald-dim: #22c55e;
         --diamond: #67e8f9;
         --text-bright: #f5f0e8;
-        --text: #ddd2c3;
-        --text-muted: #c2b29a;
-        --text-ghost: #8a7562;
+        --text: #d8ccbc;
+        --text-muted: #bcae9c;
+        --text-ghost: #8f7c6b;
         --stock-low: #e8760a;
         --stock-ok: #4ade80;
         --stock-out: #756556;
@@ -70,14 +70,14 @@
         background:
           radial-gradient(
             circle at 50% 16%,
-            rgba(255, 186, 84, 0.14),
+            rgba(255, 186, 84, 0.1),
             transparent 16%
           ),
           linear-gradient(
             180deg,
-            rgba(61, 98, 128, 0.26) 0%,
-            rgba(40, 67, 59, 0.18) 34%,
-            rgba(8, 6, 4, 0.88) 100%
+            rgba(61, 98, 128, 0.12) 0%,
+            rgba(40, 67, 59, 0.1) 34%,
+            rgba(8, 6, 4, 0.94) 100%
           );
       }
 
@@ -306,14 +306,14 @@
         background:
           radial-gradient(
             circle at 50% 46%,
-            rgba(255, 219, 149, 0.12),
+            rgba(255, 219, 149, 0.08),
             transparent 34%
           ),
           linear-gradient(
             180deg,
-            rgba(8, 6, 4, 0.06) 0%,
-            rgba(8, 6, 4, 0.22) 46%,
-            rgba(8, 6, 4, 0.78) 100%
+            rgba(8, 6, 4, 0.18) 0%,
+            rgba(8, 6, 4, 0.36) 46%,
+            rgba(8, 6, 4, 0.88) 100%
           );
         opacity: 0.92;
         transition: opacity 900ms ease;
@@ -325,17 +325,17 @@
         background:
           linear-gradient(
             180deg,
-            rgba(0, 0, 0, 0.32) 0%,
-            rgba(0, 0, 0, 0.44) 32%,
-            rgba(0, 0, 0, 0.64) 100%
+            rgba(0, 0, 0, 0.5) 0%,
+            rgba(0, 0, 0, 0.6) 32%,
+            rgba(0, 0, 0, 0.76) 100%
           ),
           radial-gradient(
             circle at center,
-            rgba(0, 0, 0, 0.08),
-            rgba(0, 0, 0, 0.22) 72%
+            rgba(0, 0, 0, 0.14),
+            rgba(0, 0, 0, 0.34) 72%
           );
         transition: opacity 900ms ease;
-        opacity: 0.72;
+        opacity: 0.84;
       }
 
       .backdrop-layer {
@@ -528,11 +528,11 @@
       }
 
       body[data-sky-mode="day"] .backdrop-haze {
-        opacity: 0.98;
+        opacity: 1;
       }
 
       body[data-sky-mode="day"] .backdrop-readability {
-        opacity: 0.84;
+        opacity: 0.94;
       }
 
       body[data-sky-mode="night"] .backdrop-sky-day {
@@ -563,7 +563,7 @@
       }
 
       body[data-sky-mode="night"] .backdrop-readability {
-        opacity: 0.6;
+        opacity: 0.72;
       }
 
       body[data-sky-mode="night"] .backdrop-far,
@@ -689,6 +689,7 @@
           );
         backdrop-filter: blur(16px);
         border-bottom: 1px solid var(--border-mid);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       }
 
       .site-header-inner {
@@ -749,7 +750,7 @@
 
       .updated-text {
         min-width: 0;
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 10px;
         white-space: nowrap;
       }
@@ -757,35 +758,79 @@
       .sky-cycle-button {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        min-height: 34px;
-        padding: 0 10px;
-        border: 1px solid var(--border);
-        background: linear-gradient(
-          180deg,
-          rgba(36, 25, 16, 0.94),
-          rgba(20, 14, 10, 0.96)
-        );
-        color: var(--text);
+        gap: 10px;
+        min-height: 38px;
+        padding: 0 12px;
+        border: 1px solid var(--border-mid);
+        background:
+          linear-gradient(
+            180deg,
+            rgba(48, 34, 22, 0.96),
+            rgba(20, 14, 10, 0.98)
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.03) 0 6px,
+            transparent 6px 12px
+          );
+        color: var(--text-bright);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.06),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.32),
+          0 8px 18px rgba(0, 0, 0, 0.24);
         transition:
           border-color 140ms ease,
           box-shadow 140ms ease,
           color 140ms ease,
-          transform 140ms ease;
+          transform 140ms ease,
+          background 140ms ease;
       }
 
       .sky-cycle-button:hover {
         border-color: var(--accent);
         color: var(--text-bright);
-        box-shadow: 0 0 0 1px rgba(232, 118, 10, 0.18);
+        background:
+          linear-gradient(
+            180deg,
+            rgba(61, 42, 27, 0.98),
+            rgba(26, 18, 9, 1)
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.03) 0 6px,
+            transparent 6px 12px
+          );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 0 0 1px rgba(232, 118, 10, 0.22),
+          0 12px 24px rgba(0, 0, 0, 0.3);
         transform: translateY(-1px);
       }
 
+      .sky-cycle-button:active {
+        transform: translateY(0);
+        box-shadow:
+          inset 0 2px 0 rgba(0, 0, 0, 0.25),
+          0 4px 10px rgba(0, 0, 0, 0.22);
+      }
+
       .sky-cycle-icon {
-        width: 16px;
+        width: 18px;
         text-align: center;
-        font-size: 12px;
+        font-size: 13px;
         line-height: 1;
+        color: var(--accent);
+        text-shadow: 0 0 14px rgba(232, 118, 10, 0.35);
+      }
+
+      .sky-cycle-pill {
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(232, 118, 10, 0.22);
+        background: rgba(8, 6, 4, 0.48);
       }
 
       .sky-cycle-copy {
@@ -797,7 +842,7 @@
 
       .sky-cycle-kicker {
         font-size: 6px;
-        color: var(--text-ghost);
+        color: var(--text-muted);
       }
 
       .sky-cycle-label {
@@ -830,6 +875,7 @@
         color: var(--text);
         font-size: 13px;
         line-height: 1.7;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
       }
 
       .search-wrap {
@@ -916,7 +962,7 @@
         height: 28px;
         border: 1px solid transparent;
         background: rgba(33, 23, 15, 0.92);
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 18px;
         line-height: 1;
         opacity: 0;
@@ -943,8 +989,9 @@
         justify-content: center;
         flex-wrap: wrap;
         gap: 8px;
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 11px;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
       }
 
       .hero-stats strong {
@@ -973,10 +1020,38 @@
       .filter-inner {
         padding: 10px 24px;
         display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 12px 18px;
+        flex-wrap: wrap;
+      }
+
+      .filter-groups {
+        display: grid;
+        gap: 10px;
+        flex: 1 1 720px;
+      }
+
+      .filter-row {
+        display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px 18px;
         flex-wrap: wrap;
+      }
+
+      .filter-cluster {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .filter-label {
+        color: var(--text-muted);
+        font-size: 8px;
+        line-height: 1.8;
+        white-space: nowrap;
       }
 
       .sort-chips {
@@ -987,10 +1062,12 @@
       }
 
       .sort-chip,
+      .scope-chip,
+      .intent-chip,
       .mini-action,
       .filter-tag {
         border: 1px solid var(--border);
-        background: rgba(33, 23, 15, 0.92);
+        background: rgba(20, 14, 10, 0.96);
         color: var(--text);
         padding: 6px 14px;
         font-size: 10px;
@@ -1004,13 +1081,17 @@
       }
 
       .sort-chip:hover,
+      .scope-chip:hover,
+      .intent-chip:hover,
       .mini-action:hover,
       .filter-tag:hover {
         border-color: var(--border-mid);
         color: var(--text);
       }
 
-      .sort-chip.active {
+      .sort-chip.active,
+      .scope-chip.active,
+      .intent-chip.active {
         background: var(--surface2);
         border-color: var(--accent);
         color: var(--text-bright);
@@ -1087,7 +1168,7 @@
       }
 
       .toggle input:checked ~ .toggle-label {
-        color: var(--text);
+        color: var(--text-bright);
       }
 
       .results-meta {
@@ -1096,7 +1177,7 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 8px;
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 10px;
       }
 
@@ -1112,9 +1193,9 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: transparent;
+        background: rgba(26, 18, 9, 0.88);
         border-color: var(--border-mid);
-        color: var(--border-mid);
+        color: var(--text);
         padding: 4px 10px;
       }
 
@@ -1138,7 +1219,7 @@
         text-align: center;
         border: 1px solid var(--border);
         background: var(--surface);
-        color: var(--text-muted);
+        color: var(--text);
       }
 
       .state-icon {
@@ -1155,7 +1236,7 @@
 
       .state-copy {
         margin-top: 12px;
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 13px;
         line-height: 1.8;
         white-space: pre-line;
@@ -1201,8 +1282,8 @@
         background:
           linear-gradient(
             180deg,
-            rgba(37, 26, 17, 0.96),
-            rgba(21, 16, 11, 0.98)
+            rgba(24, 17, 11, 0.985),
+            rgba(13, 10, 7, 0.995)
           ),
           repeating-linear-gradient(
             90deg,
@@ -1238,6 +1319,33 @@
         display: flex;
         gap: 10px;
         padding-right: 150px;
+        align-items: flex-start;
+      }
+
+      .player-head {
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--border-mid);
+        background:
+          linear-gradient(180deg, rgba(49, 35, 24, 0.98), rgba(15, 11, 8, 1)),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.03) 0 4px,
+            transparent 4px 8px
+          );
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+          0 8px 18px rgba(0, 0, 0, 0.28);
+        image-rendering: pixelated;
+        overflow: hidden;
+      }
+
+      .player-head img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        image-rendering: pixelated;
       }
 
       .item-emoji {
@@ -1266,7 +1374,7 @@
       }
 
       .shop-line-name {
-        color: var(--text);
+        color: var(--text-muted);
       }
 
       .shop-line-sep {
@@ -1305,6 +1413,18 @@
         color: var(--enchant);
         border-color: rgba(103, 232, 249, 0.3);
         background: rgba(103, 232, 249, 0.04);
+      }
+
+      .badge.trade-buy {
+        color: var(--diamond);
+        border-color: rgba(103, 232, 249, 0.35);
+        background: rgba(103, 232, 249, 0.08);
+      }
+
+      .badge.trade-sell {
+        color: var(--accent);
+        border-color: rgba(232, 118, 10, 0.35);
+        background: rgba(232, 118, 10, 0.08);
       }
 
       .badge.shulker {
@@ -1364,12 +1484,62 @@
       }
 
       .price-note {
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 10px;
       }
 
       .price-result {
+        color: var(--text-bright);
+      }
+
+      .card-market {
+        padding: 0 16px 10px;
+        display: grid;
+        gap: 4px;
+      }
+
+      .market-line,
+      .market-subline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .market-kicker {
+        color: var(--accent);
+        font-size: 6px;
+        line-height: 1.8;
+      }
+
+      .market-values {
+        color: var(--text-bright);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .market-piece {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .market-subline {
         color: var(--text);
+        font-size: 10px;
+        line-height: 1.7;
+      }
+
+      .market-dot {
+        color: var(--border-mid);
+      }
+
+      .market-good {
+        color: var(--emerald);
+      }
+
+      .market-bad {
+        color: var(--stock-low);
       }
 
       .price-result-amount {
@@ -1396,7 +1566,7 @@
       .shulker-toggle {
         border: 0;
         background: transparent;
-        color: var(--text-muted);
+        color: var(--text);
         font-size: 10px;
         padding: 0;
         line-height: 1.7;
@@ -1455,7 +1625,7 @@
 
       .coords {
         min-width: 0;
-        color: var(--text);
+        color: var(--text-muted);
         font-size: 11px;
         display: flex;
         align-items: center;
@@ -1481,8 +1651,8 @@
       .map-button {
         flex: 0 0 auto;
         border: 1px solid var(--border);
-        background: rgba(33, 23, 15, 0.96);
-        color: var(--text);
+        background: rgba(26, 18, 9, 0.98);
+        color: var(--text-bright);
         padding: 5px 12px;
         font-size: 10px;
         transition:
@@ -1505,10 +1675,22 @@
       }
 
       .footer-note {
-        padding: 0 24px 24px;
-        color: var(--text-muted);
-        font-size: 10px;
+        padding: 0 24px 28px;
+        color: var(--text-bright);
+        font-size: 12px;
         text-align: center;
+        line-height: 1.9;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+        font-weight: 700;
+      }
+
+      .footer-credit {
+        color: var(--text-bright);
+        font-weight: 700;
+      }
+
+      .footer-accent {
+        color: var(--accent);
       }
 
       @keyframes bob {
@@ -1665,11 +1847,11 @@
       @keyframes autoReadability {
         0%,
         36% {
-          opacity: 0.84;
+          opacity: 0.94;
         }
         50%,
         100% {
-          opacity: 0.6;
+          opacity: 0.72;
         }
       }
 
@@ -1720,6 +1902,10 @@
         }
 
         .filter-inner {
+          align-items: flex-start;
+        }
+
+        .filter-row {
           align-items: flex-start;
         }
 
@@ -1787,6 +1973,10 @@
           align-items: stretch;
         }
 
+        .filter-cluster {
+          width: 100%;
+        }
+
         .toggle-row {
           justify-content: space-between;
         }
@@ -1843,9 +2033,9 @@
               aria-label="Cycle sky mode"
               title="Sky mode: Auto"
             >
-              <span class="sky-cycle-icon" id="skyCycleIcon" aria-hidden="true"
-                >◐</span
-              >
+              <span class="sky-cycle-pill" aria-hidden="true">
+                <span class="sky-cycle-icon" id="skyCycleIcon">◐</span>
+              </span>
               <span class="sky-cycle-copy">
                 <span class="sky-cycle-kicker pixel-font">SKY</span>
                 <span class="sky-cycle-label" id="skyCycleLabel">AUTO</span>
@@ -1909,42 +2099,84 @@
 
         <section class="filter-bar">
           <div class="filter-inner">
-            <div
-              class="sort-chips"
-              id="sortChips"
-              role="tablist"
-              aria-label="Sort results"
-            >
-              <button
-                class="sort-chip active"
-                type="button"
-                data-sort="relevance"
-              >
-                Relevance
-              </button>
-              <button class="sort-chip" type="button" data-sort="price">
-                Lowest Price
-              </button>
-              <button class="sort-chip" type="button" data-sort="stock">
-                Most Stock
-              </button>
-              <button class="sort-chip" type="button" data-sort="alpha">
-                A-Z
-              </button>
-            </div>
+            <div class="filter-groups">
+              <div class="filter-row">
+                <div class="filter-cluster">
+                  <span class="filter-label pixel-font">SORT</span>
+                  <div
+                    class="sort-chips"
+                    id="sortChips"
+                    role="tablist"
+                    aria-label="Sort results"
+                  >
+                    <button
+                      class="sort-chip active"
+                      type="button"
+                      data-sort="relevance"
+                    >
+                      Relevance
+                    </button>
+                    <button class="sort-chip" type="button" data-sort="price">
+                      Lowest Price
+                    </button>
+                    <button class="sort-chip" type="button" data-sort="stock">
+                      Most Stock
+                    </button>
+                    <button class="sort-chip" type="button" data-sort="alpha">
+                      A-Z
+                    </button>
+                  </div>
+                </div>
 
-            <div class="toggle-row">
-              <label class="toggle">
-                <input id="inStockOnlyToggle" type="checkbox" checked />
-                <span class="toggle-box" aria-hidden="true"></span>
-                <span class="toggle-label">In stock only</span>
-              </label>
+                <div class="toggle-row">
+                  <label class="toggle">
+                    <input id="inStockOnlyToggle" type="checkbox" checked />
+                    <span class="toggle-box" aria-hidden="true"></span>
+                    <span class="toggle-label">In stock only</span>
+                  </label>
 
-              <label class="toggle">
-                <input id="includeShulkerToggle" type="checkbox" checked />
-                <span class="toggle-box" aria-hidden="true"></span>
-                <span class="toggle-label">Include Shulker items</span>
-              </label>
+                  <label class="toggle">
+                    <input id="includeShulkerToggle" type="checkbox" checked />
+                    <span class="toggle-box" aria-hidden="true"></span>
+                    <span class="toggle-label">Include Shulker items</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="filter-row">
+                <div class="filter-cluster">
+                  <span class="filter-label pixel-font">SEARCH</span>
+                  <div class="sort-chips" id="searchScopeChips" aria-label="Search scope">
+                    <button class="scope-chip active" type="button" data-scope="item">
+                      Item
+                    </button>
+                    <button class="scope-chip" type="button" data-scope="shop">
+                      Shop
+                    </button>
+                    <button class="scope-chip" type="button" data-scope="seller">
+                      Player
+                    </button>
+                    <button class="scope-chip" type="button" data-scope="variant">
+                      Variants
+                    </button>
+                  </div>
+                </div>
+
+                <div class="filter-cluster">
+                  <span class="filter-label pixel-font">TRADE</span>
+                  <div class="sort-chips" id="intentChips" aria-label="Trade intent">
+                    <button class="intent-chip active" type="button" data-intent="both">
+                      Both
+                    </button>
+                    <button class="intent-chip" type="button" data-intent="sell">
+                      Selling
+                    </button>
+                    <button class="intent-chip" type="button" data-intent="buy">
+                      Buying
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1991,6 +2223,10 @@
           <div class="results-grid" id="resultsGrid" aria-live="polite"></div>
         </section>
       </main>
+
+      <footer class="footer-note page-width">
+        <span class="footer-credit">made with <span class="footer-accent">&lt;3</span> by dbage</span>
+      </footer>
     </div>
 
     <script>
@@ -2078,6 +2314,11 @@
           short: "dmnd. block",
           color: "var(--diamond)",
         },
+        NETHERITE_INGOT: {
+          icon: "🖤",
+          short: "netherite",
+          color: "var(--text-bright)",
+        },
         IRON_INGOT: { icon: "⚙️", short: "iron", color: "var(--text)" },
         GOLD_INGOT: { icon: "🟡", short: "gold", color: "#f59e0b" },
         GOLD_BLOCK: { icon: "🟨", short: "gold block", color: "#f59e0b" },
@@ -2093,11 +2334,35 @@
         EMERALD_BLOCK: 2,
         DIAMOND: 3,
         DIAMOND_BLOCK: 4,
-        GOLD_INGOT: 5,
-        GOLD_BLOCK: 6,
-        IRON_INGOT: 7,
-        ANCIENT_DEBRIS: 8,
+        NETHERITE_INGOT: 5,
+        GOLD_INGOT: 6,
+        GOLD_BLOCK: 7,
+        IRON_INGOT: 8,
+        ANCIENT_DEBRIS: 9,
       };
+
+      const currencyUnitMap = {
+        EMERALD: { base: "emerald", factor: 1 },
+        EMERALD_BLOCK: { base: "emerald", factor: 9 },
+        DIAMOND: { base: "diamond", factor: 1 },
+        DIAMOND_BLOCK: { base: "diamond", factor: 9 },
+        NETHERITE_INGOT: { base: "netherite", factor: 1 },
+        ANCIENT_DEBRIS: { base: "debris", factor: 1 },
+        GOLD_INGOT: { base: "gold", factor: 1 },
+        GOLD_BLOCK: { base: "gold", factor: 9 },
+        IRON_INGOT: { base: "iron", factor: 1 },
+      };
+
+      const marketCurrencyDisplay = {
+        emerald: { icon: "💚", short: "em", color: "var(--emerald)" },
+        diamond: { icon: "💎", short: "dmnd", color: "var(--diamond)" },
+        netherite: { icon: "🖤", short: "net", color: "var(--text-bright)" },
+        debris: { icon: "🌑", short: "debris", color: "var(--text-muted)" },
+        gold: { icon: "🟡", short: "gold", color: "#f59e0b" },
+        iron: { icon: "⚙️", short: "iron", color: "var(--text)" },
+      };
+
+      const marketDisplayOrder = ["emerald", "diamond", "netherite"];
 
       const refs = {
         loadingBarFill: document.getElementById("loadingBarFill"),
@@ -2112,6 +2377,8 @@
         skyCycleIcon: document.getElementById("skyCycleIcon"),
         skyCycleLabel: document.getElementById("skyCycleLabel"),
         sortChips: document.getElementById("sortChips"),
+        searchScopeChips: document.getElementById("searchScopeChips"),
+        intentChips: document.getElementById("intentChips"),
         inStockOnlyToggle: document.getElementById("inStockOnlyToggle"),
         includeShulkerToggle: document.getElementById("includeShulkerToggle"),
         resultsMeta: document.getElementById("resultsMeta"),
@@ -2128,12 +2395,18 @@
       const state = {
         query: "",
         sort: "relevance",
+        searchScope: "item",
+        tradeIntent: "both",
         skyMode: "auto",
         inStockOnly: true,
         includeShulker: true,
         lastDumpedAt: null,
         shops: [],
         listings: [],
+        market: {
+          currencyValues: { emerald: 1 },
+          productStats: {},
+        },
         filtered: [],
         loadingStartedAt: performance.now(),
         loadingFinished: false,
@@ -2150,6 +2423,9 @@
         initSkyMode();
         initParticles();
         bindEvents();
+        syncSortChips();
+        syncSearchScopeChips();
+        syncIntentChips();
         tickLoadingBar();
         loadData();
       }
@@ -2182,6 +2458,28 @@
 
           state.sort = button.getAttribute("data-sort") || "relevance";
           syncSortChips();
+          renderAll();
+        });
+
+        refs.searchScopeChips.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-scope]");
+          if (!button) {
+            return;
+          }
+
+          state.searchScope = button.getAttribute("data-scope") || "item";
+          syncSearchScopeChips();
+          renderAll();
+        });
+
+        refs.intentChips.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-intent]");
+          if (!button) {
+            return;
+          }
+
+          state.tradeIntent = button.getAttribute("data-intent") || "both";
+          syncIntentChips();
           renderAll();
         });
 
@@ -2219,6 +2517,12 @@
             refs.searchInput.value = "";
             state.query = "";
             updateSearchClearState();
+          } else if (filter === "scope") {
+            state.searchScope = "item";
+            syncSearchScopeChips();
+          } else if (filter === "intent") {
+            state.tradeIntent = "both";
+            syncIntentChips();
           } else if (filter === "stock") {
             refs.inStockOnlyToggle.checked = false;
             state.inStockOnly = false;
@@ -2311,7 +2615,9 @@
             payload.information && payload.information.timeDumped
               ? new Date(payload.information.timeDumped)
               : null;
-          state.listings = flattenListings(state.shops);
+          const flattened = flattenListings(state.shops);
+          state.listings = flattened.listings;
+          state.market = flattened.marketContext;
           updateStats();
           renderAll();
           startRelativeTime();
@@ -2391,7 +2697,11 @@
         state.inStockOnly = true;
         state.includeShulker = true;
         state.sort = "relevance";
+        state.searchScope = "item";
+        state.tradeIntent = "both";
         syncSortChips();
+        syncSearchScopeChips();
+        syncIntentChips();
         updateSearchClearState();
         renderAll();
       }
@@ -2402,6 +2712,26 @@
           chip.classList.toggle(
             "active",
             chip.getAttribute("data-sort") === state.sort,
+          );
+        });
+      }
+
+      function syncSearchScopeChips() {
+        const chips = refs.searchScopeChips.querySelectorAll("[data-scope]");
+        chips.forEach((chip) => {
+          chip.classList.toggle(
+            "active",
+            chip.getAttribute("data-scope") === state.searchScope,
+          );
+        });
+      }
+
+      function syncIntentChips() {
+        const chips = refs.intentChips.querySelectorAll("[data-intent]");
+        chips.forEach((chip) => {
+          chip.classList.toggle(
+            "active",
+            chip.getAttribute("data-intent") === state.tradeIntent,
           );
         });
       }
@@ -2463,6 +2793,8 @@
         const tags = buildActiveFilterTags();
         const shouldShow = Boolean(
           state.query ||
+          state.searchScope !== "item" ||
+          state.tradeIntent !== "both" ||
           state.inStockOnly ||
           !state.includeShulker ||
           state.sort !== "relevance",
@@ -2495,6 +2827,33 @@
 
         if (state.query) {
           tags.push(buildFilterTag("query", state.query));
+        }
+
+        if (state.searchScope !== "item") {
+          const scopeLabelMap = {
+            shop: "shop",
+            seller: "player",
+            variant: "variants",
+          };
+          tags.push(
+            buildFilterTag(
+              "scope",
+              scopeLabelMap[state.searchScope] || state.searchScope,
+            ),
+          );
+        }
+
+        if (state.tradeIntent !== "both") {
+          const intentLabelMap = {
+            sell: "selling",
+            buy: "buying",
+          };
+          tags.push(
+            buildFilterTag(
+              "intent",
+              intentLabelMap[state.tradeIntent] || state.tradeIntent,
+            ),
+          );
         }
 
         if (state.inStockOnly) {
@@ -2574,24 +2933,28 @@
 
           if (!terms.length) {
             listing.matchScore = 0;
+            listing.activeComparison = buildActiveComparison(listing, terms);
             return true;
           }
 
-          const haystack = state.includeShulker
-            ? listing.searchAll
-            : listing.searchWithoutLore;
-          const matches = terms.every((term) => haystack.includes(term));
+          const matches = doesListingMatchScope(listing, terms);
           if (!matches) {
             return false;
           }
 
           listing.matchScore = computeMatchScore(listing, terms);
+          listing.activeComparison = buildActiveComparison(listing, terms);
           return true;
         });
 
         filtered.sort((left, right) => {
           if (state.sort === "price") {
+            const priceCompare = compareNullableNumber(
+              left.activeComparison.unitValue,
+              right.activeComparison.unitValue,
+            );
             return (
+              priceCompare ||
               compareNumber(left.priceRank, right.priceRank) ||
               compareNumber(left.totalPaymentUnits, right.totalPaymentUnits) ||
               compareNumber(right.stock, left.stock) ||
@@ -2635,11 +2998,18 @@
       function buildCardMarkup(listing, index, terms) {
         const stockBadge = getStockBadge(listing.stock);
         const specialBadges = [];
+        const comparison = listing.activeComparison || buildActiveComparison(listing, terms);
 
         if (listing.enchants.length) {
           specialBadges.push(
             '<span class="badge enchanted pixel">✦ ENCHANTED</span>',
           );
+        }
+
+        if (state.query && listing.activeMatchIntent === "buy") {
+          specialBadges.push('<span class="badge trade-buy pixel">BUYING</span>');
+        } else if (state.query && state.tradeIntent === "sell") {
+          specialBadges.push('<span class="badge trade-sell pixel">SELLING</span>');
         }
 
         if (listing.isShulker) {
@@ -2665,6 +3035,7 @@
         const shulkerSection = listing.shulkerContents.length
           ? buildShulkerSection(listing, terms)
           : "";
+        const marketSection = buildMarketSection(listing, comparison);
 
         const enchantsSection = listing.enchants.length
           ? '<div class="card-enchants">✦ ' +
@@ -2685,6 +3056,13 @@
             'ms">',
           '  <div class="card-header">',
           '    <div class="card-header-main">',
+          '      <div class="player-head" aria-hidden="true">',
+          '        <img src="' +
+            escapeAttribute(listing.avatarUrl) +
+            '" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'' +
+            escapeAttribute(getAvatarUrl("MHF_Steve")) +
+            '\';" />',
+          "      </div>",
           '      <div class="item-emoji" aria-hidden="true">' +
             escapeHtml(listing.emoji) +
             "</div>",
@@ -2709,6 +3087,7 @@
           '  <div class="card-price">' +
             buildPriceLine(listing, terms) +
             "</div>",
+          marketSection,
           enchantsSection,
           shulkerSection,
           '  <div class="card-footer">',
@@ -2777,6 +3156,59 @@
         );
       }
 
+      function buildMarketSection(listing, comparison) {
+        if (!Number.isFinite(listing.paymentMarketValue)) {
+          return "";
+        }
+
+        const totalPieces = buildMarketValuePieces(listing.paymentMarketValue);
+        const subParts = [];
+
+        if (Number.isFinite(comparison.unitValue)) {
+          subParts.push(
+            "≈ " +
+              formatMarketNumber(comparison.unitValue) +
+              " em / " +
+              comparison.label,
+          );
+        }
+
+        if (
+          listing.marketSampleCount > 1 &&
+          Number.isFinite(listing.marketAverageTotal) &&
+          Number.isFinite(listing.marketDeltaRatio)
+        ) {
+          const deltaClass =
+            listing.marketDeltaRatio <= 0 ? "market-good" : "market-bad";
+          const direction =
+            listing.marketDeltaRatio <= 0 ? "below avg" : "above avg";
+
+          subParts.push(
+            '<span class="' +
+              deltaClass +
+              '">' +
+              formatPercent(Math.abs(listing.marketDeltaRatio)) +
+              " " +
+              direction +
+              "</span>",
+          );
+        }
+
+        return [
+          '<div class="card-market">',
+          '  <div class="market-line">',
+          '    <span class="market-kicker pixel-font">MARKET</span>',
+          '    <span class="market-values">' + totalPieces.join('<span class="market-dot">·</span>') + "</span>",
+          "  </div>",
+          subParts.length
+            ? '  <div class="market-subline">' +
+              subParts.join('<span class="market-dot">·</span>') +
+              "</div>"
+            : "",
+          "</div>",
+        ].join("");
+      }
+
       function buildShulkerSection(listing, terms) {
         const buttonLabel =
           "▶  VIEW CONTENTS  (" + listing.shulkerContents.length + " items)";
@@ -2813,42 +3245,112 @@
         ].join("");
       }
 
+      function doesListingMatchScope(listing, terms) {
+        if (!terms.length) {
+          listing.activeMatchIntent = "sell";
+          return true;
+        }
+
+        const intent = state.tradeIntent;
+        const scope = state.searchScope;
+
+        if (scope === "shop") {
+          listing.activeMatchIntent = "sell";
+          return matchesSearchIndex(listing.shopIndex, terms, false);
+        }
+
+        if (scope === "seller") {
+          listing.activeMatchIntent = "sell";
+          return matchesSearchIndex(listing.sellerIndex, terms, false);
+        }
+
+        if (scope === "variant") {
+          const sellVariantMatch =
+            matchesSearchIndex(listing.sellVariantIndex, terms, true) ||
+            (state.includeShulker &&
+              matchesSearchIndex(listing.sellShulkerIndex, terms, true));
+          const buyVariantMatch = matchesSearchIndex(
+            listing.buyVariantIndex,
+            terms,
+            true,
+          );
+
+          if (intent === "sell") {
+            listing.activeMatchIntent = sellVariantMatch ? "sell" : null;
+            return sellVariantMatch;
+          }
+
+          if (intent === "buy") {
+            listing.activeMatchIntent = buyVariantMatch ? "buy" : null;
+            return buyVariantMatch;
+          }
+
+          listing.activeMatchIntent = sellVariantMatch
+            ? buyVariantMatch
+              ? "both"
+              : "sell"
+            : buyVariantMatch
+              ? "buy"
+              : null;
+          return sellVariantMatch || buyVariantMatch;
+        }
+
+        const sellItemMatch =
+          matchesSearchIndex(listing.sellItemIndex, terms, false) ||
+          (state.includeShulker &&
+            matchesSearchIndex(listing.sellShulkerIndex, terms, false));
+        const buyItemMatch = matchesSearchIndex(listing.buyItemIndex, terms, false);
+
+        if (intent === "sell") {
+          listing.activeMatchIntent = sellItemMatch ? "sell" : null;
+          return sellItemMatch;
+        }
+
+        if (intent === "buy") {
+          listing.activeMatchIntent = buyItemMatch ? "buy" : null;
+          return buyItemMatch;
+        }
+
+        listing.activeMatchIntent = sellItemMatch
+          ? buyItemMatch
+            ? "both"
+            : "sell"
+          : buyItemMatch
+            ? "buy"
+            : null;
+        return sellItemMatch || buyItemMatch;
+      }
+
       function computeMatchScore(listing, terms) {
         let score = 0;
-        const phrase = terms.join(" ");
 
-        if (listing.displayNameNorm.includes(phrase)) {
-          score += 60;
+        if (state.searchScope === "shop") {
+          score += scoreSearchIndex(listing.shopIndex, terms, false, 24);
+        } else if (state.searchScope === "seller") {
+          score += scoreSearchIndex(listing.sellerIndex, terms, false, 24);
+        } else if (state.searchScope === "variant") {
+          if (state.tradeIntent !== "buy") {
+            score += scoreSearchIndex(listing.sellVariantIndex, terms, true, 16);
+            if (state.includeShulker) {
+              score += scoreSearchIndex(listing.sellShulkerIndex, terms, true, 12);
+            }
+          }
+
+          if (state.tradeIntent !== "sell") {
+            score += scoreSearchIndex(listing.buyVariantIndex, terms, true, 16);
+          }
+        } else {
+          if (state.tradeIntent !== "buy") {
+            score += scoreSearchIndex(listing.sellItemIndex, terms, false, 20);
+            if (state.includeShulker) {
+              score += scoreSearchIndex(listing.sellShulkerIndex, terms, false, 14);
+            }
+          }
+
+          if (state.tradeIntent !== "sell") {
+            score += scoreSearchIndex(listing.buyItemIndex, terms, false, 20);
+          }
         }
-
-        if (listing.searchWithoutLore.includes(phrase)) {
-          score += 35;
-        }
-
-        if (listing.searchLore.includes(phrase)) {
-          score += 25;
-        }
-
-        terms.forEach((term) => {
-          if (listing.displayNameNorm.includes(term)) {
-            score += 18;
-          }
-
-          if (
-            listing.shopNameNorm.includes(term) ||
-            listing.shopOwnerNorm.includes(term)
-          ) {
-            score += 10;
-          }
-
-          if (listing.searchPrice.includes(term)) {
-            score += 8;
-          }
-
-          if (listing.searchLore.includes(term)) {
-            score += 6;
-          }
-        });
 
         score += Math.min(listing.stock, 100) / 20;
         return score;
@@ -2873,6 +3375,7 @@
             const rawLore = cleanLore(resultItem.lore);
             const shulkerContents = parseShulkerContents(resultItem.lore);
             const enchants = formatEnchants(resultItem.enchant);
+            const enchantKey = buildEnchantKey(resultItem.enchant);
             const payments = [recipe.item1, recipe.item2]
               .filter(Boolean)
               .map((item) => buildPaymentPart(item));
@@ -2884,6 +3387,10 @@
               (sum, part) => sum + part.rawUnits,
               0,
             );
+            const totalPaymentItemAmount = payments.reduce(
+              (sum, part) => sum + part.itemAmount,
+              0,
+            );
             const coords = parseCoords(shop.location);
             const mapUrl = buildMapUrl(shop.world, coords);
             const searchType = formatType(resultItem.type);
@@ -2891,14 +3398,37 @@
               rawLore.join(" "),
               shulkerContents.map((entry) => entry.searchText).join(" "),
             ].join(" ");
+            const shulkerTotalItems = shulkerContents.reduce(
+              (sum, entry) => sum + entry.amount,
+              0,
+            );
             const priceSearch = payments
               .map((part) => part.searchText)
               .join(" ");
+            const paymentExactSearch = payments
+              .map((part) => part.exactText)
+              .join(" ");
             const enchantKeys = Object.keys(resultItem.enchant || {}).join(" ");
-            const nameAndLore = [
+            const sellItemText = [searchType, cleanText(resultItem.name)].join(" ");
+            const shulkerItemText = shulkerContents
+              .map((entry) => entry.name + " " + entry.rawKey)
+              .join(" ");
+            const variantText = [
+              searchType,
               cleanText(resultItem.name),
+              enchantKeys,
               rawLore.join(" "),
+              shulkerContents.map((entry) => entry.searchText).join(" "),
             ].join(" ");
+            const resultCurrency = getCurrencyMeta(resultItem.type);
+            const outputUnits = Math.max(numberOrZero(resultItem.amount) || 1, 1);
+            const marketKey = buildMarketKey({
+              type: resultItem.type || "",
+              displayName,
+              enchantKey,
+              shulkerContents,
+            });
+            const avatarName = normalizeAvatarName(shopOwner);
 
             listings.push({
               id: "card-" + shopIndex + "-" + recipeIndex,
@@ -2912,17 +3442,37 @@
               displayName,
               displayNameNorm: normalizeForSearch(displayName),
               emoji: getEmoji(resultItem.type || ""),
+              avatarName,
+              avatarUrl: getAvatarUrl(avatarName),
               stock: numberOrZero(recipe.stock),
               enchants,
+              enchantKey,
               isShulker: String(resultItem.type || "").includes("SHULKER"),
               shulkerContents,
+              shulkerTotalItems,
               paymentParts: payments,
               priceRank,
               totalPaymentUnits,
+              totalPaymentItemAmount,
               coords,
               mapUrl,
+              outputUnits,
+              marketKey,
+              resultCurrencyBase: resultCurrency ? resultCurrency.base : null,
+              resultCurrencyFactor: resultCurrency ? resultCurrency.factor : 0,
+              sellItemIndex: buildSearchIndex(sellItemText),
+              sellShulkerIndex: buildSearchIndex(shulkerItemText),
+              buyItemIndex: buildSearchIndex(paymentExactSearch),
+              shopIndex: buildSearchIndex(shopName),
+              sellerIndex: buildSearchIndex(shopOwner),
+              sellVariantIndex: buildSearchIndex(
+                [sellItemText, variantText].join(" "),
+              ),
+              buyVariantIndex: buildSearchIndex(
+                [paymentExactSearch, priceSearch].join(" "),
+              ),
               directSearch: normalizeForSearch(
-                [searchType, cleanText(resultItem.name), nameAndLore].join(" "),
+                [searchType, cleanText(resultItem.name), displayName].join(" "),
               ),
               searchWithoutLore: normalizeForSearch(
                 [
@@ -2948,17 +3498,55 @@
                 ].join(" "),
               ),
               matchScore: 0,
+              paymentMarketValue: null,
+              marketAverageUnit: null,
+              marketAverageTotal: null,
+              marketSampleCount: 0,
+              marketDeltaRatio: null,
+              activeComparison: {
+                units: outputUnits,
+                label: "item",
+                source: "result",
+                unitValue: null,
+              },
             });
           });
         });
 
-        return listings;
+        const marketContext = buildMarketContext(listings);
+        listings.forEach((listing) => {
+          const paymentMarketValue = computePaymentMarketValue(
+            listing.paymentParts,
+            marketContext.currencyValues,
+          );
+          const productStats = marketContext.productStats[listing.marketKey];
+
+          listing.paymentMarketValue = paymentMarketValue;
+          listing.marketAverageUnit = productStats ? productStats.median : null;
+          listing.marketAverageTotal =
+            productStats && Number.isFinite(productStats.median)
+              ? productStats.median * listing.outputUnits
+              : null;
+          listing.marketSampleCount = productStats ? productStats.count : 0;
+          listing.marketDeltaRatio =
+            productStats &&
+            productStats.count > 1 &&
+            Number.isFinite(paymentMarketValue) &&
+            Number.isFinite(listing.marketAverageTotal) &&
+            listing.marketAverageTotal > 0
+              ? (paymentMarketValue - listing.marketAverageTotal) /
+                listing.marketAverageTotal
+              : null;
+        });
+
+        return { listings, marketContext };
       }
 
       function buildPaymentPart(item) {
         const type = String(item.type || "");
         const amount = numberOrZero(item.amount) || 1;
         const labelConfig = priceTypeMap[type];
+        const currencyMeta = getCurrencyMeta(type);
         const customName = cleanText(item.name);
         const displayName =
           customName || (labelConfig ? labelConfig.short : formatType(type));
@@ -2968,19 +3556,446 @@
           type === "EMERALD_BLOCK" ? "(= " + amount * 9 + " em.)" : "";
 
         return {
+          itemAmount: amount,
           icon,
           color,
           text: amount + " " + displayName,
           note,
           rank: priceOrder[type] || 50,
+          currencyBase: currencyMeta ? currencyMeta.base : null,
+          currencyUnits: currencyMeta ? amount * currencyMeta.factor : 0,
           rawUnits:
             type === "EMERALD_BLOCK" ||
             type === "DIAMOND_BLOCK" ||
             type === "GOLD_BLOCK"
               ? amount * 9
               : amount,
+          exactText: [type, customName, formatType(type)].join(" "),
           searchText: [type, customName, displayName, note].join(" "),
         };
+      }
+
+      function buildMarketContext(listings) {
+        const currencyValues = { emerald: 1 };
+        let productStats = buildProductStats(listings, currencyValues);
+
+        for (let pass = 0; pass < 12; pass += 1) {
+          const candidates = {};
+
+          listings.forEach((listing) => {
+            const stats = productStats[listing.marketKey];
+            if (!stats || !Number.isFinite(stats.median)) {
+              return;
+            }
+
+            if (listing.resultCurrencyBase && listing.resultCurrencyFactor > 0) {
+              addNumberCandidate(
+                candidates,
+                listing.resultCurrencyBase,
+                stats.median / listing.resultCurrencyFactor,
+              );
+            }
+
+            const singleCurrencyQuote = getSingleCurrencyQuote(
+              listing.paymentParts,
+            );
+            if (!singleCurrencyQuote || listing.outputUnits <= 0) {
+              return;
+            }
+
+            addNumberCandidate(
+              candidates,
+              singleCurrencyQuote.base,
+              stats.median / (singleCurrencyQuote.units / listing.outputUnits),
+            );
+          });
+
+          let changed = false;
+
+          Object.entries(candidates).forEach(([base, values]) => {
+            if (base === "emerald") {
+              currencyValues.emerald = 1;
+              return;
+            }
+
+            const nextValue = median(values);
+            if (!Number.isFinite(nextValue) || nextValue <= 0) {
+              return;
+            }
+
+            const previous = currencyValues[base];
+            if (
+              !Number.isFinite(previous) ||
+              Math.abs(previous - nextValue) / nextValue > 0.02
+            ) {
+              changed = true;
+            }
+
+            currencyValues[base] = nextValue;
+          });
+
+          currencyValues.emerald = 1;
+          productStats = buildProductStats(listings, currencyValues);
+
+          if (!changed) {
+            break;
+          }
+        }
+
+        return { currencyValues, productStats };
+      }
+
+      function buildProductStats(listings, currencyValues) {
+        const groups = {};
+
+        listings.forEach((listing) => {
+          const paymentMarketValue = computePaymentMarketValue(
+            listing.paymentParts,
+            currencyValues,
+          );
+          if (!Number.isFinite(paymentMarketValue) || listing.outputUnits <= 0) {
+            return;
+          }
+
+          addNumberCandidate(
+            groups,
+            listing.marketKey,
+            paymentMarketValue / listing.outputUnits,
+          );
+        });
+
+        return Object.fromEntries(
+          Object.entries(groups).map(([key, values]) => {
+            const sorted = values.slice().sort((left, right) => left - right);
+            const sum = sorted.reduce((total, value) => total + value, 0);
+
+            return [
+              key,
+              {
+                count: sorted.length,
+                median: median(sorted),
+                average: sum / sorted.length,
+                low: sorted[0],
+                high: sorted[sorted.length - 1],
+              },
+            ];
+          }),
+        );
+      }
+
+      function computePaymentMarketValue(paymentParts, currencyValues) {
+        if (!Array.isArray(paymentParts) || !paymentParts.length) {
+          return null;
+        }
+
+        let total = 0;
+        for (const part of paymentParts) {
+          if (!part.currencyBase) {
+            return null;
+          }
+
+          const baseValue = currencyValues[part.currencyBase];
+          if (!Number.isFinite(baseValue)) {
+            return null;
+          }
+
+          total += part.currencyUnits * baseValue;
+        }
+
+        return total;
+      }
+
+      function getSingleCurrencyQuote(paymentParts) {
+        if (!Array.isArray(paymentParts) || !paymentParts.length) {
+          return null;
+        }
+
+        let base = null;
+        let units = 0;
+
+        for (const part of paymentParts) {
+          if (!part.currencyBase) {
+            return null;
+          }
+
+          if (!base) {
+            base = part.currencyBase;
+          }
+
+          if (part.currencyBase !== base) {
+            return null;
+          }
+
+          units += part.currencyUnits;
+        }
+
+        return base ? { base, units } : null;
+      }
+
+      function buildActiveComparison(listing, terms) {
+        const broad = state.searchScope === "variant";
+        const comparisonIntent =
+          state.tradeIntent === "both" && listing.activeMatchIntent === "buy"
+            ? "buy"
+            : state.tradeIntent === "buy"
+              ? "buy"
+              : "sell";
+
+        if (comparisonIntent === "buy") {
+          const matchedPaymentUnits = getMatchedPaymentUnits(listing, terms, broad);
+          const resultOfferValue = getResultOfferMarketValue(listing);
+          const units = matchedPaymentUnits || listing.totalPaymentItemAmount || 1;
+
+          return {
+            units,
+            label: matchedPaymentUnits ? "wanted item" : "payment item",
+            source: "buy",
+            unitValue:
+              Number.isFinite(resultOfferValue) && units > 0
+                ? resultOfferValue / units
+                : null,
+          };
+        }
+
+        const matchedUnits = getMatchedShulkerUnits(listing, terms);
+        const useShulkerMatch = matchedUnits > 0;
+        const units = useShulkerMatch
+          ? matchedUnits
+          : !terms.length && listing.isShulker && listing.shulkerTotalItems > 0
+            ? listing.shulkerTotalItems
+            : listing.outputUnits;
+        const label = useShulkerMatch ? "matched item" : "item";
+
+        return {
+          units,
+          label,
+          source: useShulkerMatch
+            ? "shulker-match"
+            : !terms.length && listing.isShulker && listing.shulkerTotalItems > 0
+              ? "shulker-total"
+              : "result",
+          unitValue:
+            Number.isFinite(listing.paymentMarketValue) && units > 0
+              ? listing.paymentMarketValue / units
+              : null,
+        };
+      }
+
+      function getMatchedShulkerUnits(listing, terms) {
+        if (
+          !listing.isShulker ||
+          !listing.shulkerContents.length ||
+          !Array.isArray(terms) ||
+          !terms.length
+        ) {
+          return 0;
+        }
+
+        return listing.shulkerContents.reduce((sum, entry) => {
+          const matches = terms.every((term) => entry.searchText.includes(term));
+          return matches ? sum + entry.amount : sum;
+        }, 0);
+      }
+
+      function getMatchedPaymentUnits(listing, terms, broad) {
+        if (!Array.isArray(terms) || !terms.length) {
+          return 0;
+        }
+
+        return listing.paymentParts.reduce((sum, part) => {
+          const index = buildSearchIndex(broad ? part.searchText : part.exactText);
+          return matchesSearchIndex(index, terms, broad)
+            ? sum + part.itemAmount
+            : sum;
+        }, 0);
+      }
+
+      function getResultOfferMarketValue(listing) {
+        const currencyValues = (state.market && state.market.currencyValues) || {};
+
+        if (listing.resultCurrencyBase && listing.resultCurrencyFactor > 0) {
+          const baseValue = currencyValues[listing.resultCurrencyBase];
+          if (Number.isFinite(baseValue)) {
+            return (
+              listing.outputUnits * listing.resultCurrencyFactor * baseValue
+            );
+          }
+        }
+
+        if (Number.isFinite(listing.marketAverageTotal)) {
+          return listing.marketAverageTotal;
+        }
+
+        if (Number.isFinite(listing.paymentMarketValue)) {
+          return listing.paymentMarketValue;
+        }
+
+        return null;
+      }
+
+      function buildMarketValuePieces(totalValue) {
+        const values = (state.market && state.market.currencyValues) || {
+          emerald: 1,
+        };
+        const pieces = [];
+
+        marketDisplayOrder.forEach((base) => {
+          const baseValue = values[base];
+          const meta = marketCurrencyDisplay[base];
+          if (!Number.isFinite(baseValue) || !meta || baseValue <= 0) {
+            return;
+          }
+
+          pieces.push(
+            '<span class="market-piece" style="color:' +
+              meta.color +
+              '">' +
+              escapeHtml(meta.icon) +
+              " " +
+              escapeHtml(formatMarketNumber(totalValue / baseValue)) +
+              " " +
+              escapeHtml(meta.short) +
+              "</span>",
+          );
+        });
+
+        if (!pieces.length) {
+          pieces.push(
+            '<span class="market-piece" style="color:var(--emerald)">💚 ' +
+              escapeHtml(formatMarketNumber(totalValue)) +
+              " em</span>",
+          );
+        }
+
+        return pieces;
+      }
+
+      function getCurrencyMeta(type) {
+        return currencyUnitMap[String(type || "")] || null;
+      }
+
+      function buildMarketKey(details) {
+        const typeKey = normalizeForSearch(details.type);
+        const enchantKey = details.enchantKey || "";
+
+        if (details.shulkerContents.length) {
+          const contentKey = details.shulkerContents
+            .map((entry) => entry.rawKey + ":" + entry.amount)
+            .join("|");
+          return ["shulker", contentKey, enchantKey].join("::");
+        }
+
+        return [
+          typeKey,
+          normalizeForSearch(details.displayName),
+          enchantKey,
+        ].join("::");
+      }
+
+      function buildEnchantKey(enchantObject) {
+        if (!enchantObject || typeof enchantObject !== "object") {
+          return "";
+        }
+
+        return Object.entries(enchantObject)
+          .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+          .map(([key, value]) => key + ":" + value)
+          .join("|");
+      }
+
+      function addNumberCandidate(store, key, value) {
+        if (!Number.isFinite(value) || value <= 0) {
+          return;
+        }
+
+        if (!store[key]) {
+          store[key] = [];
+        }
+
+        store[key].push(value);
+      }
+
+      function buildSearchIndex(value) {
+        const text = normalizeForSearch(value);
+        const tokens = Array.from(
+          new Set(text.split(" ").map((token) => token.trim()).filter(Boolean)),
+        );
+
+        return { text, tokens };
+      }
+
+      function matchesSearchIndex(index, terms, broad) {
+        if (!terms.length) {
+          return true;
+        }
+
+        if (!index) {
+          return false;
+        }
+
+        if (broad) {
+          return terms.every((term) => index.text.includes(term));
+        }
+
+        return terms.every((term) =>
+          index.tokens.some(
+            (token) => token === term || token.startsWith(term),
+          ),
+        );
+      }
+
+      function scoreSearchIndex(index, terms, broad, baseScore) {
+        if (!index || !terms.length) {
+          return 0;
+        }
+
+        let score = 0;
+        const phrase = terms.join(" ");
+
+        if (broad && index.text.includes(phrase)) {
+          score += baseScore + 10;
+        }
+
+        if (!broad && index.tokens.some((token) => token === phrase)) {
+          score += baseScore + 12;
+        }
+
+        terms.forEach((term) => {
+          if (broad && index.text.includes(term)) {
+            score += baseScore;
+            return;
+          }
+
+          const exactToken = index.tokens.some((token) => token === term);
+          const prefixToken = !exactToken &&
+            index.tokens.some((token) => token.startsWith(term));
+
+          if (exactToken) {
+            score += baseScore + 2;
+          } else if (prefixToken) {
+            score += baseScore - 2;
+          }
+        });
+
+        return score;
+      }
+
+      function normalizeAvatarName(value) {
+        const raw = String(value || "").trim();
+        const hasBedrockPrefix = raw.startsWith(".");
+        const cleaned = raw
+          .replace(/[^A-Za-z0-9_]/g, "")
+          .slice(0, 16);
+
+        if (!cleaned) {
+          return "MHF_Steve";
+        }
+
+        return hasBedrockPrefix ? "." + cleaned : cleaned;
+      }
+
+      function getAvatarUrl(name) {
+        return "https://api.mcheads.org/head/" + encodeURIComponent(name) + "/64";
       }
 
       function parseShulkerContents(lore) {
@@ -2993,14 +4008,18 @@
             }
 
             const amount = match[1];
+            const amountNumber = numberOrZero(amount);
             const rawName = match[2].trim();
             const name = looksLikeItemType(rawName)
               ? formatType(rawName)
               : rawName;
+            const rawKey = normalizeForSearch(rawName);
 
             return {
+              amount: amountNumber,
               amountLabel: amount + "×",
               name,
+              rawKey,
               searchText: normalizeForSearch(
                 amount + " " + rawName + " " + name,
               ),
@@ -3317,6 +4336,21 @@
         requestAnimationFrame(render);
       }
 
+      function median(values) {
+        if (!Array.isArray(values) || !values.length) {
+          return null;
+        }
+
+        const sorted = values.slice().sort((left, right) => left - right);
+        const middle = Math.floor(sorted.length / 2);
+
+        if (sorted.length % 2 === 0) {
+          return (sorted[middle - 1] + sorted[middle]) / 2;
+        }
+
+        return sorted[middle];
+      }
+
       function compareNumber(left, right) {
         if (left === right) {
           return 0;
@@ -3324,8 +4358,64 @@
         return left < right ? -1 : 1;
       }
 
+      function compareNullableNumber(left, right) {
+        const leftValid = Number.isFinite(left);
+        const rightValid = Number.isFinite(right);
+
+        if (leftValid && rightValid) {
+          return compareNumber(left, right);
+        }
+
+        if (leftValid) {
+          return -1;
+        }
+
+        if (rightValid) {
+          return 1;
+        }
+
+        return 0;
+      }
+
       function formatNumber(value) {
         return new Intl.NumberFormat("en-US").format(value);
+      }
+
+      function formatMarketNumber(value) {
+        if (!Number.isFinite(value)) {
+          return "--";
+        }
+
+        const absolute = Math.abs(value);
+        let maximumFractionDigits = 2;
+
+        if (absolute >= 100) {
+          maximumFractionDigits = 0;
+        } else if (absolute >= 10) {
+          maximumFractionDigits = 1;
+        } else if (absolute >= 1) {
+          maximumFractionDigits = 2;
+        } else if (absolute >= 0.1) {
+          maximumFractionDigits = 2;
+        } else {
+          maximumFractionDigits = 3;
+        }
+
+        return new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits,
+        }).format(value);
+      }
+
+      function formatPercent(value) {
+        if (!Number.isFinite(value)) {
+          return "--";
+        }
+
+        return new Intl.NumberFormat("en-US", {
+          style: "percent",
+          maximumFractionDigits: 0,
+        }).format(value);
       }
 
       function numberOrZero(value) {
