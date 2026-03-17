@@ -1,0 +1,10 @@
+{
+  "name": "pvcfinder",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "node scripts/local-dev-server.js",
+    "start": "node scripts/local-dev-server.js",
+    "textures:generate": "node scripts/generate-item-textures.mjs"
+  }
+}

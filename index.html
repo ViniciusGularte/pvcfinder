@@ -1347,13 +1347,38 @@
           border-color 150ms ease,
           box-shadow 150ms ease;
         opacity: 0;
-        animation: fadeInUp 220ms ease forwards;
+        transform: translateY(18px) scale(0.985);
+        transform-origin: center bottom;
+        will-change: transform, opacity;
+        animation: cardIntro 520ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        animation-delay: var(--card-delay, 0ms);
       }
 
       .shop-card:hover {
         border-color: var(--accent);
         transform: translateY(-2px);
         box-shadow: 0 8px 32px rgba(232, 118, 10, 0.1);
+      }
+
+      .shop-card > * {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: cardSectionIn 420ms cubic-bezier(0.24, 0.84, 0.24, 1) forwards;
+        animation-delay: calc(var(--card-delay, 0ms) + 90ms);
+      }
+
+      .shop-card .card-price {
+        animation-delay: calc(var(--card-delay, 0ms) + 140ms);
+      }
+
+      .shop-card .card-enchant-panel,
+      .shop-card .card-enchants,
+      .shop-card .card-shulker {
+        animation-delay: calc(var(--card-delay, 0ms) + 190ms);
+      }
+
+      .shop-card .card-footer {
+        animation-delay: calc(var(--card-delay, 0ms) + 240ms);
       }
 
       .shop-card.sold-out {
@@ -1399,11 +1424,25 @@
         image-rendering: pixelated;
       }
 
-      .item-emoji {
+      .item-texture-shell {
         flex: 0 0 auto;
-        font-size: 22px;
-        line-height: 1;
+        width: 30px;
+        height: 30px;
         margin-top: 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(8, 6, 4, 0.34);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.24);
+      }
+
+      .item-texture {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
       }
 
       .item-title {
@@ -1434,6 +1473,51 @@
 
       .shop-line-owner {
         color: var(--text);
+      }
+
+      .stock-summary {
+        margin-top: 8px;
+        display: inline-grid;
+        grid-auto-flow: column;
+        align-items: center;
+        gap: 8px;
+        min-height: 28px;
+        padding: 5px 10px 6px;
+        border: 1px solid rgba(74, 222, 128, 0.24);
+        background:
+          linear-gradient(
+            180deg,
+            rgba(74, 222, 128, 0.14),
+            rgba(74, 222, 128, 0.06)
+          ),
+          rgba(8, 6, 4, 0.42);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+          0 8px 18px rgba(0, 0, 0, 0.14);
+      }
+
+      .stock-summary-piece {
+        color: var(--text-ghost);
+        font-size: 8px;
+        line-height: 1.2;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .stock-summary-strong {
+        color: var(--text-bright);
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 1;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+      }
+
+      .stock-summary-unit {
+        color: var(--stock-ok);
+        font-size: 8px;
+        line-height: 1.2;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
       }
 
       .card-badges {
@@ -1572,6 +1656,46 @@
         line-height: 1.4;
       }
 
+      .normalized-price {
+        padding: 7px 10px 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .normalized-price-label {
+        color: var(--text-ghost);
+        font-size: 9px;
+        line-height: 1.4;
+      }
+
+      .normalized-price-value {
+        color: var(--text-bright);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+
+      .normalized-price-delta {
+        font-size: 10px;
+        line-height: 1.4;
+      }
+
+      .normalized-price-delta.good {
+        color: var(--stock-ok);
+      }
+
+      .normalized-price-delta.bad {
+        color: var(--stock-low);
+      }
+
+      .normalized-price-delta.neutral {
+        color: var(--text-muted);
+      }
+
       .price-flow {
         padding: 12px 10px;
         display: grid;
@@ -1611,6 +1735,18 @@
 
       .price-side-row-icon {
         flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .price-side-row-texture {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
       }
 
       .price-side-row-copy {
@@ -1652,6 +1788,96 @@
 
       .card-enchants .sep {
         color: var(--border);
+      }
+
+      .card-enchant-panel {
+        padding: 0 16px 12px;
+      }
+
+      .enchant-summary {
+        border: 1px solid rgba(103, 232, 249, 0.28);
+        background: rgba(14, 23, 28, 0.42);
+        padding: 8px 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .enchant-summary-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .enchant-summary-label {
+        color: var(--enchant);
+        font-size: 6px;
+        line-height: 1.8;
+      }
+
+      .enchant-summary-count {
+        color: var(--text-muted);
+        font-size: 10px;
+      }
+
+      .enchant-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .enchant-chip {
+        border: 1px solid rgba(103, 232, 249, 0.24);
+        background: rgba(103, 232, 249, 0.08);
+        color: var(--enchant);
+        font-size: 10px;
+        line-height: 1.4;
+        padding: 4px 6px;
+      }
+
+      .enchant-toggle {
+        border: 1px solid rgba(103, 232, 249, 0.25);
+        background: rgba(103, 232, 249, 0.08);
+        color: var(--enchant);
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 10px;
+      }
+
+      .enchant-panel {
+        display: none;
+        padding-top: 4px;
+      }
+
+      .enchant-panel.open {
+        display: block;
+      }
+
+      .enchant-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .enchant-row {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        color: var(--text-bright);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .enchant-row-level {
+        color: var(--enchant);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .enchant-missing {
+        padding: 0 16px 12px;
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.6;
       }
 
       .card-shulker {
@@ -2021,10 +2247,27 @@
         }
       }
 
-      @keyframes fadeInUp {
+      @keyframes cardIntro {
         from {
           opacity: 0;
-          transform: translateY(14px);
+          transform: translateY(18px) scale(0.985);
+          box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+        }
+        60% {
+          opacity: 1;
+          transform: translateY(-3px) scale(1.003);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+        }
+      }
+
+      @keyframes cardSectionIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
         }
         to {
           opacity: 1;
@@ -2451,6 +2694,7 @@
       </footer>
     </div>
 
+    <script src="data/item-textures.js"></script>
     <script>
       const CONFIG = {
         dataUrl: "/api/shops",
@@ -2460,69 +2704,22 @@
         pageSize: 100,
       };
 
-      const emojiEntries = [
-        ["LINGERING_POTION", "🫧"],
-        ["SPLASH_POTION", "💥"],
-        ["ENCHANTED_BOOK", "📖"],
-        ["DIAMOND_BLOCK", "🔷"],
-        ["EMERALD_BLOCK", "🟩"],
-        ["ANCIENT_DEBRIS", "🌑"],
-        ["NETHERITE_INGOT", "🖤"],
-        ["GOLDEN_APPLE", "🍎"],
-        ["FIREWORK_ROCKET", "🎆"],
-        ["FILLED_MAP", "🗺️"],
-        ["REDSTONE_BLOCK", "🟥"],
-        ["SHULKER_BOX", "📦"],
-        ["SMITHING_TEMPLATE", "🔨"],
-        ["POINTED_DRIPSTONE", "🗿"],
-        ["PUMPKIN_PIE", "🥧"],
-        ["CHORUS_FRUIT", "🍇"],
-        ["SOUL_SAND", "💀"],
-        ["MAGMA_BLOCK", "🌋"],
-        ["LAVA_BUCKET", "🔥"],
-        ["NETHER_WART", "🍄"],
-        ["SEA_LANTERN", "🐟"],
-        ["NAUTILUS_SHELL", "🐚"],
-        ["PRISMARINE", "🌊"],
-        ["DRAGON_HEAD", "🐉"],
-        ["ITEM_FRAME", "🖼️"],
-        ["PICKAXE", "⛏️"],
-        ["CHESTPLATE", "🛡️"],
-        ["LEGGINGS", "🩱"],
-        ["HELMET", "🪖"],
-        ["BOOTS", "👟"],
-        ["TRIDENT", "🔱"],
-        ["ELYTRA", "🪂"],
-        ["SHOVEL", "🪣"],
-        ["SWORD", "⚔️"],
-        ["AXE", "🪓"],
-        ["HOE", "🌾"],
-        ["BOW", "🏹"],
-        ["POTION", "🧪"],
-        ["EMERALD", "💚"],
-        ["DIAMOND", "💎"],
-        ["IRON_INGOT", "⚙️"],
-        ["GOLD_INGOT", "🟡"],
-        ["GOLD_BLOCK", "🟨"],
-        ["MUSIC_DISC", "💿"],
-        ["COMPASS", "🧭"],
-        ["CLOCK", "⏰"],
-        ["REDSTONE", "🔴"],
-        ["PUMPKIN", "🎃"],
-        ["MELON", "🍈"],
-        ["CARROT", "🥕"],
-        ["POTATO", "🥔"],
-        ["WHEAT", "🌾"],
-        ["SUGAR_CANE", "🌿"],
-        ["BAMBOO", "🎋"],
-        ["EGG", "🥚"],
-        ["COOKED_", "🍖"],
-        ["MOSS_", "🍃"],
-        ["GRANITE", "🪨"],
-        ["DIORITE", "🪨"],
-        ["ANDESITE", "🪨"],
-        ["DEFAULT", "📦"],
-      ];
+      const MC_ASSET_VERSION = "1.21.8";
+      const MC_ASSET_TEXTURE_BASE =
+        "https://assets.mcasset.cloud/" +
+        MC_ASSET_VERSION +
+        "/assets/minecraft/textures";
+      const ITEM_TEXTURE_PLACEHOLDER =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" fill="#100c08"/><rect x="1" y="1" width="14" height="14" fill="#261b12"/><rect x="2" y="2" width="12" height="12" fill="#60462d"/><rect x="6" y="3" width="4" height="2" fill="#d7ad5f"/><rect x="7" y="6" width="2" height="5" fill="#f2ead8"/><rect x="7" y="12" width="2" height="1" fill="#f2ead8"/></svg>',
+        );
+
+      const textureAliasMap = {
+        CLOCK: ["item/clock_00"],
+        COMPASS: ["item/compass_00"],
+        RECOVERY_COMPASS: ["item/recovery_compass_00"],
+      };
 
       const priceTypeMap = {
         EMERALD: { icon: "💚", short: "emerald", color: "var(--emerald)" },
@@ -2782,22 +2979,39 @@
 
         refs.resultsGrid.addEventListener("click", (event) => {
           const toggle = event.target.closest("[data-shulker-toggle]");
-          if (!toggle) {
+          if (toggle) {
+            const cardId = toggle.getAttribute("data-shulker-toggle");
+            const panel = refs.resultsGrid.querySelector(
+              '[data-shulker-panel="' + cssEscape(cardId) + '"]',
+            );
+            if (!panel) {
+              return;
+            }
+
+            const isOpen = panel.classList.toggle("open");
+            toggle.textContent = isOpen
+              ? "▼  CLOSE FULL LIST"
+              : "▶  OPEN FULL LIST";
             return;
           }
 
-          const cardId = toggle.getAttribute("data-shulker-toggle");
+          const enchantToggle = event.target.closest("[data-enchant-toggle]");
+          if (!enchantToggle) {
+            return;
+          }
+
+          const cardId = enchantToggle.getAttribute("data-enchant-toggle");
           const panel = refs.resultsGrid.querySelector(
-            '[data-shulker-panel="' + cssEscape(cardId) + '"]',
+            '[data-enchant-panel="' + cssEscape(cardId) + '"]',
           );
           if (!panel) {
             return;
           }
 
           const isOpen = panel.classList.toggle("open");
-          toggle.textContent = isOpen
-            ? "▼  CLOSE FULL LIST"
-            : "▶  OPEN FULL LIST";
+          enchantToggle.textContent = isOpen
+            ? "▼  HIDE ENCHANTS"
+            : "▶  VIEW ENCHANTS";
         });
 
         document.addEventListener("click", (event) => {
@@ -2926,7 +3140,7 @@
           console.error("PVC Shop Browser failed to load:", error);
           state.loadingError = true;
           refs.errorCopy.textContent =
-            "The local /api/shops function could not load the PVC market data.";
+            "The local /api/shops function could not load the PVC market data. Try again in a moment.";
           refs.resultsGrid.innerHTML = "";
           refs.resultsTail.classList.remove("visible");
           refs.resultsTail.textContent = "";
@@ -2941,7 +3155,16 @@
       async function fetchJsonUrl(url) {
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) {
-          throw new Error("HTTP " + response.status + " for " + url);
+          let details = "";
+          try {
+            const payload = await response.json();
+            details = payload.details || payload.error || "";
+          } catch (error) {
+            details = "";
+          }
+
+          const suffix = details ? ": " + details : "";
+          throw new Error("HTTP " + response.status + " for " + url + suffix);
         }
 
         return await response.json();
@@ -3427,21 +3650,12 @@
           ? buildShulkerSection(listing, terms)
           : "";
 
-        const enchantsSection = listing.enchants.length
-          ? '<div class="card-enchants">✦ ' +
-            listing.enchants
-              .map((entry, enchantIndex) => {
-                const sep = enchantIndex ? '<span class="sep"> · </span>' : "";
-                return sep + highlightText(entry, terms);
-              })
-              .join("") +
-            "</div>"
-          : "";
+        const enchantsSection = buildEnchantSection(listing, terms);
 
         return [
           '<article class="' +
             cardClasses.join(" ") +
-            '" style="animation-delay:' +
+            '" style="--card-delay:' +
             Math.min(index * 40, 500) +
             'ms">',
           '  <div class="card-header">',
@@ -3453,8 +3667,12 @@
             avatarFallbacks +
             '" data-avatar-index="0" alt="" loading="lazy" decoding="async" onerror="window.handleAvatarError(this)" />',
           "      </div>",
-          '      <div class="item-emoji" aria-hidden="true">' +
-            escapeHtml(listing.emoji) +
+          '      <div class="item-texture-shell" aria-hidden="true">' +
+            buildItemTextureMarkup(
+              listing.resultType,
+              listing.displayName,
+              "item-texture",
+            ) +
             "</div>",
           "      <div>",
           '        <h2 class="item-title">' +
@@ -3468,6 +3686,13 @@
           '          <span class="shop-line-owner">' +
             highlightText(listing.shopOwner, terms) +
             "</span>",
+          "        </div>",
+          '        <div class="stock-summary" title="Raw item total for this exact listing. Shulker contents are included in this count.">',
+          '          <span class="stock-summary-piece">seller has</span>',
+          '          <span class="stock-summary-strong">' +
+            escapeHtml(formatNumber(listing.sellerItemTotalStock)) +
+            "</span>",
+          '          <span class="stock-summary-unit">units</span>',
           "        </div>",
           "      </div>",
           "    </div>",
@@ -3503,12 +3728,19 @@
 
       function buildPriceLine(listing, terms, tradeMode, comparison) {
         const copy = getTradeModeCopy(tradeMode, comparison);
+        const normalizedPriceMarkup = buildNormalizedPriceMarkup(listing, comparison);
         const paymentRows = listing.paymentParts
-          .map((part) => buildPriceSideRow(part.icon, part.color, part.text, part.note, terms))
+          .map((part) =>
+            buildPriceSideRow(
+              part.textureType,
+              part.text,
+              part.note,
+              terms,
+            ),
+          )
           .join("");
         const resultRow = buildPriceSideRow(
-          listing.emoji,
-          "var(--text-bright)",
+          listing.resultType,
           listing.resultAmount + "× " + listing.displayName,
           "",
           terms,
@@ -3527,6 +3759,7 @@
             escapeHtml(copy.helper) +
             "</span>",
           "  </div>",
+          normalizedPriceMarkup,
           '  <div class="price-flow">',
           '    <div class="price-side">',
           '      <div class="price-side-label pixel-font">' +
@@ -3544,6 +3777,114 @@
           "  </div>",
           "</div>",
         ].join("");
+      }
+
+      function buildNormalizedPriceMarkup(listing, comparison) {
+        if (!comparison || !Number.isFinite(comparison.unitValue)) {
+          return "";
+        }
+
+        const primaryValueText = formatMarketNumber(comparison.unitValue) + " em";
+        const detailTitle = buildMarketValueTitle(comparison.unitValue);
+        const unitLabel = comparison.label || "item";
+        let deltaClass = "neutral";
+        let deltaText = "market baseline unavailable";
+
+        if (Number.isFinite(listing.marketAverageUnit) && listing.marketAverageUnit > 0) {
+          const ratio = (comparison.unitValue - listing.marketAverageUnit) / listing.marketAverageUnit;
+          if (Math.abs(ratio) < 0.03) {
+            deltaText = "near market avg";
+          } else if (ratio < 0) {
+            deltaClass = "good";
+            deltaText = formatPercent(Math.abs(ratio)) + " below avg";
+          } else {
+            deltaClass = "bad";
+            deltaText = formatPercent(ratio) + " above avg";
+          }
+        }
+
+        return [
+          '<div class="normalized-price" title="' +
+            escapeAttribute(detailTitle) +
+            '">',
+          '  <span class="normalized-price-label">price / ' +
+            escapeHtml(unitLabel) +
+            "</span>",
+          '  <span class="normalized-price-value">' +
+            escapeHtml(primaryValueText) +
+            "</span>",
+          '  <span class="normalized-price-delta ' +
+            deltaClass +
+            '">' +
+            escapeHtml(deltaText) +
+            "</span>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildEnchantSection(listing, terms) {
+        if (listing.enchants.length) {
+          const previewEntries = listing.enchants.slice(0, 2);
+          const rows = listing.enchants
+            .map((entry) => {
+              const levelMatch = entry.match(/^(.*?)(\s+[IVXLCM]+|\s+\d+)$/);
+              const name = levelMatch ? levelMatch[1] : entry;
+              const level = levelMatch ? levelMatch[2].trim() : "";
+
+              return (
+                '<div class="enchant-row">' +
+                '<span class="enchant-row-name">' +
+                highlightText(name, terms) +
+                "</span>" +
+                (level
+                  ? '<span class="enchant-row-level">' +
+                    highlightText(level, terms) +
+                    "</span>"
+                  : "") +
+                "</div>"
+              );
+            })
+            .join("");
+
+          return [
+            '<div class="card-enchant-panel">',
+            '  <div class="enchant-summary">',
+            '    <div class="enchant-summary-top">',
+            '      <span class="enchant-summary-label pixel-font">✦ ENCHANTS</span>',
+            '      <span class="enchant-summary-count">' +
+              escapeHtml(String(listing.enchants.length)) +
+              " total</span>",
+            "    </div>",
+            '    <div class="enchant-preview">' +
+              previewEntries
+                .map((entry) => {
+                  return (
+                    '<span class="enchant-chip">' +
+                    highlightText(entry, terms) +
+                    "</span>"
+                  );
+                })
+                .join("") +
+              (listing.enchants.length > previewEntries.length
+                ? '<span class="enchant-chip">+' +
+                  escapeHtml(String(listing.enchants.length - previewEntries.length)) +
+                  " more</span>"
+                : "") +
+              "</div>",
+            '    <button class="enchant-toggle" type="button" data-enchant-toggle="' +
+              escapeAttribute(listing.id) +
+              '">▶  VIEW ENCHANTS</button>',
+            '    <div class="enchant-panel" data-enchant-panel="' +
+              escapeAttribute(listing.id) +
+              '">',
+            '      <div class="enchant-list">' + rows + "</div>",
+            "    </div>",
+            "  </div>",
+            "</div>",
+          ].join("");
+        }
+
+        return "";
       }
 
       function getCardTradeMode(listing) {
@@ -3595,13 +3936,15 @@
         };
       }
 
-      function buildPriceSideRow(icon, color, text, note, terms, isResult) {
+      function buildPriceSideRow(textureType, text, note, terms, isResult) {
         return [
           '<div class="price-side-row' + (isResult ? " result" : "") + '">',
-          '  <span class="price-side-row-icon" style="color:' +
-            color +
-            '">' +
-            escapeHtml(icon) +
+          '  <span class="price-side-row-icon">' +
+            buildItemTextureMarkup(
+              textureType,
+              text,
+              "price-side-row-texture",
+            ) +
             "</span>",
           '  <span class="price-side-row-copy">',
           isResult
@@ -3794,6 +4137,25 @@
         return score;
       }
 
+      function getGrossListingStockUnits(
+        offerStock,
+        resultAmount,
+        isShulker,
+        shulkerTotalItems,
+      ) {
+        const tradesAvailable = Math.max(numberOrZero(offerStock), 0);
+        if (!tradesAvailable) {
+          return 0;
+        }
+
+        const unitsPerTrade = Math.max(numberOrZero(resultAmount) || 1, 1);
+        if (isShulker && shulkerTotalItems > 0) {
+          return tradesAvailable * unitsPerTrade * shulkerTotalItems;
+        }
+
+        return tradesAvailable * unitsPerTrade;
+      }
+
       function flattenListings(shops) {
         const listings = [];
 
@@ -3808,11 +4170,14 @@
             const resultItem = recipe.resultItem;
             const shopName = cleanText(shop.shopName) || "Unnamed Shop";
             const shopOwner = cleanText(shop.shopOwner) || "Unknown Seller";
-            const displayName =
-              cleanText(resultItem.name) || formatType(resultItem.type);
             const rawLore = cleanLore(resultItem.lore);
             const shulkerContents = parseShulkerContents(resultItem.lore);
             const enchants = formatEnchants(resultItem.enchant);
+            const enchantSearchText = buildEnchantSearchText(
+              resultItem.enchant,
+              enchants,
+            );
+            const displayName = buildListingDisplayName(resultItem, enchants);
             const enchantKey = buildEnchantKey(resultItem.enchant);
             const payments = [recipe.item1, recipe.item2]
               .filter(Boolean)
@@ -3847,7 +4212,11 @@
               .map((part) => part.exactText)
               .join(" ");
             const enchantKeys = Object.keys(resultItem.enchant || {}).join(" ");
-            const sellItemText = [searchType, cleanText(resultItem.name)].join(" ");
+            const sellItemText = [
+              searchType,
+              cleanText(resultItem.name),
+              enchantSearchText,
+            ].join(" ");
             const shulkerItemText = shulkerContents
               .map((entry) => entry.name + " " + entry.rawKey)
               .join(" ");
@@ -3855,11 +4224,20 @@
               searchType,
               cleanText(resultItem.name),
               enchantKeys,
+              enchantSearchText,
               rawLore.join(" "),
               shulkerContents.map((entry) => entry.searchText).join(" "),
             ].join(" ");
             const resultCurrency = getCurrencyMeta(resultItem.type);
             const outputUnits = Math.max(numberOrZero(resultItem.amount) || 1, 1);
+            const isShulker = String(resultItem.type || "").includes("SHULKER");
+            const offerStock = numberOrZero(recipe.stock);
+            const grossStockUnits = getGrossListingStockUnits(
+              offerStock,
+              outputUnits,
+              isShulker,
+              shulkerTotalItems,
+            );
             const marketKey = buildMarketKey({
               type: resultItem.type || "",
               displayName,
@@ -3868,6 +4246,7 @@
             });
             const avatarName = normalizeAvatarName(shopOwner);
             const avatarSources = getAvatarSources(shopOwner, avatarName);
+            const stockGroupKey = [shopOwner, marketKey].join("::");
 
             listings.push({
               id: "card-" + shopIndex + "-" + recipeIndex,
@@ -3880,14 +4259,18 @@
               resultAmount: numberOrZero(resultItem.amount) || 1,
               displayName,
               displayNameNorm: normalizeForSearch(displayName),
-              emoji: getEmoji(resultItem.type || ""),
               avatarName,
               avatarUrl: avatarSources[0],
               avatarFallbacks: avatarSources,
-              stock: numberOrZero(recipe.stock),
+              offerStock,
+              stock: grossStockUnits,
+              stockGroupKey,
+              sellerItemTotalStock: 0,
               enchants,
+              enchantSearchText,
+              hasEnchantData: enchants.length > 0,
               enchantKey,
-              isShulker: String(resultItem.type || "").includes("SHULKER"),
+              isShulker,
               shulkerContents,
               shulkerTotalItems,
               paymentParts: payments,
@@ -3922,6 +4305,7 @@
                   shopName,
                   shopOwner,
                   enchantKeys,
+                  enchantSearchText,
                 ].join(" "),
               ),
               searchLore: normalizeForSearch(searchLore),
@@ -3934,6 +4318,7 @@
                   shopName,
                   shopOwner,
                   enchantKeys,
+                  enchantSearchText,
                   searchLore,
                 ].join(" "),
               ),
@@ -3951,6 +4336,17 @@
               },
             });
           });
+        });
+
+        const sellerItemStockTotals = {};
+        listings.forEach((listing) => {
+          sellerItemStockTotals[listing.stockGroupKey] =
+            (sellerItemStockTotals[listing.stockGroupKey] || 0) + listing.stock;
+        });
+
+        listings.forEach((listing) => {
+          listing.sellerItemTotalStock =
+            sellerItemStockTotals[listing.stockGroupKey] || listing.stock;
         });
 
         const marketContext = buildMarketContext(listings);
@@ -3990,14 +4386,13 @@
         const customName = cleanText(item.name);
         const displayName =
           customName || (labelConfig ? labelConfig.short : formatType(type));
-        const icon = labelConfig ? labelConfig.icon : getEmoji(type);
         const color = labelConfig ? labelConfig.color : "var(--text)";
         const note =
           type === "EMERALD_BLOCK" ? "(= " + amount * 9 + " em.)" : "";
 
         return {
           itemAmount: amount,
-          icon,
+          textureType: type,
           color,
           text: amount + " " + displayName,
           note,
@@ -4286,13 +4681,18 @@
             return;
           }
 
+          const convertedValue = totalValue / baseValue;
+          if (!Number.isFinite(convertedValue) || convertedValue < 0.01) {
+            return;
+          }
+
           pieces.push(
             '<span class="market-piece" style="color:' +
               meta.color +
               '">' +
               escapeHtml(meta.icon) +
               " " +
-              escapeHtml(formatMarketNumber(totalValue / baseValue)) +
+              escapeHtml(formatMarketNumber(convertedValue)) +
               " " +
               escapeHtml(meta.short) +
               "</span>",
@@ -4308,6 +4708,34 @@
         }
 
         return pieces;
+      }
+
+      function buildMarketValueTitle(totalValue) {
+        const values = (state.market && state.market.currencyValues) || {
+          emerald: 1,
+        };
+        const parts = [];
+
+        marketDisplayOrder.forEach((base) => {
+          const baseValue = values[base];
+          const meta = marketCurrencyDisplay[base];
+          if (!Number.isFinite(baseValue) || !meta || baseValue <= 0) {
+            return;
+          }
+
+          const convertedValue = totalValue / baseValue;
+          if (!Number.isFinite(convertedValue) || convertedValue < 0.01) {
+            return;
+          }
+
+          parts.push(formatMarketNumber(convertedValue) + " " + meta.short);
+        });
+
+        if (!parts.length) {
+          parts.push(formatMarketNumber(totalValue) + " em");
+        }
+
+        return parts.join(" | ");
       }
 
       function getCurrencyMeta(type) {
@@ -4341,6 +4769,59 @@
           .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
           .map(([key, value]) => key + ":" + value)
           .join("|");
+      }
+
+      function buildEnchantSearchText(enchantObject, enchants) {
+        const keyText = Object.entries(enchantObject || {})
+          .map(([key, value]) => {
+            const base = key.replace(/^minecraft:/, "").replace(/_/g, " ");
+            return [base, value, romanize(value)].join(" ");
+          })
+          .join(" ");
+
+        return [keyText, Array.isArray(enchants) ? enchants.join(" ") : ""].join(" ");
+      }
+
+      function buildTextureCandidates(type) {
+        const safeType = String(type || "").trim().toUpperCase();
+        if (!safeType) {
+          return [ITEM_TEXTURE_PLACEHOLDER];
+        }
+
+        const textureKey = safeType.toLowerCase();
+        const aliases = textureAliasMap[safeType] || [];
+        const mappedTexture =
+          window.PVC_ITEM_TEXTURES && window.PVC_ITEM_TEXTURES[safeType]
+            ? [window.PVC_ITEM_TEXTURES[safeType]]
+            : [];
+        const candidates = [
+          ...mappedTexture,
+          ...aliases.map(
+            (relativePath) => MC_ASSET_TEXTURE_BASE + "/" + relativePath + ".png",
+          ),
+          MC_ASSET_TEXTURE_BASE + "/item/" + textureKey + ".png",
+          MC_ASSET_TEXTURE_BASE + "/block/" + textureKey + ".png",
+          ITEM_TEXTURE_PLACEHOLDER,
+        ];
+
+        return Array.from(new Set(candidates.filter(Boolean)));
+      }
+
+      function buildItemTextureMarkup(type, label, className) {
+        const candidates = buildTextureCandidates(type);
+        const src = candidates[0] || "";
+
+        return (
+          '<img class="' +
+          escapeAttribute(className) +
+          '" src="' +
+          escapeAttribute(src) +
+          '" data-texture-fallbacks="' +
+          escapeAttribute(candidates.join("|")) +
+          '" data-texture-index="0" alt="' +
+          escapeAttribute(String(label || type || "")) +
+          '" loading="lazy" decoding="async" onerror="window.handleTextureError(this)" />'
+        );
       }
 
       function addNumberCandidate(store, key, value) {
@@ -4429,41 +4910,45 @@
         return cleaned || "MHF_Steve";
       }
 
-      function getAvatarSources(ownerName, avatarName) {
-        const normalized = avatarName || "MHF_Steve";
+      function buildPreferredAvatarIdentifier(ownerName, avatarName) {
         const rawOwner = String(ownerName || "").trim();
-        const looksBedrock = rawOwner.startsWith(".");
-        const bedrockName = rawOwner.replace(/^\.+/, "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16);
-        const sources = [];
-
-        if (looksBedrock && bedrockName) {
-          sources.push(
-            "https://api.mcheads.org/head/" +
-              encodeURIComponent("." + bedrockName) +
-              "/64",
-          );
+        if (rawOwner.startsWith(".")) {
+          const bedrockName = rawOwner.replace(/^\.+/, "").trim();
+          if (bedrockName) {
+            return "." + bedrockName;
+          }
         }
 
-        sources.push(
-          "https://minotar.net/helm/" +
-            encodeURIComponent(normalized) +
-            "/64.png",
-        );
-        sources.push(
-          "https://mc-heads.net/avatar/" +
-            encodeURIComponent(normalized) +
-            "/64/nohelm.png",
-        );
-        sources.push(
-          "https://api.mcheads.org/head/" +
-            encodeURIComponent(normalized) +
-            "/64",
-        );
-        sources.push(
-          "https://minotar.net/helm/MHF_Steve/64.png",
-        );
+        return avatarName || "MHF_Steve";
+      }
 
-        return Array.from(new Set(sources));
+      function getAvatarSources(ownerName, avatarName) {
+        const normalized = avatarName || "MHF_Steve";
+        const preferred = buildPreferredAvatarIdentifier(ownerName, avatarName);
+
+        return Array.from(
+          new Set(
+            [
+              "https://api.mcheads.org/head/" +
+                encodeURIComponent(preferred) +
+                "/64",
+              preferred !== normalized
+                ? "https://api.mcheads.org/head/" +
+                  encodeURIComponent(normalized) +
+                  "/64"
+                : "",
+              "https://mc-heads.net/avatar/" +
+                encodeURIComponent(normalized) +
+                "/64/nohelm.png",
+              "https://minotar.net/helm/" +
+                encodeURIComponent(normalized) +
+                "/64.png",
+              "https://api.mcheads.org/head/MHF_Steve/64",
+              "https://mc-heads.net/avatar/MHF_Steve/64/nohelm.png",
+              "https://minotar.net/helm/MHF_Steve/64.png",
+            ].filter(Boolean),
+          ),
+        );
       }
 
       function getAvatarUrl(name) {
@@ -4489,6 +4974,30 @@
         }
 
         image.setAttribute("data-avatar-index", String(nextIndex));
+        image.src = fallbacks[nextIndex];
+      }
+
+      function handleTextureError(image) {
+        if (!image) {
+          return;
+        }
+
+        const fallbacks = String(
+          image.getAttribute("data-texture-fallbacks") || "",
+        )
+          .split("|")
+          .filter(Boolean);
+        const currentIndex = numberOrZero(
+          image.getAttribute("data-texture-index"),
+        );
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex >= fallbacks.length) {
+          image.onerror = null;
+          return;
+        }
+
+        image.setAttribute("data-texture-index", String(nextIndex));
         image.src = fallbacks[nextIndex];
       }
 
@@ -4535,6 +5044,24 @@
         });
       }
 
+      function buildListingDisplayName(item, enchants) {
+        const customName = cleanText(item && item.name);
+        if (customName) {
+          return customName;
+        }
+
+        const baseType = formatType(item && item.type);
+        if (baseType) {
+          return baseType;
+        }
+
+        if (Array.isArray(enchants) && enchants.length) {
+          return enchants.join(", ");
+        }
+
+        return "Unknown Item";
+      }
+
       function getStockBadge(stock) {
         if (stock === 0) {
           return { label: "SOLD OUT", className: "stock-out" };
@@ -4546,16 +5073,6 @@
           return { label: "STACKED", className: "stock-stacked" };
         }
         return { label: "IN STOCK", className: "stock-ok" };
-      }
-
-      function getEmoji(type) {
-        const value = String(type || "");
-        for (const [key, emoji] of emojiEntries) {
-          if (key !== "DEFAULT" && value.includes(key)) {
-            return emoji;
-          }
-        }
-        return "📦";
       }
 
       function parseCoords(location) {

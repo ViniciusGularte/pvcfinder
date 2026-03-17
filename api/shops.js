@@ -1,3 +1,19 @@
+const fs = require("fs/promises");
+const path = require("path");
+
+const SNAPSHOT_PATH = path.join(__dirname, "..", "data", "shops-snapshot.json");
+const LIVE_DATA_URL = "https://web.peacefulvanilla.club/shops/data.json";
+
+async function readSnapshot() {
+  const contents = await fs.readFile(SNAPSHOT_PATH, "utf8");
+  return JSON.parse(contents);
+}
+
+async function writeSnapshot(data) {
+  await fs.mkdir(path.dirname(SNAPSHOT_PATH), { recursive: true });
+  await fs.writeFile(SNAPSHOT_PATH, JSON.stringify(data), "utf8");
+}
+
 module.exports = async function handler(req, res) {
   let timeout;
 
@@ -5,7 +21,7 @@ module.exports = async function handler(req, res) {
     const controller = new AbortController();
     timeout = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch("https://web.peacefulvanilla.club/shops/data.json", {
+    const response = await fetch(LIVE_DATA_URL, {
       signal: controller.signal,
       headers: {
         "accept": "application/json,text/plain,*/*",
@@ -23,16 +39,30 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await response.json();
+    await writeSnapshot(data);
 
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     res.status(200).json(data);
   } catch (error) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(500).json({
-      error: "Failed to fetch PVC shop data",
-      details: error instanceof Error ? error.message : String(error)
-    });
+    try {
+      const snapshot = await readSnapshot();
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-PVC-Data-Source", "snapshot");
+      res.status(200).json(snapshot);
+      return;
+    } catch (snapshotError) {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.status(500).json({
+        error: "Failed to fetch PVC shop data",
+        details: error instanceof Error ? error.message : String(error),
+        snapshotDetails:
+          snapshotError instanceof Error
+            ? snapshotError.message
+            : String(snapshotError)
+      });
+    }
   } finally {
     if (timeout) {
       clearTimeout(timeout);
