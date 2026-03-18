@@ -2939,7 +2939,9 @@
         loadingDuration: 1800,
         loadingPause: 300,
         searchDebounce: 150,
+        fetchTimeout: 15000,
         pageSize: 100,
+        mobilePageSize: 36,
       };
 
       const MC_ASSET_VERSION = "1.21.8";
@@ -2958,6 +2960,9 @@
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 24" shape-rendering="crispEdges"><rect width="16" height="24" fill="transparent"/><rect x="5" y="1" width="6" height="6" fill="#8493b6"/><rect x="3" y="7" width="10" height="8" fill="#586584"/><rect x="1" y="8" width="2" height="7" fill="#586584"/><rect x="13" y="8" width="2" height="7" fill="#586584"/><rect x="4" y="15" width="3" height="8" fill="#586584"/><rect x="9" y="15" width="3" height="8" fill="#586584"/><rect x="4" y="7" width="8" height="1" fill="#f59e0b"/></svg>',
         );
       const sellerVisualCache = Object.create(null);
+      const IS_IOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
       const textureAliasMap = {
         CLOCK: ["item/clock_00"],
@@ -3030,6 +3035,8 @@
 
       const refs = {
         loadingBarFill: document.getElementById("loadingBarFill"),
+        loadingScreen: document.getElementById("loadingScreen"),
+        appShell: document.getElementById("appShell"),
         searchWrap: document.getElementById("searchWrap"),
         searchInput: document.getElementById("searchInput"),
         searchClear: document.getElementById("searchClear"),
@@ -3098,16 +3105,54 @@
       init();
 
       function init() {
-        initSkyMode();
-        initParticles();
-        bindEvents();
-        syncSortChips();
-        syncSearchScopeChips();
-        syncIntentChips();
-        syncMobileFilterUI();
-        initInfiniteScroll();
-        tickLoadingBar();
-        loadData();
+        try {
+          initSkyMode();
+          initParticles();
+          bindEvents();
+          syncSortChips();
+          syncSearchScopeChips();
+          syncIntentChips();
+          syncMobileFilterUI();
+          initInfiniteScroll();
+          tickLoadingBar();
+          loadData();
+        } catch (error) {
+          handleBootError(error);
+        }
+      }
+
+      function getPageSize() {
+        return IS_IOS ? CONFIG.mobilePageSize : CONFIG.pageSize;
+      }
+
+      function setLoadingVisible(visible) {
+        document.body.classList.toggle("app-ready", !visible);
+
+        if (refs.loadingScreen) {
+          refs.loadingScreen.style.display = visible ? "flex" : "none";
+          refs.loadingScreen.setAttribute("aria-hidden", visible ? "false" : "true");
+        }
+
+        if (refs.appShell) {
+          refs.appShell.style.opacity = visible ? "0" : "1";
+          refs.appShell.style.transform = visible ? "translateY(10px)" : "translateY(0)";
+        }
+      }
+
+      function handleBootError(error) {
+        console.error("PVC Shop Browser failed during boot:", error);
+        state.loadingError = true;
+        refs.errorCopy.textContent =
+          "This browser hit a startup problem before the market could load. Try refreshing or updating Safari/iOS.";
+        refs.resultsGrid.innerHTML = "";
+        refs.resultsTail.classList.remove("visible");
+        refs.resultsTail.textContent = "";
+        refs.emptyState.classList.add("hidden");
+        refs.soldOutState.classList.add("hidden");
+        refs.resultsMeta.classList.remove("visible");
+        refs.errorState.classList.remove("hidden");
+        setLoadingVisible(false);
+        resolveLoading().catch(() => {});
       }
 
       function bindEvents() {
@@ -3220,7 +3265,10 @@
           state.loadingStartedAt = performance.now();
           state.loadingResolved = false;
           refs.loadingBarFill.style.width = "0%";
-          document.body.classList.remove("app-ready");
+          if (refs.loadingScreen) {
+            refs.loadingScreen.style.display = "flex";
+          }
+          setLoadingVisible(true);
           tickLoadingBar();
           loadData();
         });
@@ -3436,7 +3484,6 @@
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
-          hydrateSellerVisuals(state.listings);
           updateStats();
           renderAll();
           startRelativeTime();
@@ -3458,21 +3505,46 @@
       }
 
       async function fetchJsonUrl(url) {
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) {
-          let details = "";
-          try {
-            const payload = await response.json();
-            details = payload.details || payload.error || "";
-          } catch (error) {
-            details = "";
+        const controller =
+          typeof AbortController !== "undefined" ? new AbortController() : null;
+        let timeoutId = null;
+
+        try {
+          if (controller) {
+            timeoutId = window.setTimeout(() => {
+              controller.abort();
+            }, CONFIG.fetchTimeout);
           }
 
-          const suffix = details ? ": " + details : "";
-          throw new Error("HTTP " + response.status + " for " + url + suffix);
-        }
+          const response = await Promise.race([
+            fetch(url, {
+              cache: "no-store",
+              signal: controller ? controller.signal : undefined,
+            }),
+            delay(CONFIG.fetchTimeout).then(() => {
+              throw new Error("Request timed out");
+            }),
+          ]);
 
-        return await response.json();
+          if (!response.ok) {
+            let details = "";
+            try {
+              const payload = await response.json();
+              details = payload.details || payload.error || "";
+            } catch (error) {
+              details = "";
+            }
+
+            const suffix = details ? ": " + details : "";
+            throw new Error("HTTP " + response.status + " for " + url + suffix);
+          }
+
+          return await response.json();
+        } finally {
+          if (timeoutId) {
+            window.clearTimeout(timeoutId);
+          }
+        }
       }
 
       function getSellerRawName(ownerName) {
@@ -3590,8 +3662,28 @@
         });
       }
 
+      function ensureSellerVisual(listing) {
+        if (!listing) {
+          return;
+        }
+
+        const cacheKey =
+          listing.sellerLookupKey || getSellerLookupKey(listing.shopOwner);
+        listing.sellerLookupKey = cacheKey;
+
+        if (!sellerVisualCache[cacheKey]) {
+          sellerVisualCache[cacheKey] = buildSellerVisual(
+            listing.shopOwner,
+            listing.avatarName,
+          );
+        }
+
+        applySellerVisualToListing(listing, sellerVisualCache[cacheKey]);
+      }
+
       function hydrateVisibleSellerVisuals(listings) {
         listings.forEach((listing) => {
+          ensureSellerVisual(listing);
           resolveBedrockSellerVisual(listing);
         });
       }
@@ -3713,6 +3805,7 @@
 
       async function resolveLoading() {
         if (state.loadingResolved) {
+          setLoadingVisible(false);
           return;
         }
 
@@ -3726,7 +3819,7 @@
         refs.loadingBarFill.style.width = "100%";
         await delay(CONFIG.loadingPause);
         state.loadingResolved = true;
-        document.body.classList.add("app-ready");
+        setLoadingVisible(false);
       }
 
       function updateSearchClearState() {
@@ -3968,9 +4061,9 @@
         const nextKey = buildResultsKey(listings);
         if (state.lastResultsKey !== nextKey) {
           state.lastResultsKey = nextKey;
-          state.visibleCount = Math.min(CONFIG.pageSize, listings.length);
+          state.visibleCount = Math.min(getPageSize(), listings.length);
         } else if (!state.visibleCount && listings.length) {
-          state.visibleCount = Math.min(CONFIG.pageSize, listings.length);
+          state.visibleCount = Math.min(getPageSize(), listings.length);
         }
       }
 
@@ -4108,8 +4201,9 @@
         const terms = tokenize(state.query);
         const visibleListings = listings.slice(
           0,
-          state.visibleCount || CONFIG.pageSize,
+          state.visibleCount || getPageSize(),
         );
+        visibleListings.forEach(ensureSellerVisual);
         refs.resultsGrid.innerHTML = visibleListings
           .map((listing, index) => buildCardMarkup(listing, index, terms))
           .join("");
@@ -4149,7 +4243,7 @@
         }
 
         state.visibleCount = Math.min(
-          state.visibleCount + CONFIG.pageSize,
+          state.visibleCount + getPageSize(),
           state.filtered.length,
         );
         renderGrid(state.filtered);
@@ -4849,10 +4943,16 @@
               cleanText(resultItem.name),
             ]);
             const buyExactLabels = buildExactLabelList(
-              payments.flatMap((part) => part.exactLabels),
+              payments.reduce(
+                (allLabels, part) => allLabels.concat(part.exactLabels || []),
+                [],
+              ),
             );
             const shulkerExactLabels = buildExactLabelList(
-              shulkerContents.flatMap((entry) => entry.matchLabels),
+              shulkerContents.reduce(
+                (allLabels, entry) => allLabels.concat(entry.matchLabels || []),
+                [],
+              ),
             );
             const priceSearch = payments
               .map((part) => part.searchText)
@@ -5196,23 +5296,22 @@
           );
         });
 
-        return Object.fromEntries(
-          Object.entries(groups).map(([key, values]) => {
-            const sorted = values.slice().sort((left, right) => left - right);
-            const sum = sorted.reduce((total, value) => total + value, 0);
+        return Object.entries(groups).reduce((stats, entry) => {
+          const key = entry[0];
+          const values = entry[1];
+          const sorted = values.slice().sort((left, right) => left - right);
+          const sum = sorted.reduce((total, value) => total + value, 0);
 
-            return [
-              key,
-              {
-                count: sorted.length,
-                median: median(sorted),
-                average: sum / sorted.length,
-                low: sorted[0],
-                high: sorted[sorted.length - 1],
-              },
-            ];
-          }),
-        );
+          stats[key] = {
+            count: sorted.length,
+            median: median(sorted),
+            average: sum / sorted.length,
+            low: sorted[0],
+            high: sorted[sorted.length - 1],
+          };
+
+          return stats;
+        }, {});
       }
 
       function computePaymentMarketValue(paymentParts, currencyValues) {
@@ -6174,8 +6273,20 @@
       }
 
       function initParticles() {
+        if (IS_IOS) {
+          return;
+        }
+
         const canvas = refs.particles;
+        if (!canvas || typeof canvas.getContext !== "function") {
+          return;
+        }
+
         const context = canvas.getContext("2d");
+        if (!context) {
+          return;
+        }
+
         const particles = [];
         const particleCount = 80;
         const palette = [
