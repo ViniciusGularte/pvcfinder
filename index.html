@@ -3475,26 +3475,30 @@
         return await response.json();
       }
 
-      function getSellerLookupKey(ownerName) {
-        return (
-          normalizeForSearch(
-            String(ownerName || "")
-              .replace(/^\.+/, "")
-              .trim(),
-          ) || "mhf_steve"
-        );
-      }
-
-      function getSellerLookupUsername(ownerName) {
-        return normalizeAvatarName(
-          String(ownerName || "")
-            .replace(/^\.+/, "")
-            .trim(),
-        );
+      function getSellerRawName(ownerName) {
+        return String(ownerName || "").trim();
       }
 
       function isLikelyBedrockSeller(ownerName) {
-        return /^\./.test(String(ownerName || "").trim());
+        return /^\./.test(getSellerRawName(ownerName));
+      }
+
+      function getSellerGamertag(ownerName) {
+        return getSellerRawName(ownerName).replace(/^\.+/, "").trim();
+      }
+
+      function getSellerLookupKey(ownerName) {
+        const sellerType = isLikelyBedrockSeller(ownerName) ? "bedrock" : "java";
+        const baseKey = normalizeForSearch(getSellerGamertag(ownerName)) || "mhf_steve";
+        return sellerType + "::" + baseKey;
+      }
+
+      function getSellerLookupUsername(ownerName) {
+        return normalizeAvatarName(getSellerGamertag(ownerName));
+      }
+
+      function getSellerProfileName(ownerName) {
+        return getSellerRawName(ownerName);
       }
 
       function getSellerAvatarSources(ownerName, avatarName) {
@@ -3605,9 +3609,7 @@
         visual.bedrockLookupStarted = true;
 
         try {
-          const gamertag = String(listing.shopOwner || "")
-            .replace(/^\.+/, "")
-            .trim();
+          const gamertag = getSellerGamertag(listing.shopOwner);
           if (!gamertag) {
             throw new Error("Missing Bedrock gamertag");
           }
@@ -4898,7 +4900,7 @@
               enchantKey,
               shulkerContents,
             });
-            const avatarName = normalizeAvatarName(shopOwner);
+            const avatarName = getSellerLookupUsername(shopOwner);
             const sellerLookupKey = getSellerLookupKey(shopOwner);
             const stockGroupKey = [shopOwner, marketKey].join("::");
 
@@ -5974,13 +5976,14 @@
       }
 
       function buildProfileUrl(ownerName) {
-        const username = getSellerLookupUsername(ownerName);
-        if (!username || username === "MHF_Steve") {
+        const profileName = getSellerProfileName(ownerName);
+        const lookupUsername = getSellerLookupUsername(ownerName);
+        if (!profileName || !lookupUsername || lookupUsername === "MHF_Steve") {
           return "https://pvc.coolwebsite.uk/";
         }
 
         return (
-          "https://pvc.coolwebsite.uk/?profile=" + encodeURIComponent(username)
+          "https://pvc.coolwebsite.uk/?profile=" + encodeURIComponent(profileName)
         );
       }
 
