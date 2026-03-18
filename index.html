@@ -2120,6 +2120,46 @@
         gap: 12px;
       }
 
+      .footer-coords {
+        width: 100%;
+        border: 1px solid rgba(94, 112, 151, 0.28);
+        background: linear-gradient(
+          180deg,
+          rgba(16, 19, 29, 0.98),
+          rgba(10, 13, 21, 0.98)
+        );
+        color: var(--text-muted);
+        padding: 9px 12px;
+        font-size: 10px;
+        line-height: 1.5;
+        letter-spacing: 0.05em;
+        text-align: center;
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+          0 8px 18px rgba(0, 0, 0, 0.16);
+        transition:
+          border-color 120ms ease,
+          color 120ms ease,
+          transform 120ms ease,
+          background 120ms ease;
+      }
+
+      .footer-coords:hover {
+        border-color: rgba(157, 193, 255, 0.42);
+        color: var(--text-bright);
+        transform: translateY(-1px);
+      }
+
+      .footer-coords.copied {
+        border-color: rgba(74, 222, 128, 0.46);
+        color: #d8f7e1;
+        background: linear-gradient(
+          180deg,
+          rgba(20, 45, 34, 0.96),
+          rgba(12, 28, 22, 0.96)
+        );
+      }
+
       .footer-button {
         width: 100%;
         border: 1px solid rgba(94, 112, 151, 0.3);
@@ -4363,6 +4403,18 @@
           : "";
 
         const enchantsSection = buildEnchantSection(listing, terms);
+        const coordsLabel =
+          "X: " +
+          stripDecimal(listing.coords.x) +
+          " · Y: " +
+          stripDecimal(listing.coords.y) +
+          " · Z: " +
+          stripDecimal(listing.coords.z);
+        const coordsCopyValue = [
+          stripDecimal(listing.coords.x),
+          stripDecimal(listing.coords.y),
+          stripDecimal(listing.coords.z),
+        ].join(", ");
 
         return [
           '<article class="' +
@@ -4423,6 +4475,11 @@
             escapeAttribute(listing.mapUrl) +
             '" target="_blank" rel="noreferrer">VIEW SHOP →</a>',
           "    </div>",
+          '    <button class="footer-coords" type="button" data-copy-coords="' +
+            escapeAttribute(coordsCopyValue) +
+            '" aria-label="Copy shop coordinates">' +
+            escapeHtml(coordsLabel) +
+            "</button>",
           buildStockSummary(listing),
           "  </div>",
           "</article>",
