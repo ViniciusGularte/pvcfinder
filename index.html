@@ -1974,6 +1974,10 @@
         padding: 0 16px 12px;
       }
 
+      .price-side-shulker {
+        padding: 0;
+      }
+
       .shulker-summary {
         border: 1px solid rgba(192, 132, 252, 0.28);
         background: rgba(36, 24, 16, 0.48);
@@ -4521,8 +4525,13 @@
       function buildPriceLine(listing, terms, tradeMode, comparison) {
         const copy = getTradeModeCopy(tradeMode, comparison);
         const paymentRows = listing.paymentParts
-          .map((part) =>
-            buildPriceSideRow(part.textureType, part.text, part.note, terms),
+          .map((part, index) =>
+            buildPaymentPartMarkup(
+              listing,
+              part,
+              index,
+              terms,
+            ),
           )
           .join("");
         const resultRow = buildPriceSideRow(
@@ -4686,13 +4695,74 @@
         ].join("");
       }
 
+      function buildPaymentPartMarkup(listing, part, index, terms) {
+        const row = buildPriceSideRow(
+          part.textureType,
+          part.text,
+          part.note,
+          terms,
+        );
+
+        if (!part.shulkerContents.length) {
+          return row;
+        }
+
+        return (
+          row +
+          buildShulkerSectionMarkup({
+            id: listing.id + "-pay-" + index,
+            shulkerContents: part.shulkerContents,
+            uniformShulkerFill: part.uniformShulkerFill,
+            terms,
+            wrapperClass: "card-shulker price-side-shulker",
+            label:
+              part.itemAmount > 1
+                ? "▣ INSIDE EACH BOX"
+                : "▣ INSIDE BOX",
+            countText:
+              String(part.shulkerContents.length) +
+              " item lines" +
+              (part.itemAmount > 1 ? " each" : ""),
+          })
+        );
+      }
+
       function buildShulkerSection(listing, terms) {
-        if (listing.uniformShulkerFill) {
+        return buildShulkerSectionMarkup({
+          id: listing.id,
+          shulkerContents: listing.shulkerContents,
+          uniformShulkerFill: listing.uniformShulkerFill,
+          terms,
+          wrapperClass: "card-shulker",
+          label: "▣ INSIDE BOX",
+          countText: String(listing.shulkerContents.length) + " item lines",
+          hideUniformFill: true,
+        });
+      }
+
+      function buildShulkerSectionMarkup(config) {
+        const id = config.id;
+        const shulkerContents = Array.isArray(config.shulkerContents)
+          ? config.shulkerContents
+          : [];
+        const uniformShulkerFill = config.uniformShulkerFill || null;
+        const terms = config.terms || [];
+        const wrapperClass = config.wrapperClass || "card-shulker";
+        const label = config.label || "▣ INSIDE BOX";
+        const countText =
+          config.countText || String(shulkerContents.length) + " item lines";
+        const hideUniformFill = Boolean(config.hideUniformFill);
+
+        if (!shulkerContents.length) {
+          return "";
+        }
+
+        if (hideUniformFill && uniformShulkerFill) {
           return "";
         }
 
         const buttonLabel = "▶  OPEN FULL LIST";
-        const previewEntries = listing.shulkerContents.slice(0, 1);
+        const previewEntries = shulkerContents.slice(0, 1);
         const previewMarkup = previewEntries
           .map((entry) => {
             return (
@@ -4705,11 +4775,8 @@
             );
           })
           .join("");
-        const moreCount = Math.max(
-          0,
-          listing.shulkerContents.length - previewEntries.length,
-        );
-        const rows = listing.shulkerContents
+        const moreCount = Math.max(0, shulkerContents.length - previewEntries.length);
+        const rows = shulkerContents
           .map((entry) => {
             return (
               '<div class="shulker-row">' +
@@ -4725,13 +4792,15 @@
           .join("");
 
         return [
-          '<div class="card-shulker">',
+          '<div class="' + escapeAttribute(wrapperClass) + '">',
           '  <div class="shulker-summary">',
           '    <div class="shulker-summary-top">',
-          '      <span class="shulker-summary-label pixel-font">▣ INSIDE BOX</span>',
+          '      <span class="shulker-summary-label pixel-font">' +
+            escapeHtml(label) +
+            "</span>",
           '      <span class="shulker-summary-count">' +
-            escapeHtml(String(listing.shulkerContents.length)) +
-            " item lines</span>",
+            escapeHtml(countText) +
+            "</span>",
           "    </div>",
           '    <div class="shulker-preview">' +
             previewMarkup +
@@ -4742,14 +4811,14 @@
               : "") +
             "</div>",
           '  <button class="shulker-toggle" type="button" data-count="' +
-            listing.shulkerContents.length +
+            shulkerContents.length +
             '" data-shulker-toggle="' +
-            escapeAttribute(listing.id) +
+            escapeAttribute(id) +
             '">' +
             buttonLabel +
             "</button>",
           '  <div class="shulker-panel" data-shulker-panel="' +
-            escapeAttribute(listing.id) +
+            escapeAttribute(id) +
             '">',
           '    <div class="shulker-list">' + rows + "</div>",
           "  </div>",
@@ -5304,6 +5373,7 @@
               ? amount * 9
               : amount,
           shulkerContents,
+          uniformShulkerFill: getUniformShulkerFill(shulkerContents),
           shulkerExactLabels,
           exactLabels,
           shulkerExactPhrases: shulkerExactLabels.map((label) =>
