@@ -4782,11 +4782,10 @@
             matchesSearchIndex(listing.sellVariantIndex, terms, true) ||
             (state.includeShulker &&
               matchesSearchIndex(listing.sellShulkerIndex, terms, true));
-          const buyVariantMatch = matchesSearchIndex(
-            listing.buyVariantIndex,
-            terms,
-            true,
-          );
+          const buyVariantMatch =
+            matchesSearchIndex(listing.buyVariantIndex, terms, true) ||
+            (state.includeShulker &&
+              matchesSearchIndex(listing.buyShulkerIndex, terms, true));
 
           if (intent === "sell") {
             listing.activeMatchIntent = sellVariantMatch ? "sell" : null;
@@ -4817,8 +4816,12 @@
             (state.includeShulker &&
               matchesSearchIndex(listing.sellShulkerIndex, terms, false));
         const buyItemMatch = useExactPhrase
-          ? matchesExactPhrase(listing.buyExactPhrases, exactPhrase)
-          : matchesSearchIndex(listing.buyItemIndex, terms, false);
+          ? matchesExactPhrase(listing.buyExactPhrases, exactPhrase) ||
+            (state.includeShulker &&
+              matchesExactPhrase(listing.buyShulkerExactPhrases, exactPhrase))
+          : matchesSearchIndex(listing.buyItemIndex, terms, false) ||
+            (state.includeShulker &&
+              matchesSearchIndex(listing.buyShulkerIndex, terms, false));
 
         if (intent === "sell") {
           listing.activeMatchIntent = sellItemMatch ? "sell" : null;
@@ -4867,6 +4870,14 @@
 
           if (state.tradeIntent !== "sell") {
             score += scoreSearchIndex(listing.buyVariantIndex, terms, true, 16);
+            if (state.includeShulker) {
+              score += scoreSearchIndex(
+                listing.buyShulkerIndex,
+                terms,
+                true,
+                12,
+              );
+            }
           }
         } else {
           if (exactPhrase) {
@@ -4888,6 +4899,14 @@
               score += matchesExactPhrase(listing.buyExactPhrases, exactPhrase)
                 ? 36
                 : 0;
+              if (state.includeShulker) {
+                score += matchesExactPhrase(
+                  listing.buyShulkerExactPhrases,
+                  exactPhrase,
+                )
+                  ? 26
+                  : 0;
+              }
             }
           } else {
             if (state.tradeIntent !== "buy") {
@@ -4909,6 +4928,14 @@
 
             if (state.tradeIntent !== "sell") {
               score += scoreSearchIndex(listing.buyItemIndex, terms, false, 20);
+              if (state.includeShulker) {
+                score += scoreSearchIndex(
+                  listing.buyShulkerIndex,
+                  terms,
+                  false,
+                  14,
+                );
+              }
             }
           }
         }
@@ -5005,6 +5032,13 @@
                 [],
               ),
             );
+            const buyShulkerExactLabels = buildExactLabelList(
+              payments.reduce(
+                (allLabels, part) =>
+                  allLabels.concat(part.shulkerExactLabels || []),
+                [],
+              ),
+            );
             const shulkerExactLabels = buildExactLabelList(
               shulkerContents.reduce(
                 (allLabels, entry) => allLabels.concat(entry.matchLabels || []),
@@ -5016,6 +5050,9 @@
               .join(" ");
             const paymentExactSearch = payments
               .map((part) => part.exactText)
+              .join(" ");
+            const paymentShulkerSearch = payments
+              .map((part) => part.shulkerSearchText)
               .join(" ");
             const enchantKeys = Object.keys(resultItem.enchant || {}).join(" ");
             const sellItemText = [
@@ -5111,6 +5148,10 @@
               buyExactPhrases: buyExactLabels.map((label) =>
                 normalizeForSearch(label),
               ),
+              buyShulkerExactLabels,
+              buyShulkerExactPhrases: buyShulkerExactLabels.map((label) =>
+                normalizeForSearch(label),
+              ),
               shulkerExactLabels,
               shulkerExactPhrases: shulkerExactLabels.map((label) =>
                 normalizeForSearch(label),
@@ -5118,6 +5159,7 @@
               sellItemIndex: buildSearchIndex(sellItemText),
               sellShulkerIndex: buildSearchIndex(shulkerItemText),
               buyItemIndex: buildSearchIndex(paymentExactSearch),
+              buyShulkerIndex: buildSearchIndex(paymentShulkerSearch),
               shopIndex: buildSearchIndex(shopName),
               sellerIndex: buildSearchIndex(shopOwner),
               sellVariantIndex: buildSearchIndex(
@@ -5224,6 +5266,7 @@
         const currencyMeta = getCurrencyMeta(type);
         const customName = cleanText(item.name);
         const formattedType = formatType(type);
+        const shulkerContents = parseShulkerContents(item.lore);
         const displayName =
           customName || (labelConfig ? labelConfig.short : formattedType);
         const color = labelConfig ? labelConfig.color : "var(--text)";
@@ -5234,6 +5277,15 @@
           formattedType,
           displayName,
         ]);
+        const shulkerExactLabels = buildExactLabelList(
+          shulkerContents.reduce(
+            (allLabels, entry) => allLabels.concat(entry.matchLabels || []),
+            [],
+          ),
+        );
+        const shulkerSearchText = shulkerContents
+          .map((entry) => entry.searchText)
+          .join(" ");
 
         return {
           itemAmount: amount,
@@ -5251,9 +5303,15 @@
             type === "GOLD_BLOCK"
               ? amount * 9
               : amount,
+          shulkerContents,
+          shulkerExactLabels,
           exactLabels,
+          shulkerExactPhrases: shulkerExactLabels.map((label) =>
+            normalizeForSearch(label),
+          ),
           exactPhrases: exactLabels.map((label) => normalizeForSearch(label)),
           exactText: [type, customName, formattedType].join(" "),
+          shulkerSearchText,
           searchText: [type, customName, displayName, note].join(" "),
         };
       }
@@ -5515,7 +5573,26 @@
                 terms,
                 broad,
               );
-          return matches ? sum + part.comparableUnits : sum;
+          const shulkerUnits = part.shulkerContents.reduce(
+            (shulkerSum, entry) => {
+              const shulkerMatches = exactPhrase
+                ? entry.matchPhrases.includes(exactPhrase)
+                : matchesSearchIndex(
+                    buildSearchIndex(
+                      broad ? entry.searchText : entry.matchLabels.join(" "),
+                    ),
+                    terms,
+                    broad,
+                  );
+
+              return shulkerMatches
+                ? shulkerSum + entry.amount * part.itemAmount
+                : shulkerSum;
+            },
+            0,
+          );
+
+          return sum + shulkerUnits + (matches ? part.comparableUnits : 0);
         }, 0);
       }
 
@@ -5761,8 +5838,11 @@
           listing.buyExactLabels.forEach((label) => {
             addOption(label, "BUYING", 2);
           });
+          listing.buyShulkerExactLabels.forEach((label) => {
+            addOption(label, "BUY SHULKER", 3);
+          });
           listing.shulkerExactLabels.forEach((label) => {
-            addOption(label, "SHULKER", 3);
+            addOption(label, "SHULKER", 4);
           });
         });
 
