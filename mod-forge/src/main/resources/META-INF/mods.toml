@@ -1,0 +1,38 @@
+# See https://docs.minecraftforge.net/en/1.21.x/gettingstarted/modfiles/#modstoml
+# There are lots of things you can do with the mods.toml, and not all fields are included with this MDK
+# References: https://github.com/MinecraftForge/MDKExamples
+
+modLoader="javafml"
+loaderVersion="[60,)"
+license="All Rights Reserved"
+#issueTrackerURL="https://github.com/MyOrganization/MyMod/" #optional
+clientSideOnly=true
+
+[[mods]]
+modId="pvcfinder"
+version="${file.jarVersion}"
+displayName="PVC Finder"
+#updateJSONURL="https://example.com/updates.json" #optional
+#displayURL="https://example.com/" #optional
+#logoFile="examplemod.png" #optional
+#credits="" #optional
+authors="Vinicius + Codex" #optional
+#displayTest="MATCH_VERSION" #optional, default=MATCH_VERSION when not clientSideOnly, else IGNORE_ALL_VERSION
+
+description='''Browse PVC shop offers in-game, open the finder with the N key,
+and track a selected shop with an in-world marker that only appears
+in the matching dimension and clears itself when you get close.'''
+
+[[dependencies.pvcfinder]] #recommended
+    modId="forge"
+    mandatory=true
+    versionRange="[60,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.pvcfinder]] #recommended
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.21.10,1.22,)"
+    ordering="NONE"
+    side="BOTH"

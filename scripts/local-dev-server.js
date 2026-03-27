@@ -54,6 +54,10 @@ function safePathname(requestUrl) {
     return "index.html";
   }
 
+  if (normalizedPath === "/mods" || normalizedPath === "/mods/") {
+    return "mods.html";
+  }
+
   return normalizedPath.replace(/^[/\\]+/, "");
 }
 

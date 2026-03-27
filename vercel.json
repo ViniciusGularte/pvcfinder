@@ -1,4 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["gru1"]
+  "regions": ["gru1"],
+  "rewrites": [
+    {
+      "source": "/mods",
+      "destination": "/mods.html"
+    },
+    {
+      "source": "/mods/",
+      "destination": "/mods.html"
+    }
+  ]
 }

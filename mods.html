@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PVC Finder Mods</title>
+    <meta
+      name="description"
+      content="Download the Fabric or Forge build of PVC Finder for Minecraft 1.21.10."
+    />
+    <link rel="icon" type="image/png" href="assets/pvc-logo.png" />
+    <link rel="apple-touch-icon" href="assets/pvc-logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #080604;
+        --surface: #0f0b08;
+        --surface2: #1a1209;
+        --surface3: #241810;
+        --border: #5a3418;
+        --border-mid: #7b4b25;
+        --accent: #e8760a;
+        --accent-dim: #b85a00;
+        --text-bright: #f5f0e8;
+        --text: #d8ccbc;
+        --text-muted: #bcae9c;
+        --emerald: #4ade80;
+        --diamond: #67e8f9;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: "IBM Plex Mono", monospace;
+        background:
+          radial-gradient(circle at top, rgba(232, 118, 10, 0.14), transparent 24%),
+          linear-gradient(180deg, rgba(14, 10, 8, 0.98), rgba(8, 6, 4, 1));
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 36px),
+          linear-gradient(rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 36px);
+        opacity: 0.18;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+
+      .pixel-font {
+        font-family: "Press Start 2P", monospace;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border: 1px solid var(--border);
+        background: rgba(15, 11, 8, 0.88);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .brand img {
+        width: 42px;
+        height: 42px;
+      }
+
+      .brand-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .brand-title {
+        color: var(--text-bright);
+        font-size: 12px;
+      }
+
+      .brand-subtitle {
+        color: var(--text-muted);
+        font-size: 11px;
+      }
+
+      .back-link,
+      .download-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid var(--border-mid);
+        background: rgba(26, 18, 9, 0.96);
+        color: var(--text-bright);
+        transition: border-color 120ms ease, transform 120ms ease;
+      }
+
+      .back-link:hover,
+      .download-button:hover {
+        border-color: var(--accent);
+        transform: translateY(-1px);
+      }
+
+      .hero {
+        margin-top: 18px;
+        padding: 36px 24px 28px;
+        border: 1px solid var(--border);
+        background:
+          linear-gradient(180deg, rgba(26, 18, 9, 0.96), rgba(12, 9, 7, 0.98)),
+          repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 18px);
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-size: 9px;
+        letter-spacing: 0.18em;
+      }
+
+      h1 {
+        margin: 18px 0 0;
+        color: var(--text-bright);
+        font-size: clamp(24px, 4vw, 44px);
+        line-height: 1.15;
+      }
+
+      .hero p {
+        margin: 18px 0 0;
+        max-width: 720px;
+        color: var(--text);
+        line-height: 1.8;
+      }
+
+      .cards {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        background: rgba(15, 11, 8, 0.92);
+        padding: 22px 20px;
+      }
+
+      .card-tag {
+        display: inline-block;
+        padding: 5px 8px;
+        border: 1px solid currentColor;
+        font-size: 10px;
+      }
+
+      .card-tag.fabric {
+        color: var(--diamond);
+      }
+
+      .card-tag.forge {
+        color: var(--emerald);
+      }
+
+      .card h2 {
+        margin: 16px 0 10px;
+        color: var(--text-bright);
+        font-size: 18px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--text);
+        line-height: 1.8;
+      }
+
+      .meta {
+        margin-top: 16px;
+        color: var(--text-muted);
+        font-size: 11px;
+        line-height: 1.8;
+      }
+
+      .actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .download-button.primary {
+        border-color: var(--accent);
+      }
+
+      .download-button.secondary {
+        color: var(--text);
+      }
+
+      .steps {
+        margin-top: 20px;
+        padding: 22px 20px;
+        border: 1px solid var(--border);
+        background: rgba(15, 11, 8, 0.9);
+      }
+
+      .steps h2 {
+        margin: 0 0 12px;
+        color: var(--text-bright);
+        font-size: 18px;
+      }
+
+      .steps ol {
+        margin: 0;
+        padding-left: 20px;
+        line-height: 1.9;
+      }
+
+      code {
+        color: var(--text-bright);
+      }
+
+      @media (max-width: 720px) {
+        .topbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .back-link,
+        .download-button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/pvc-logo.png" alt="PVC" />
+          <div class="brand-copy">
+            <div class="brand-title pixel-font">PVC FINDER MODS</div>
+            <div class="brand-subtitle">Minecraft 1.21.10 downloads</div>
+          </div>
+        </div>
+        <a class="back-link pixel-font" href="/">BACK TO MARKET</a>
+      </header>
+
+      <section class="hero">
+        <div class="eyebrow pixel-font">INSTALL CLIENT</div>
+        <h1 class="pixel-font">Pick your loader and drop the jar into your mods folder.</h1>
+        <p>
+          PVC Finder adds the in-game browser, tracking HUD, trade content preview,
+          and the cursed button. Choose Fabric or Forge below and download the build
+          that matches your client.
+        </p>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <span class="card-tag fabric pixel-font">FABRIC</span>
+          <h2>Fabric build</h2>
+          <p>
+            Recommended if you already run Fabric API. Includes the upgraded trade
+            preview UI, tracking tools, and the haunted nuke sequence.
+          </p>
+          <div class="meta">
+            Loader: Fabric
+            <br />
+            Minecraft: 1.21.10
+            <br />
+            File: <code>pvcfinder-fabric-1.21.10-0.1.0.jar</code>
+          </div>
+          <div class="actions">
+            <a
+              class="download-button primary pixel-font"
+              href="/mod-fabric/build/libs/pvcfinder-fabric-1.21.10-0.1.0.jar"
+              download
+              >DOWNLOAD FABRIC</a
+            >
+            <a
+              class="download-button secondary"
+              href="/mod-fabric/build/libs/pvcfinder-fabric-1.21.10-0.1.0-sources.jar"
+              download
+              >Sources</a
+            >
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="card-tag forge pixel-font">FORGE</span>
+          <h2>Forge build</h2>
+          <p>
+            Use this if your setup is already on Forge. Same core market browser,
+            tracking, trade preview, and nuke aftermath behavior for 1.21.10.
+          </p>
+          <div class="meta">
+            Loader: Forge
+            <br />
+            Minecraft: 1.21.10
+            <br />
+            File: <code>pvcfinder-forge-1.21.10-0.1.0.jar</code>
+          </div>
+          <div class="actions">
+            <a
+              class="download-button primary pixel-font"
+              href="/mod-forge/build/libs/pvcfinder-forge-1.21.10-0.1.0.jar"
+              download
+              >DOWNLOAD FORGE</a
+            >
+          </div>
+        </article>
+      </section>
+
+      <section class="steps">
+        <h2>Quick install</h2>
+        <ol>
+          <li>Download the jar that matches your loader.</li>
+          <li>Open your Minecraft instance folder.</li>
+          <li>Drop the jar into <code>mods/</code>.</li>
+          <li>Launch Minecraft 1.21.10 and press <code>N</code> in-game.</li>
+        </ol>
+      </section>
+    </div>
+  </body>
+</html>

@@ -19,6 +19,7 @@ Servidor local:
 Rotas importantes:
 
 - `/`
+- `/mods`
 - `/api/shops`
 
 Observacao:

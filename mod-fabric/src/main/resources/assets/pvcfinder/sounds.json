@@ -1,0 +1,10 @@
+{
+  "nuclear_alarm": {
+    "sounds": [
+      {
+        "name": "pvcfinder:nuclear_alarm",
+        "stream": true
+      }
+    ]
+  }
+}

@@ -876,6 +876,15 @@
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
       }
 
+      .hero-actions {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
       .search-wrap {
         width: min(100%, 640px);
         position: relative;
@@ -2745,6 +2754,12 @@
           <p class="hero-subtitle">
             Search items, compare prices, find sellers across PVC
           </p>
+
+          <div class="hero-actions">
+            <a class="mini-action active pixel-font" href="/mods"
+              >INSTALL MODS</a
+            >
+          </div>
 
           <div class="search-wrap" id="searchWrap">
             <label class="sr-only" for="searchInput"
@@ -4695,6 +4710,24 @@
         ].join("");
       }
 
+      function buildTradeItemDisplayName(item, shulkerContents) {
+        const customName = cleanText(item && item.name);
+        if (
+          String((item && item.type) || "").includes("SHULKER") &&
+          Array.isArray(shulkerContents) &&
+          shulkerContents.length === 1 &&
+          (!customName || isGenericShulkerName(customName))
+        ) {
+          return "Shulker of " + shulkerContents[0].name;
+        }
+
+        if (customName) {
+          return customName;
+        }
+
+        return formatType(item && item.type);
+      }
+
       function buildPaymentPartMarkup(listing, part, index, terms) {
         const row = buildPriceSideRow(
           part.textureType,
@@ -5333,11 +5366,10 @@
         const amount = numberOrZero(item.amount) || 1;
         const labelConfig = priceTypeMap[type];
         const currencyMeta = getCurrencyMeta(type);
-        const customName = cleanText(item.name);
         const formattedType = formatType(type);
         const shulkerContents = parseShulkerContents(item.lore);
-        const displayName =
-          customName || (labelConfig ? labelConfig.short : formattedType);
+        const customName = cleanText(item.name);
+        const displayName = buildTradeItemDisplayName(item, shulkerContents);
         const color = labelConfig ? labelConfig.color : "var(--text)";
         const note =
           type === "EMERALD_BLOCK" ? "(= " + amount * 9 + " em.)" : "";
@@ -6247,6 +6279,10 @@
       function buildListingDisplayName(item, enchants, shulkerContents) {
         const customName = cleanText(item && item.name);
         if (String((item && item.type) || "").includes("SHULKER")) {
+          if (Array.isArray(shulkerContents) && shulkerContents.length === 1) {
+            return "Shulker of " + shulkerContents[0].name;
+          }
+
           const uniformFill = getUniformShulkerFill(shulkerContents);
           if (uniformFill) {
             return "Shulker of " + uniformFill.name;

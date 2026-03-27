@@ -1,0 +1,23 @@
+{
+  "key.categories.pvcfinder": "PVC Finder",
+  "key.pvcfinder.open": "Open PVC Finder",
+  "message.pvcfinder.arrived": "You reached the tracked shop. Marker cleared.",
+  "message.pvcfinder.nuke_client": "PVC nuke sequence started.",
+  "message.pvcfinder.nuke_released": "Something has been released.",
+  "message.pvcfinder.tracking_cleared": "Tracking cleared.",
+  "message.pvcfinder.tracking_started": "Tracking %1$s at %2$s (%3$s)",
+  "screen.pvcfinder.close": "Close",
+  "screen.pvcfinder.contents": "Contents",
+  "screen.pvcfinder.empty": "No offers match your search.",
+  "screen.pvcfinder.error": "Could not load snapshot: %s",
+  "screen.pvcfinder.search": "Search offers, shops, or owners",
+  "screen.pvcfinder.send_nuke": "Don't press this button",
+  "screen.pvcfinder.stop_tracking": "Stop tracking",
+  "screen.pvcfinder.subtitle": "%1$s offers loaded | snapshot %2$s",
+  "screen.pvcfinder.title": "PVC Finder",
+  "screen.pvcfinder.track": "Track",
+  "screen.pvcfinder.tracking": "Tracking",
+  "screen.pvcfinder.tracking_active": "Tracking: %1$s at %2$s, %3$s, %4$s",
+  "screen.pvcfinder.tracking_none": "No shop is being tracked.",
+  "screen.pvcfinder.tracking_other_dimension": "Tracking %1$s in another dimension."
+}
