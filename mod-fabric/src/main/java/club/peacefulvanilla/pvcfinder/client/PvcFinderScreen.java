@@ -42,7 +42,7 @@ public final class PvcFinderScreen extends Screen {
     private static final int COLOR_TEXT_MUTED = 0xFFBCAE9C;
     private static final int COLOR_TEXT_GHOST = 0xFF8F7C6B;
     private static final int COLOR_DANGER = 0xFFE35C5C;
-    private static final int TRACK_BUTTON_WIDTH = 56;
+    private static final int TRACK_BUTTON_WIDTH = 72;
     private static final int CONTENTS_BUTTON_WIDTH = 62;
     private static final int ACTION_BUTTON_HEIGHT = 20;
     private static final int ACTION_BUTTON_GAP = 8;
@@ -340,27 +340,13 @@ public final class PvcFinderScreen extends Screen {
 
     private void renderNukeRow(GuiGraphics guiGraphics, int mouseX, int mouseY, int left) {
         int y = nukeRowY();
-        drawFilterLabel(guiGraphics, "ALERT", left + 20, y + 5);
-        String nukeLabel = Component.translatable("screen.pvcfinder.send_nuke").getString();
+        drawFilterLabel(guiGraphics, "FRIEND", left + 20, y + 5);
         renderChip(
                 guiGraphics,
                 mouseX,
                 mouseY,
                 left + 68,
                 y,
-                nukeLabel,
-                false,
-                COLOR_DANGER,
-                false
-        );
-        int friendY = y + 24;
-        drawFilterLabel(guiGraphics, "FRIEND", left + 20, friendY + 5);
-        renderChip(
-                guiGraphics,
-                mouseX,
-                mouseY,
-                left + 68,
-                friendY,
                 jesusChipLabel(),
                 PvcFinderClient.isImaginaryFriendActive(),
                 COLOR_DIAMOND,
@@ -478,16 +464,8 @@ public final class PvcFinderScreen extends Screen {
             return true;
         }
 
-        int nukeX = left + 68;
-        int nukeY = filtersStartY() + 72;
-        String nukeLabel = Component.translatable("screen.pvcfinder.send_nuke").getString();
-        int nukeWidth = chipWidth(nukeLabel, false);
-        if (isInside(mouseX, mouseY, nukeX, nukeY, nukeWidth, CHIP_HEIGHT)) {
-            return PvcFinderClient.triggerTrackedNuke(minecraft);
-        }
-
         int jesusX = left + 68;
-        int jesusY = nukeY + 24;
+        int jesusY = nukeRowY();
         int jesusWidth = chipWidth(jesusChipLabel(), false);
         if (isInside(mouseX, mouseY, jesusX, jesusY, jesusWidth, CHIP_HEIGHT)) {
             PvcFinderClient.toggleImaginaryFriend(minecraft);
@@ -785,7 +763,7 @@ public final class PvcFinderScreen extends Screen {
     }
 
     private int totalFiltersHeight() {
-        return (nukeRowY() - filtersStartY()) + 48;
+        return (nukeRowY() - filtersStartY()) + 24;
     }
 
     private int sortRowStartX() {
@@ -1166,7 +1144,7 @@ public final class PvcFinderScreen extends Screen {
 
         private Component trackLabel() {
             return PvcFinderClient.isTracked(offer)
-                    ? Component.translatable("screen.pvcfinder.stop_tracking")
+                    ? Component.literal("Stop")
                     : Component.translatable("screen.pvcfinder.track");
         }
 
@@ -1184,7 +1162,13 @@ public final class PvcFinderScreen extends Screen {
             if (hovered) {
                 guiGraphics.fill(x + 2, y + 2, x + width - 2, y + ACTION_BUTTON_HEIGHT - 2, 0x24000000);
             }
-            guiGraphics.drawCenteredString(font, button.getMessage(), x + (width / 2), y + 6, active ? COLOR_TEXT_BRIGHT : COLOR_TEXT);
+            guiGraphics.drawCenteredString(
+                    font,
+                    font.plainSubstrByWidth(button.getMessage().getString(), width - 12),
+                    x + (width / 2),
+                    y + 6,
+                    active ? COLOR_TEXT_BRIGHT : COLOR_TEXT
+            );
         }
     }
 }
