@@ -18,19 +18,20 @@
     />
     <style>
       :root {
-        --bg: #080604;
-        --surface: #0f0b08;
-        --surface2: #1a1209;
-        --surface3: #241810;
-        --border: #5a3418;
-        --border-mid: #7b4b25;
-        --accent: #e8760a;
-        --accent-dim: #b85a00;
-        --text-bright: #f5f0e8;
-        --text: #d8ccbc;
-        --text-muted: #bcae9c;
+        --bg: #070503;
+        --surface: rgba(16, 11, 7, 0.92);
+        --surface-strong: rgba(26, 18, 10, 0.97);
+        --surface-soft: rgba(36, 24, 14, 0.78);
+        --border: #6b3d18;
+        --border-bright: #b56314;
+        --accent: #f08c18;
+        --accent-dim: #c36708;
+        --text-bright: #fbf4ea;
+        --text: #ddcfbb;
+        --text-muted: #bda88d;
         --emerald: #4ade80;
         --diamond: #67e8f9;
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
       }
 
       * {
@@ -43,8 +44,9 @@
         color: var(--text);
         font-family: "IBM Plex Mono", monospace;
         background:
-          radial-gradient(circle at top, rgba(232, 118, 10, 0.14), transparent 24%),
-          linear-gradient(180deg, rgba(14, 10, 8, 0.98), rgba(8, 6, 4, 1));
+          radial-gradient(circle at 50% -10%, rgba(240, 140, 24, 0.2), transparent 28%),
+          radial-gradient(circle at 10% 20%, rgba(103, 232, 249, 0.08), transparent 22%),
+          linear-gradient(180deg, #140d08 0%, #090604 52%, #050403 100%);
       }
 
       body::before {
@@ -53,9 +55,19 @@
         inset: 0;
         pointer-events: none;
         background:
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 36px),
-          linear-gradient(rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 36px);
-        opacity: 0.18;
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 42px),
+          linear-gradient(rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 42px);
+        opacity: 0.14;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(240, 140, 24, 0.08), transparent 18%),
+          radial-gradient(circle at center, transparent 55%, rgba(0, 0, 0, 0.28) 100%);
       }
 
       a {
@@ -66,9 +78,9 @@
       .page {
         position: relative;
         z-index: 1;
-        width: min(1120px, calc(100% - 32px));
+        width: min(1180px, calc(100% - 28px));
         margin: 0 auto;
-        padding: 28px 0 56px;
+        padding: 24px 0 64px;
       }
 
       .pixel-font {
@@ -76,41 +88,57 @@
       }
 
       .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 18px 20px;
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+        padding: 28px 24px 24px;
         border: 1px solid var(--border);
-        background: rgba(15, 11, 8, 0.88);
+        background:
+          linear-gradient(180deg, rgba(28, 18, 10, 0.96), rgba(12, 8, 5, 0.98)),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.02));
+        box-shadow: var(--shadow);
+      }
+
+      .topbar::before {
+        content: "";
+        position: absolute;
+        inset: 8px 10px auto;
+        height: 6px;
+        background: linear-gradient(90deg, var(--accent), #ffb25b);
       }
 
       .brand {
         display: flex;
         align-items: center;
         gap: 12px;
-        min-width: 0;
+        flex-direction: column;
+        text-align: center;
       }
 
       .brand img {
-        width: 42px;
-        height: 42px;
+        width: 64px;
+        height: 64px;
+        filter: drop-shadow(0 6px 18px rgba(240, 140, 24, 0.28));
       }
 
       .brand-copy {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
+        align-items: center;
       }
 
       .brand-title {
         color: var(--text-bright);
-        font-size: 12px;
+        font-size: clamp(14px, 2vw, 18px);
       }
 
       .brand-subtitle {
         color: var(--text-muted);
-        font-size: 11px;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
       }
 
       .back-link,
@@ -118,67 +146,94 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 42px;
-        padding: 0 16px;
-        border: 1px solid var(--border-mid);
-        background: rgba(26, 18, 9, 0.96);
+        min-height: 48px;
+        padding: 0 18px;
+        border: 1px solid var(--border);
+        background: var(--surface-strong);
         color: var(--text-bright);
-        transition: border-color 120ms ease, transform 120ms ease;
+        transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
       }
 
       .back-link:hover,
       .download-button:hover {
-        border-color: var(--accent);
-        transform: translateY(-1px);
+        border-color: var(--border-bright);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
       }
 
       .hero {
         margin-top: 18px;
-        padding: 36px 24px 28px;
+        padding: 34px 26px 26px;
         border: 1px solid var(--border);
         background:
-          linear-gradient(180deg, rgba(26, 18, 9, 0.96), rgba(12, 9, 7, 0.98)),
-          repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 18px);
+          linear-gradient(180deg, rgba(24, 16, 10, 0.96), rgba(9, 7, 5, 0.99)),
+          repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 16px);
+        box-shadow: var(--shadow);
+        text-align: center;
       }
 
       .eyebrow {
-        color: var(--accent);
+        color: #ffbf75;
         font-size: 9px;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.22em;
       }
 
       h1 {
-        margin: 18px 0 0;
+        margin: 16px auto 0;
         color: var(--text-bright);
-        font-size: clamp(24px, 4vw, 44px);
-        line-height: 1.15;
+        font-size: clamp(22px, 3.8vw, 40px);
+        line-height: 1.25;
+        max-width: 900px;
       }
 
       .hero p {
-        margin: 18px 0 0;
-        max-width: 720px;
-        color: var(--text);
-        line-height: 1.8;
+        margin: 14px auto 0;
+        max-width: 640px;
+        color: var(--text-muted);
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        margin-top: 22px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
       }
 
       .cards {
-        margin-top: 20px;
+        margin-top: 22px;
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 18px;
+        gap: 20px;
       }
 
       .card {
         border: 1px solid var(--border);
-        background: rgba(15, 11, 8, 0.92);
-        padding: 22px 20px;
+        background:
+          linear-gradient(180deg, rgba(18, 12, 8, 0.96), rgba(12, 8, 5, 0.98)),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+        padding: 24px 22px 22px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: auto -10% -40% 30%;
+        height: 140px;
+        background: radial-gradient(circle, rgba(240, 140, 24, 0.14), transparent 70%);
+        pointer-events: none;
       }
 
       .card-tag {
         display: inline-block;
-        padding: 5px 8px;
+        padding: 6px 9px;
         border: 1px solid currentColor;
         font-size: 10px;
+        background: rgba(255, 255, 255, 0.03);
       }
 
       .card-tag.fabric {
@@ -190,44 +245,50 @@
       }
 
       .card h2 {
-        margin: 16px 0 10px;
+        margin: 16px 0 8px;
         color: var(--text-bright);
-        font-size: 18px;
+        font-size: 20px;
       }
 
       .card p {
         margin: 0;
         color: var(--text);
-        line-height: 1.8;
+        line-height: 1.7;
       }
 
       .meta {
-        margin-top: 16px;
+        margin-top: 18px;
         color: var(--text-muted);
         font-size: 11px;
-        line-height: 1.8;
+        line-height: 1.9;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .actions {
-        margin-top: 18px;
+        margin-top: 20px;
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
       }
 
       .download-button.primary {
-        border-color: var(--accent);
+        background: linear-gradient(180deg, rgba(240, 140, 24, 0.22), rgba(195, 103, 8, 0.16));
+        border-color: var(--border-bright);
+        min-width: 220px;
       }
 
       .download-button.secondary {
         color: var(--text);
+        background: rgba(28, 18, 10, 0.78);
       }
 
       .steps {
         margin-top: 20px;
-        padding: 22px 20px;
+        padding: 24px 22px;
         border: 1px solid var(--border);
-        background: rgba(15, 11, 8, 0.9);
+        background: rgba(14, 10, 7, 0.92);
+        box-shadow: var(--shadow);
       }
 
       .steps h2 {
@@ -243,18 +304,35 @@
       }
 
       code {
-        color: var(--text-bright);
+        color: #ffd4a3;
+      }
+
+      .microcopy {
+        margin-top: 10px;
+        color: var(--text-muted);
+        font-size: 12px;
       }
 
       @media (max-width: 720px) {
         .topbar {
-          flex-direction: column;
-          align-items: stretch;
+          padding-inline: 18px;
         }
 
         .back-link,
         .download-button {
           width: 100%;
+        }
+
+        .hero {
+          text-align: left;
+        }
+
+        .hero p {
+          margin-left: 0;
+        }
+
+        .hero-actions {
+          justify-content: stretch;
         }
       }
     </style>
@@ -266,32 +344,39 @@
           <img src="assets/pvc-logo.png" alt="PVC" />
           <div class="brand-copy">
             <div class="brand-title pixel-font">PVC FINDER MODS</div>
-            <div class="brand-subtitle">Minecraft 1.21.10 downloads</div>
+            <div class="brand-subtitle">Minecraft 1.21.10 client builds</div>
           </div>
         </div>
         <a class="back-link pixel-font" href="/">BACK TO MARKET</a>
       </header>
 
       <section class="hero">
-        <div class="eyebrow pixel-font">INSTALL CLIENT</div>
-        <h1 class="pixel-font">Pick your loader and drop the jar into your mods folder.</h1>
-        <p>
-          PVC Finder adds the in-game browser, tracking HUD, trade content preview,
-          and the cursed button. Choose Fabric or Forge below and download the build
-          that matches your client.
-        </p>
+        <div class="eyebrow pixel-font">DOWNLOADS</div>
+        <h1 class="pixel-font">Choose your loader. Drop the jar in <code>mods/</code>. Press <code>N</code>.</h1>
+        <p>PVC Finder for Fabric or Forge, built for Minecraft 1.21.10.</p>
+        <div class="hero-actions">
+          <a
+            class="download-button primary pixel-font"
+            href="/mod-fabric/build/libs/pvcfinder-fabric-1.21.10-0.1.0.jar"
+            download
+            >GET FABRIC</a
+          >
+          <a
+            class="download-button primary pixel-font"
+            href="/mod-forge/build/libs/pvcfinder-forge-1.21.10-0.1.0.jar"
+            download
+            >GET FORGE</a
+          >
+        </div>
       </section>
 
       <section class="cards">
         <article class="card">
           <span class="card-tag fabric pixel-font">FABRIC</span>
-          <h2>Fabric build</h2>
-          <p>
-            Recommended if you already run Fabric API. Includes the upgraded trade
-            preview UI, tracking tools, and the haunted nuke sequence.
-          </p>
+          <h2>Fabric Build</h2>
+          <p>Best fit if your client already runs Fabric API.</p>
           <div class="meta">
-            Loader: Fabric
+            Loader: Fabric + Fabric API
             <br />
             Minecraft: 1.21.10
             <br />
@@ -311,15 +396,13 @@
               >Sources</a
             >
           </div>
+          <div class="microcopy">Includes sources jar.</div>
         </article>
 
         <article class="card">
           <span class="card-tag forge pixel-font">FORGE</span>
-          <h2>Forge build</h2>
-          <p>
-            Use this if your setup is already on Forge. Same core market browser,
-            tracking, trade preview, and nuke aftermath behavior for 1.21.10.
-          </p>
+          <h2>Forge Build</h2>
+          <p>Use this one if your instance is already on Forge.</p>
           <div class="meta">
             Loader: Forge
             <br />
@@ -335,6 +418,7 @@
               >DOWNLOAD FORGE</a
             >
           </div>
+          <div class="microcopy">Same feature set, Forge flavor.</div>
         </article>
       </section>
 

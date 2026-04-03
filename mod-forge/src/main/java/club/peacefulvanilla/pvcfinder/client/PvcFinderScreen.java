@@ -24,6 +24,7 @@ public final class PvcFinderScreen extends Screen {
     private final PvcFinderDataStore dataStore;
     private EditBox searchBox;
     private OfferList offerList;
+    private Button jesusButton;
     private Button nukeButton;
     private PvcOffer activeContentsOffer;
     private int contentsScrollOffset;
@@ -46,10 +47,15 @@ public final class PvcFinderScreen extends Screen {
         addRenderableWidget(searchBox);
 
         int panelWidth = Math.min(width - 20, 460);
+        int panelLeft = (width - panelWidth) / 2;
+        jesusButton = addRenderableWidget(Button.builder(Component.translatable(jesusButtonTranslationKey()), button -> {
+            PvcFinderClient.toggleImaginaryFriend(minecraft);
+            button.setMessage(Component.translatable(jesusButtonTranslationKey()));
+        }).bounds(panelLeft + panelWidth - 194, 14, 90, 20).build());
         nukeButton = addRenderableWidget(Button.builder(Component.translatable("screen.pvcfinder.send_nuke"), button -> {
             PvcFinderClient.triggerTrackedNuke(minecraft);
             refreshList();
-        }).bounds(((width - panelWidth) / 2) + panelWidth - 96, 14, 88, 20).build());
+        }).bounds(panelLeft + panelWidth - 96, 14, 88, 20).build());
 
         offerList = addRenderableWidget(new OfferList(
                 minecraft,
@@ -136,6 +142,12 @@ public final class PvcFinderScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private String jesusButtonTranslationKey() {
+        return PvcFinderClient.isImaginaryFriendActive()
+                ? "screen.pvcfinder.hide_jesus"
+                : "screen.pvcfinder.spawn_jesus";
     }
 
     private void refreshList() {

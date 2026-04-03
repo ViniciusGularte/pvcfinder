@@ -61,6 +61,7 @@ public final class PvcFinderClient {
     public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         ClientNukeEffect.tick(minecraft);
+        ImaginaryFriendController.tick(minecraft);
         if (minecraft.player == null) {
             return;
         }
@@ -130,6 +131,14 @@ public final class PvcFinderClient {
 
     public static boolean triggerTrackedNuke(Minecraft minecraft) {
         return ClientNukeEffect.trigger(minecraft);
+    }
+
+    public static boolean toggleImaginaryFriend(Minecraft minecraft) {
+        return ImaginaryFriendController.toggle(minecraft);
+    }
+
+    public static boolean isImaginaryFriendActive() {
+        return ImaginaryFriendController.isActive();
     }
 
     private static void tickTrackedTarget(Minecraft minecraft) {

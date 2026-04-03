@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 
 public final class PvcFinderScreen extends Screen {
     private static final ResourceLocation LOGO_TEXTURE =
@@ -48,6 +49,8 @@ public final class PvcFinderScreen extends Screen {
     private static final int SUMMARY_PANEL_WIDTH = 150;
     private static final int CHIP_HEIGHT = 18;
     private static final int CHIP_GAP = 6;
+    private static final int COMPACT_LAYOUT_WIDTH = 760;
+    private static final int FILTER_ROW_PITCH = 24;
 
     private final PvcFinderDataStore dataStore;
     private EditBox searchBox;
@@ -99,7 +102,7 @@ public final class PvcFinderScreen extends Screen {
                 width,
                 height - 20,
                 listStartY(),
-                88
+                offerRowHeight()
         ));
         setInitialFocus(searchBox);
         refreshList();
@@ -225,21 +228,25 @@ public final class PvcFinderScreen extends Screen {
     }
 
     private void renderTopRow(GuiGraphics guiGraphics, int mouseX, int mouseY, int left, int right) {
-        drawStatChip(guiGraphics, left + 20, statsRowY(), "OFFERS " + dataStore.offerCount(), COLOR_EMERALD, COLOR_PANEL_ALT, 92);
-        drawStatChip(guiGraphics, left + 124, statsRowY(), "RESULTS " + (offerList == null ? 0 : offerList.entryCount()), COLOR_ACCENT, COLOR_PANEL_ALT, 102);
+        int rowY = statsRowY();
+        int controlsY = controlsRowY();
+        drawStatChip(guiGraphics, left + 20, rowY, "OFFERS " + dataStore.offerCount(), COLOR_EMERALD, COLOR_PANEL_ALT, 92);
+        drawStatChip(guiGraphics, left + 124, rowY, "RESULTS " + (offerList == null ? 0 : offerList.entryCount()), COLOR_ACCENT, COLOR_PANEL_ALT, 102);
         int filterX = filterChipX(right);
         int refreshX = refreshChipX(right);
-        int statusX = left + 238;
-        int statusMaxWidth = refreshX - statusX - 10;
-        if (statusMaxWidth >= 72) {
-            renderMarketStatusChip(guiGraphics, statusX, statsRowY(), statusMaxWidth, dataStore.marketStatusLabel(), marketStatusAccent(), COLOR_PANEL_ALT);
+        if (!isCompactLayout()) {
+            int statusX = left + 238;
+            int statusMaxWidth = refreshX - statusX - 10;
+            if (statusMaxWidth >= 72) {
+                renderMarketStatusChip(guiGraphics, statusX, rowY, statusMaxWidth, dataStore.marketStatusLabel(), marketStatusAccent(), COLOR_PANEL_ALT);
+            }
         }
         renderChip(
                 guiGraphics,
                 mouseX,
                 mouseY,
                 refreshX,
-                statsRowY(),
+                controlsY,
                 refreshChipLabel(),
                 dataStore.isRefreshing(),
                 dataStore.isRefreshing() ? COLOR_DIAMOND : COLOR_EMERALD,
@@ -250,7 +257,7 @@ public final class PvcFinderScreen extends Screen {
                 mouseX,
                 mouseY,
                 filterX,
-                statsRowY(),
+                controlsY,
                 filtersExpanded ? "Hide filters" : "Show filters",
                 filtersExpanded,
                 COLOR_ACCENT,
@@ -285,52 +292,78 @@ public final class PvcFinderScreen extends Screen {
     }
 
     private void renderSortRow(GuiGraphics guiGraphics, int mouseX, int mouseY, int left) {
-        int y = filtersStartY();
+        int y = sortRowY();
         drawFilterLabel(guiGraphics, "SORT", left + 20, y + 5);
-        int x = left + 62;
+        ChipFlow flow = new ChipFlow(left + 62, y, panelLeft() + panelWidth() - 24);
         for (PvcFinderFilters.SortMode option : PvcFinderFilters.SortMode.values()) {
-            renderChip(guiGraphics, mouseX, mouseY, x, y, option.label(), sortMode == option, COLOR_ACCENT, false);
-            x += chipWidth(option.label(), false) + CHIP_GAP;
+            int chipX = flow.place(chipWidth(option.label(), false));
+            renderChip(guiGraphics, mouseX, mouseY, chipX, flow.y, option.label(), sortMode == option, COLOR_ACCENT, false);
+            flow.advance(chipWidth(option.label(), false));
         }
     }
 
     private void renderScopeRow(GuiGraphics guiGraphics, int mouseX, int mouseY, int left) {
-        int y = filtersStartY() + 24;
+        int y = scopeRowY();
         drawFilterLabel(guiGraphics, "SEARCH", left + 20, y + 5);
-        int x = left + 74;
+        ChipFlow flow = new ChipFlow(left + 74, y, panelLeft() + panelWidth() - 24);
         for (PvcFinderFilters.SearchScope option : PvcFinderFilters.SearchScope.values()) {
-            renderChip(guiGraphics, mouseX, mouseY, x, y, option.label(), searchScope == option, COLOR_DIAMOND, false);
-            x += chipWidth(option.label(), false) + CHIP_GAP;
+            int chipX = flow.place(chipWidth(option.label(), false));
+            renderChip(guiGraphics, mouseX, mouseY, chipX, flow.y, option.label(), searchScope == option, COLOR_DIAMOND, false);
+            flow.advance(chipWidth(option.label(), false));
         }
     }
 
     private void renderTradeRow(GuiGraphics guiGraphics, int mouseX, int mouseY, int left) {
-        int y = filtersStartY() + 48;
+        int y = tradeRowY();
         drawFilterLabel(guiGraphics, "TRADE", left + 20, y + 5);
-        int x = left + 68;
+        ChipFlow flow = new ChipFlow(left + 68, y, panelLeft() + panelWidth() - 24);
         for (PvcFinderFilters.TradeIntent option : PvcFinderFilters.TradeIntent.values()) {
-            renderChip(guiGraphics, mouseX, mouseY, x, y, option.label(), tradeIntent == option, COLOR_EMERALD, false);
-            x += chipWidth(option.label(), false) + CHIP_GAP;
+            int chipWidth = chipWidth(option.label(), false);
+            int chipX = flow.place(chipWidth);
+            renderChip(guiGraphics, mouseX, mouseY, chipX, flow.y, option.label(), tradeIntent == option, COLOR_EMERALD, false);
+            flow.advance(chipWidth);
         }
 
-        int toggleX = x + 16;
-        renderChip(guiGraphics, mouseX, mouseY, toggleX, y, Component.translatable("screen.pvcfinder.filter_in_stock").getString(), inStockOnly, COLOR_EMERALD, true);
-        toggleX += chipWidth(Component.translatable("screen.pvcfinder.filter_in_stock").getString(), true) + CHIP_GAP;
-        renderChip(guiGraphics, mouseX, mouseY, toggleX, y, Component.translatable("screen.pvcfinder.filter_shulker").getString(), includeShulker, COLOR_ACCENT, true);
+        int spacerWidth = 16;
+        flow.advance(spacerWidth - CHIP_GAP);
+        String inStockLabel = Component.translatable("screen.pvcfinder.filter_in_stock").getString();
+        int inStockWidth = chipWidth(inStockLabel, true);
+        int inStockX = flow.place(inStockWidth);
+        renderChip(guiGraphics, mouseX, mouseY, inStockX, flow.y, inStockLabel, inStockOnly, COLOR_EMERALD, true);
+        flow.advance(inStockWidth);
+        String shulkerLabel = Component.translatable("screen.pvcfinder.filter_shulker").getString();
+        int shulkerWidth = chipWidth(shulkerLabel, true);
+        int shulkerX = flow.place(shulkerWidth);
+        renderChip(guiGraphics, mouseX, mouseY, shulkerX, flow.y, shulkerLabel, includeShulker, COLOR_ACCENT, true);
+        flow.advance(shulkerWidth);
     }
 
     private void renderNukeRow(GuiGraphics guiGraphics, int mouseX, int mouseY, int left) {
-        int y = filtersStartY() + 72;
+        int y = nukeRowY();
         drawFilterLabel(guiGraphics, "ALERT", left + 20, y + 5);
+        String nukeLabel = Component.translatable("screen.pvcfinder.send_nuke").getString();
         renderChip(
                 guiGraphics,
                 mouseX,
                 mouseY,
                 left + 68,
                 y,
-                Component.translatable("screen.pvcfinder.send_nuke").getString(),
+                nukeLabel,
                 false,
                 COLOR_DANGER,
+                false
+        );
+        int friendY = y + 24;
+        drawFilterLabel(guiGraphics, "FRIEND", left + 20, friendY + 5);
+        renderChip(
+                guiGraphics,
+                mouseX,
+                mouseY,
+                left + 68,
+                friendY,
+                jesusChipLabel(),
+                PvcFinderClient.isImaginaryFriendActive(),
+                COLOR_DIAMOND,
                 false
         );
     }
@@ -369,13 +402,13 @@ public final class PvcFinderScreen extends Screen {
         int left = panelLeft();
         int right = panelLeft() + panelWidth();
         int refreshWidth = chipWidth(refreshChipLabel(), false);
-        if (isInside(mouseX, mouseY, refreshChipX(right), statsRowY(), refreshWidth, CHIP_HEIGHT)) {
+        if (isInside(mouseX, mouseY, refreshChipX(right), controlsRowY(), refreshWidth, CHIP_HEIGHT)) {
             dataStore.refreshAsync(minecraft, true);
             return true;
         }
 
         int toggleWidth = chipWidth(filtersExpanded ? "Hide filters" : "Show filters", false);
-        if (isInside(mouseX, mouseY, filterChipX(right), statsRowY(), toggleWidth, CHIP_HEIGHT)) {
+        if (isInside(mouseX, mouseY, filterChipX(right), controlsRowY(), toggleWidth, CHIP_HEIGHT)) {
             searchQuery = searchBox == null ? searchQuery : searchBox.getValue();
             filtersExpanded = !filtersExpanded;
             rebuildWidgets();
@@ -386,55 +419,60 @@ public final class PvcFinderScreen extends Screen {
             return handleTrackingActionClick(mouseX, mouseY, right);
         }
 
-        int y = filtersStartY();
-        int x = left + 62;
+        int y = sortRowY();
+        ChipFlow flow = new ChipFlow(left + 62, y, panelLeft() + panelWidth() - 24);
         for (PvcFinderFilters.SortMode option : PvcFinderFilters.SortMode.values()) {
             int width = chipWidth(option.label(), false);
-            if (isInside(mouseX, mouseY, x, y, width, CHIP_HEIGHT)) {
+            int chipX = flow.place(width);
+            if (isInside(mouseX, mouseY, chipX, flow.y, width, CHIP_HEIGHT)) {
                 sortMode = option;
                 refreshList();
                 return true;
             }
-            x += width + CHIP_GAP;
+            flow.advance(width);
         }
 
-        y = filtersStartY() + 24;
-        x = left + 74;
+        y = scopeRowY();
+        flow = new ChipFlow(left + 74, y, panelLeft() + panelWidth() - 24);
         for (PvcFinderFilters.SearchScope option : PvcFinderFilters.SearchScope.values()) {
             int width = chipWidth(option.label(), false);
-            if (isInside(mouseX, mouseY, x, y, width, CHIP_HEIGHT)) {
+            int chipX = flow.place(width);
+            if (isInside(mouseX, mouseY, chipX, flow.y, width, CHIP_HEIGHT)) {
                 searchScope = option;
                 refreshList();
                 return true;
             }
-            x += width + CHIP_GAP;
+            flow.advance(width);
         }
 
-        y = filtersStartY() + 48;
-        x = left + 68;
+        y = tradeRowY();
+        flow = new ChipFlow(left + 68, y, panelLeft() + panelWidth() - 24);
         for (PvcFinderFilters.TradeIntent option : PvcFinderFilters.TradeIntent.values()) {
             int width = chipWidth(option.label(), false);
-            if (isInside(mouseX, mouseY, x, y, width, CHIP_HEIGHT)) {
+            int chipX = flow.place(width);
+            if (isInside(mouseX, mouseY, chipX, flow.y, width, CHIP_HEIGHT)) {
                 tradeIntent = option;
                 refreshList();
                 return true;
             }
-            x += width + CHIP_GAP;
+            flow.advance(width);
         }
 
-        int toggleX = x + 16;
         String inStockLabel = Component.translatable("screen.pvcfinder.filter_in_stock").getString();
         int inStockWidth = chipWidth(inStockLabel, true);
-        if (isInside(mouseX, mouseY, toggleX, y, inStockWidth, CHIP_HEIGHT)) {
+        flow.advance(16 - CHIP_GAP);
+        int inStockX = flow.place(inStockWidth);
+        if (isInside(mouseX, mouseY, inStockX, flow.y, inStockWidth, CHIP_HEIGHT)) {
             inStockOnly = !inStockOnly;
             refreshList();
             return true;
         }
+        flow.advance(inStockWidth);
 
-        toggleX += inStockWidth + CHIP_GAP;
         String shulkerLabel = Component.translatable("screen.pvcfinder.filter_shulker").getString();
         int shulkerWidth = chipWidth(shulkerLabel, true);
-        if (isInside(mouseX, mouseY, toggleX, y, shulkerWidth, CHIP_HEIGHT)) {
+        int shulkerX = flow.place(shulkerWidth);
+        if (isInside(mouseX, mouseY, shulkerX, flow.y, shulkerWidth, CHIP_HEIGHT)) {
             includeShulker = !includeShulker;
             refreshList();
             return true;
@@ -442,9 +480,18 @@ public final class PvcFinderScreen extends Screen {
 
         int nukeX = left + 68;
         int nukeY = filtersStartY() + 72;
-        int nukeWidth = chipWidth(Component.translatable("screen.pvcfinder.send_nuke").getString(), false);
+        String nukeLabel = Component.translatable("screen.pvcfinder.send_nuke").getString();
+        int nukeWidth = chipWidth(nukeLabel, false);
         if (isInside(mouseX, mouseY, nukeX, nukeY, nukeWidth, CHIP_HEIGHT)) {
             return PvcFinderClient.triggerTrackedNuke(minecraft);
+        }
+
+        int jesusX = left + 68;
+        int jesusY = nukeY + 24;
+        int jesusWidth = chipWidth(jesusChipLabel(), false);
+        if (isInside(mouseX, mouseY, jesusX, jesusY, jesusWidth, CHIP_HEIGHT)) {
+            PvcFinderClient.toggleImaginaryFriend(minecraft);
+            return true;
         }
 
         return handleTrackingActionClick(mouseX, mouseY, right);
@@ -502,6 +549,7 @@ public final class PvcFinderScreen extends Screen {
         activeContentsOffer = null;
         contentsScrollOffset = 0;
     }
+
 
     private void renderContentsOverlay(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int modalLeft = contentsModalLeft();
@@ -661,6 +709,7 @@ public final class PvcFinderScreen extends Screen {
         return Math.max(1, (contentsBodyBottom() - (contentsBodyTop() + 44)) / 13);
     }
 
+
     private int contentsMaxScroll() {
         if (activeContentsOffer == null) {
             return 0;
@@ -684,7 +733,7 @@ public final class PvcFinderScreen extends Screen {
     }
 
     private int panelWidth() {
-        return Math.min(width - 24, 964);
+        return Math.max(360, width - 48);
     }
 
     private int panelLeft() {
@@ -696,7 +745,7 @@ public final class PvcFinderScreen extends Screen {
     }
 
     private int trackingSectionY() {
-        return filtersExpanded ? (filtersStartY() + 88) : 98;
+        return filtersExpanded ? (filtersStartY() + totalFiltersHeight()) : (controlsRowY() + 28);
     }
 
     private int searchSectionTop() {
@@ -711,8 +760,89 @@ public final class PvcFinderScreen extends Screen {
         return 70;
     }
 
+    private int controlsRowY() {
+        return isCompactLayout() ? (statsRowY() + 22) : statsRowY();
+    }
+
     private int filtersStartY() {
-        return 90;
+        return controlsRowY() + CHIP_HEIGHT + 10;
+    }
+
+    private int sortRowY() {
+        return filtersStartY();
+    }
+
+    private int scopeRowY() {
+        return sortRowY() + rowHeightFor(sortRowStartX(), this::sortChipWidths);
+    }
+
+    private int tradeRowY() {
+        return scopeRowY() + rowHeightFor(scopeRowStartX(), this::scopeChipWidths);
+    }
+
+    private int nukeRowY() {
+        return tradeRowY() + rowHeightFor(tradeRowStartX(), this::tradeChipWidths);
+    }
+
+    private int totalFiltersHeight() {
+        return (nukeRowY() - filtersStartY()) + 48;
+    }
+
+    private int sortRowStartX() {
+        return panelLeft() + 62;
+    }
+
+    private int scopeRowStartX() {
+        return panelLeft() + 74;
+    }
+
+    private int tradeRowStartX() {
+        return panelLeft() + 68;
+    }
+
+    private int rowHeightFor(int startX, Supplier<int[]> widthsSupplier) {
+        int rows = wrappedRowCount(startX, widthsSupplier.get());
+        return Math.max(1, rows) * FILTER_ROW_PITCH;
+    }
+
+    private int wrappedRowCount(int startX, int[] chipWidths) {
+        int maxRight = panelLeft() + panelWidth() - 24;
+        int x = startX;
+        int rows = 1;
+        for (int chipWidth : chipWidths) {
+            if (x != startX && (x + chipWidth) > maxRight) {
+                rows++;
+                x = startX;
+            }
+            x += chipWidth + CHIP_GAP;
+        }
+        return rows;
+    }
+
+    private int[] sortChipWidths() {
+        return java.util.Arrays.stream(PvcFinderFilters.SortMode.values())
+                .mapToInt(option -> chipWidth(option.label(), false))
+                .toArray();
+    }
+
+    private int[] scopeChipWidths() {
+        return java.util.Arrays.stream(PvcFinderFilters.SearchScope.values())
+                .mapToInt(option -> chipWidth(option.label(), false))
+                .toArray();
+    }
+
+    private int[] tradeChipWidths() {
+        String inStockLabel = Component.translatable("screen.pvcfinder.filter_in_stock").getString();
+        String shulkerLabel = Component.translatable("screen.pvcfinder.filter_shulker").getString();
+        int[] intentWidths = java.util.Arrays.stream(PvcFinderFilters.TradeIntent.values())
+                .mapToInt(option -> chipWidth(option.label(), false))
+                .toArray();
+        int[] allWidths = new int[intentWidths.length + 3];
+        System.arraycopy(intentWidths, 0, allWidths, 0, intentWidths.length);
+        allWidths[intentWidths.length] = 16;
+        allWidths[intentWidths.length + 1] = chipWidth(inStockLabel, true);
+        allWidths[intentWidths.length + 2] = chipWidth(shulkerLabel, true);
+        return allWidths;
     }
 
     private int suggestionBoxLeft() {
@@ -732,8 +862,24 @@ public final class PvcFinderScreen extends Screen {
         return 14;
     }
 
+    private boolean isCompactLayout() {
+        return panelWidth() <= COMPACT_LAYOUT_WIDTH;
+    }
+
+    private int offerRowHeight() {
+        return isCompactLayout() ? 108 : 88;
+    }
+
     private void drawFilterLabel(GuiGraphics guiGraphics, String label, int x, int y) {
         guiGraphics.drawString(font, label, x, y, COLOR_TEXT_GHOST, false);
+    }
+
+    private String jesusChipLabel() {
+        return Component.translatable(
+                PvcFinderClient.isImaginaryFriendActive()
+                        ? "screen.pvcfinder.hide_jesus"
+                        : "screen.pvcfinder.spawn_jesus"
+        ).getString();
     }
 
     private void drawStatChip(GuiGraphics guiGraphics, int x, int y, String text, int accent, int background, int minWidth) {
@@ -789,6 +935,32 @@ public final class PvcFinderScreen extends Screen {
 
     private int refreshChipX(int right) {
         return filterChipX(right) - chipWidth(refreshChipLabel(), false) - CHIP_GAP;
+    }
+
+    private static final class ChipFlow {
+        private final int startX;
+        private final int maxRight;
+        private int x;
+        private int y;
+
+        private ChipFlow(int startX, int y, int maxRight) {
+            this.startX = startX;
+            this.x = startX;
+            this.y = y;
+            this.maxRight = maxRight;
+        }
+
+        private int place(int width) {
+            if (x != startX && (x + width) > maxRight) {
+                x = startX;
+                y += FILTER_ROW_PITCH;
+            }
+            return x;
+        }
+
+        private void advance(int width) {
+            x += width + CHIP_GAP;
+        }
     }
 
     private boolean handleTrackingActionClick(double mouseX, double mouseY, int right) {
@@ -872,7 +1044,7 @@ public final class PvcFinderScreen extends Screen {
 
         @Override
         public int getRowWidth() {
-            return Math.min(PvcFinderScreen.this.width - 56, 892);
+            return Math.max(320, PvcFinderScreen.this.panelWidth() - 40);
         }
 
         @Override
@@ -919,21 +1091,25 @@ public final class PvcFinderScreen extends Screen {
             int width = getWidth();
             int height = getHeight();
             boolean tracked = PvcFinderClient.isTracked(offer);
+            boolean compact = width <= 760;
             int background = hovered ? 0xE21A1209 : 0xD717110C;
             int accent = tracked ? COLOR_ACCENT : COLOR_BORDER;
             int iconBoxLeft = left + 10;
             int iconBoxRight = left + 58;
-            int summaryPanelLeft = left + width - SUMMARY_PANEL_WIDTH;
+            int summaryPanelWidth = compact ? 116 : SUMMARY_PANEL_WIDTH;
+            int summaryPanelLeft = left + width - summaryPanelWidth;
             int textLeft = left + 72;
-            int textRight = summaryPanelLeft - 12;
+            int textRight = compact ? (left + width - 14) : (summaryPanelLeft - 12);
 
             guiGraphics.fill(left, top, left + width, top + height - 4, background);
             guiGraphics.fill(left, top, left + width, top + 3, accent);
             guiGraphics.fill(left + 1, top + height - 5, left + width - 1, top + height - 4, COLOR_BORDER);
             guiGraphics.fill(iconBoxLeft, top + 10, iconBoxRight, top + 54, 0xCC10151E);
             guiGraphics.fill(iconBoxLeft, top + 10, iconBoxRight, top + 12, tracked ? COLOR_ACCENT : COLOR_DIAMOND);
-            guiGraphics.fill(summaryPanelLeft, top + 8, left + width - 10, top + height - 8, 0xD0152018);
-            guiGraphics.fill(summaryPanelLeft, top + 8, left + width - 10, top + 10, offer.stock() > 0 ? COLOR_EMERALD : COLOR_DANGER);
+            int summaryTop = top + 8;
+            int summaryBottom = compact ? (top + 48) : (top + height - 8);
+            guiGraphics.fill(summaryPanelLeft, summaryTop, left + width - 10, summaryBottom, 0xD0152018);
+            guiGraphics.fill(summaryPanelLeft, summaryTop, left + width - 10, summaryTop + 2, offer.stock() > 0 ? COLOR_EMERALD : COLOR_DANGER);
 
             ItemStack stack = offer.resultItem().toItemStack();
             guiGraphics.renderItem(stack, iconBoxLeft + 11, top + 19);
@@ -955,11 +1131,13 @@ public final class PvcFinderScreen extends Screen {
             guiGraphics.drawCenteredString(font, offer.stock() > 0 ? String.valueOf(offer.stock()) : "0", summaryCenterX, top + 27, offer.stock() > 0 ? COLOR_EMERALD : COLOR_DANGER);
             guiGraphics.drawCenteredString(font, tracked ? "TRACKED" : "READY", summaryCenterX, top + 40, tracked ? COLOR_ACCENT : COLOR_TEXT);
 
-            int buttonY = top + 52;
-            int summaryWidth = (left + width - 10) - summaryPanelLeft;
+            int buttonY = compact ? (top + 72) : (top + 52);
+            int actionAreaLeft = compact ? textLeft : summaryPanelLeft;
+            int actionAreaRight = compact ? (left + width - 12) : (left + width - 10);
+            int actionAreaWidth = actionAreaRight - actionAreaLeft;
             if (contentsButton != null) {
                 int actionWidth = CONTENTS_BUTTON_WIDTH + ACTION_BUTTON_GAP + TRACK_BUTTON_WIDTH;
-                int actionsLeft = summaryPanelLeft + Math.max(8, Mth.floor((summaryWidth - actionWidth) / 2.0F));
+                int actionsLeft = actionAreaLeft + Math.max(0, Mth.floor((actionAreaWidth - actionWidth) / 2.0F));
                 int contentsX = actionsLeft;
                 int trackX = contentsX + CONTENTS_BUTTON_WIDTH + ACTION_BUTTON_GAP;
                 contentsButton.setX(contentsX);
@@ -968,7 +1146,7 @@ public final class PvcFinderScreen extends Screen {
                 trackButton.setY(buttonY);
                 renderActionButton(guiGraphics, mouseX, mouseY, contentsButton, false, COLOR_DIAMOND);
             } else {
-                int buttonX = summaryPanelLeft + Mth.floor((summaryWidth - TRACK_BUTTON_WIDTH) / 2.0F);
+                int buttonX = actionAreaLeft + Math.max(0, Mth.floor((actionAreaWidth - TRACK_BUTTON_WIDTH) / 2.0F));
                 trackButton.setX(buttonX);
                 trackButton.setY(buttonY);
             }

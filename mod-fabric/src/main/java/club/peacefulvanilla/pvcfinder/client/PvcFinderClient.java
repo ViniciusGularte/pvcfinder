@@ -62,6 +62,7 @@ public final class PvcFinderClient {
 
     public static void onClientTick(Minecraft minecraft) {
         ClientNukeEffect.tick(minecraft);
+        ImaginaryFriendController.tick(minecraft);
         if (minecraft.player == null) {
             return;
         }
@@ -113,6 +114,14 @@ public final class PvcFinderClient {
 
     public static boolean triggerTrackedNuke(Minecraft minecraft) {
         return ClientNukeEffect.trigger(minecraft);
+    }
+
+    public static boolean toggleImaginaryFriend(Minecraft minecraft) {
+        return ImaginaryFriendController.toggle(minecraft);
+    }
+
+    public static boolean isImaginaryFriendActive() {
+        return ImaginaryFriendController.isActive();
     }
 
     public static Component trackingStatus(Minecraft minecraft) {
