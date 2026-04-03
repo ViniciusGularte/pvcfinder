@@ -188,6 +188,10 @@ public final class ImaginaryFriendController {
         }
 
         if (behavior != FriendBehavior.FOLLOW) {
+            if (requiresStableGround(behavior) && !isStableOnGround()) {
+                endBehavior();
+                return;
+            }
             if (friend.position().distanceToSqr(player.position()) > 9.0D * 9.0D) {
                 endBehavior();
                 return;
@@ -199,6 +203,9 @@ public final class ImaginaryFriendController {
         }
 
         if (behaviorCooldownTicks > 0) {
+            return;
+        }
+        if (!isStableOnGround()) {
             return;
         }
 
@@ -310,6 +317,10 @@ public final class ImaginaryFriendController {
         if (friend == null) {
             return;
         }
+        if (requiresStableGround(behavior) && !isStableOnGround()) {
+            endBehavior();
+            return;
+        }
 
         Vec3 anchor = target == null ? friend.position() : target;
         teleportFriend(anchor, player);
@@ -406,6 +417,24 @@ public final class ImaginaryFriendController {
         friend.setShiftKeyDown(false);
         friend.setPose(Pose.STANDING);
         friend.setXRot(0.0F);
+    }
+
+    private static boolean isStableOnGround() {
+        if (friend == null) {
+            return false;
+        }
+        return friend.onGround()
+                && !friend.isFallFlying()
+                && !friend.isSwimming()
+                && !friend.isPassenger()
+                && Math.abs(friend.getDeltaMovement().y) < 0.08D;
+    }
+
+    private static boolean requiresStableGround(FriendBehavior behavior) {
+        return switch (behavior) {
+            case OBSERVE, PRAY, CROUCH, SIT, EAT, DRINK -> true;
+            default -> false;
+        };
     }
 
     private static Vec3 followTarget(ClientLevel level, LocalPlayer player) {
