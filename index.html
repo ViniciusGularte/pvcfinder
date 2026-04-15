@@ -755,7 +755,8 @@
         white-space: nowrap;
       }
 
-      .sky-cycle-button {
+      .sky-cycle-button,
+      .refresh-button {
         display: inline-flex;
         align-items: center;
         gap: 10px;
@@ -786,7 +787,8 @@
           background 140ms ease;
       }
 
-      .sky-cycle-button:hover {
+      .sky-cycle-button:hover,
+      .refresh-button:hover {
         border-color: var(--accent);
         color: var(--text-bright);
         background:
@@ -803,11 +805,61 @@
         transform: translateY(-1px);
       }
 
-      .sky-cycle-button:active {
+      .sky-cycle-button:active,
+      .refresh-button:active {
         transform: translateY(0);
         box-shadow:
           inset 0 2px 0 rgba(0, 0, 0, 0.25),
           0 4px 10px rgba(0, 0, 0, 0.22);
+      }
+
+      .refresh-button[disabled] {
+        cursor: wait;
+        opacity: 0.76;
+        transform: none;
+      }
+
+      .refresh-button[disabled]:hover {
+        transform: none;
+      }
+
+      .refresh-icon-wrap {
+        width: 22px;
+        height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(74, 222, 128, 0.24);
+        background: rgba(8, 6, 4, 0.48);
+      }
+
+      .refresh-icon {
+        color: var(--emerald);
+        font-size: 14px;
+        line-height: 1;
+        transition: transform 180ms ease;
+      }
+
+      .refresh-button[aria-busy="true"] .refresh-icon {
+        animation: refreshSpin 0.9s linear infinite;
+      }
+
+      .refresh-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+
+      .refresh-kicker {
+        font-size: 6px;
+        color: var(--text-muted);
+      }
+
+      .refresh-label {
+        font-size: 10px;
+        color: var(--text-bright);
+        line-height: 1;
       }
 
       .sky-cycle-icon {
@@ -2317,6 +2369,15 @@
         }
       }
 
+      @keyframes refreshSpin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
       @keyframes driftCloudA {
         from {
           transform: translateX(0);
@@ -2632,7 +2693,8 @@
           display: none;
         }
 
-        .sky-cycle-kicker {
+        .sky-cycle-kicker,
+        .refresh-kicker {
           display: none;
         }
 
@@ -2728,6 +2790,23 @@
               <span class="live-dot" aria-hidden="true"></span>
               <span>LIVE</span>
             </div>
+            <button
+              class="refresh-button"
+              id="refreshButton"
+              type="button"
+              aria-label="Refresh market data"
+              title="Refresh market data"
+            >
+              <span class="refresh-icon-wrap" aria-hidden="true">
+                <span class="refresh-icon" id="refreshIcon">↻</span>
+              </span>
+              <span class="refresh-copy">
+                <span class="refresh-kicker pixel-font">DATA</span>
+                <span class="refresh-label pixel-font" id="refreshLabel"
+                  >REFRESH</span
+                >
+              </span>
+            </button>
             <button
               class="sky-cycle-button"
               id="skyCycleButton"
@@ -3104,6 +3183,8 @@
         itemsStat: document.getElementById("itemsStat"),
         stockStat: document.getElementById("stockStat"),
         updatedText: document.getElementById("updatedText"),
+        refreshButton: document.getElementById("refreshButton"),
+        refreshLabel: document.getElementById("refreshLabel"),
         skyCycleButton: document.getElementById("skyCycleButton"),
         skyCycleIcon: document.getElementById("skyCycleIcon"),
         skyCycleLabel: document.getElementById("skyCycleLabel"),
@@ -3155,6 +3236,10 @@
         loadingFinished: false,
         loadingResolved: false,
         loadingError: false,
+        isRefreshing: false,
+        requestSerial: 0,
+        activeRequestId: 0,
+        lastDataSource: "unknown",
       };
 
       let searchTimer = null;
@@ -3263,6 +3348,13 @@
         });
 
         refs.skyCycleButton.addEventListener("click", cycleSkyMode);
+        refs.refreshButton.addEventListener("click", () => {
+          if (state.isRefreshing) {
+            return;
+          }
+
+          loadData({ showLoadingScreen: false, forceFresh: true });
+        });
 
         refs.mobileFilterToggle.addEventListener("click", () => {
           state.mobileFiltersOpen = !state.mobileFiltersOpen;
@@ -3329,7 +3421,7 @@
           }
           setLoadingVisible(true);
           tickLoadingBar();
-          loadData();
+          loadData({ showLoadingScreen: true, forceFresh: true });
         });
 
         refs.clearFiltersButton.addEventListener("click", clearFilters);
@@ -3531,39 +3623,113 @@
         }
       }
 
-      async function loadData() {
+      function buildMarketDataUrl(forceFresh) {
+        const url = new URL(CONFIG.dataUrl, window.location.origin);
+
+        if (forceFresh) {
+          url.searchParams.set("_ts", Date.now().toString(36));
+          url.searchParams.set("_fresh", "1");
+        }
+
+        return url.pathname + url.search;
+      }
+
+      function setRefreshState(isRefreshing) {
+        state.isRefreshing = isRefreshing;
+
+        if (!refs.refreshButton || !refs.refreshLabel) {
+          return;
+        }
+
+        refs.refreshButton.disabled = isRefreshing;
+        refs.refreshButton.setAttribute(
+          "aria-busy",
+          isRefreshing ? "true" : "false",
+        );
+        refs.refreshLabel.textContent = isRefreshing ? "UPDATING" : "REFRESH";
+      }
+
+      async function loadData(options = {}) {
+        const showLoadingScreen = options.showLoadingScreen !== false;
+        const forceFresh = options.forceFresh !== false;
+        const requestId = ++state.requestSerial;
+        let requestSucceeded = false;
+
+        state.activeRequestId = requestId;
+        setRefreshState(true);
+
         try {
-          const payload = await fetchJsonUrl(CONFIG.dataUrl);
+          const { payload, response } = await fetchJsonUrl(
+            buildMarketDataUrl(forceFresh),
+            { includeHeaders: true },
+          );
+
+          if (requestId !== state.activeRequestId) {
+            return;
+          }
+
           state.shops = Array.isArray(payload.data) ? payload.data : [];
           state.lastDumpedAt =
             payload.information && payload.information.timeDumped
               ? new Date(payload.information.timeDumped)
               : null;
+          state.lastDataSource =
+            (
+              response.headers.get("x-pvc-data-source") ||
+              "live"
+            ).toLowerCase();
           const flattened = flattenListings(state.shops);
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
+          state.loadingError = false;
+          refs.errorState.classList.add("hidden");
           updateStats();
           renderAll();
           startRelativeTime();
-          await resolveLoading();
+          requestSucceeded = true;
         } catch (error) {
+          if (requestId !== state.activeRequestId) {
+            return;
+          }
+
           console.error("PVC Shop Browser failed to load:", error);
-          state.loadingError = true;
-          refs.errorCopy.textContent =
-            "The local /api/shops function could not load the PVC market data. Try again in a moment.";
-          refs.resultsGrid.innerHTML = "";
-          refs.resultsTail.classList.remove("visible");
-          refs.resultsTail.textContent = "";
-          refs.emptyState.classList.add("hidden");
-          refs.soldOutState.classList.add("hidden");
-          refs.resultsMeta.classList.remove("visible");
-          refs.errorState.classList.remove("hidden");
-          await resolveLoading();
+
+          if (!state.listings.length || showLoadingScreen) {
+            state.loadingError = true;
+            refs.errorCopy.textContent =
+              "The local /api/shops function could not load the PVC market data. Try again in a moment.";
+            refs.resultsGrid.innerHTML = "";
+            refs.resultsTail.classList.remove("visible");
+            refs.resultsTail.textContent = "";
+            refs.emptyState.classList.add("hidden");
+            refs.soldOutState.classList.add("hidden");
+            refs.resultsMeta.classList.remove("visible");
+            refs.errorState.classList.remove("hidden");
+          } else {
+            refs.updatedText.textContent = "refresh failed";
+            window.setTimeout(() => {
+              if (!state.isRefreshing) {
+                updateRelativeTime();
+              }
+            }, 2400);
+          }
+        } finally {
+          if (requestId !== state.activeRequestId) {
+            return;
+          }
+
+          setRefreshState(false);
+
+          if (showLoadingScreen) {
+            await resolveLoading();
+          } else if (requestSucceeded) {
+            updateRelativeTime();
+          }
         }
       }
 
-      async function fetchJsonUrl(url) {
+      async function fetchJsonUrl(url, options = {}) {
         const controller =
           typeof AbortController !== "undefined" ? new AbortController() : null;
         let timeoutId = null;
@@ -3598,7 +3764,13 @@
             throw new Error("HTTP " + response.status + " for " + url + suffix);
           }
 
-          return await response.json();
+          const payload = await response.json();
+
+          if (options.includeHeaders) {
+            return { payload, response };
+          }
+
+          return payload;
         } finally {
           if (timeoutId) {
             window.clearTimeout(timeoutId);
@@ -4090,13 +4262,15 @@
 
         const diffMs = Date.now() - state.lastDumpedAt.getTime();
         const minutes = Math.max(0, Math.floor(diffMs / 60000));
+        const prefix =
+          state.lastDataSource === "snapshot" ? "snapshot " : "synced ";
         if (minutes < 1) {
-          refs.updatedText.textContent = "synced just now";
+          refs.updatedText.textContent = prefix + "just now";
         } else if (minutes < 60) {
-          refs.updatedText.textContent = "synced " + minutes + "m ago";
+          refs.updatedText.textContent = prefix + minutes + "m ago";
         } else {
           const hours = Math.floor(minutes / 60);
-          refs.updatedText.textContent = "synced " + hours + "h ago";
+          refs.updatedText.textContent = prefix + hours + "h ago";
         }
       }
 

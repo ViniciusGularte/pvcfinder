@@ -1,5 +1,7 @@
 # pvcfinder
 
+The mod UI uses Minecraft's native client GUI toolkit, built directly in Java on top of the Screen system.
+
 ## Rodando localmente
 
 Requisitos:

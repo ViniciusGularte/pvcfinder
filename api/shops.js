@@ -17,6 +17,16 @@ async function writeSnapshot(data) {
 module.exports = async function handler(req, res) {
   let timeout;
 
+  function setBaseHeaders(source) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    res.setHeader("CDN-Cache-Control", "no-store");
+    res.setHeader("Vercel-CDN-Cache-Control", "no-store");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("X-PVC-Data-Source", source);
+  }
+
   try {
     const controller = new AbortController();
     timeout = setTimeout(() => controller.abort(), 15000);
@@ -41,19 +51,16 @@ module.exports = async function handler(req, res) {
     const data = await response.json();
     await writeSnapshot(data);
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
+    setBaseHeaders("live");
     res.status(200).json(data);
   } catch (error) {
     try {
       const snapshot = await readSnapshot();
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Cache-Control", "no-store");
-      res.setHeader("X-PVC-Data-Source", "snapshot");
+      setBaseHeaders("snapshot");
       res.status(200).json(snapshot);
       return;
     } catch (snapshotError) {
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      setBaseHeaders("error");
       res.status(500).json({
         error: "Failed to fetch PVC shop data",
         details: error instanceof Error ? error.message : String(error),
