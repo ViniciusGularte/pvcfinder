@@ -26,7 +26,7 @@ Rotas importantes:
 
 Observacao:
 
-- O endpoint local tenta buscar os dados ao vivo e, se falhar, usa o snapshot salvo em `data/shops-snapshot.json`.
+- O endpoint local busca os dados ao vivo em `/api/shops` sem fallback de snapshot/cache.
 
 Texturas dos itens:
 

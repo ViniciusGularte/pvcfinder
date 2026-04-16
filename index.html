@@ -3694,26 +3694,26 @@
           }
 
           console.error("PVC Shop Browser failed to load:", error);
-
-          if (!state.listings.length || showLoadingScreen) {
-            state.loadingError = true;
-            refs.errorCopy.textContent =
-              "The local /api/shops function could not load the PVC market data. Try again in a moment.";
-            refs.resultsGrid.innerHTML = "";
-            refs.resultsTail.classList.remove("visible");
-            refs.resultsTail.textContent = "";
-            refs.emptyState.classList.add("hidden");
-            refs.soldOutState.classList.add("hidden");
-            refs.resultsMeta.classList.remove("visible");
-            refs.errorState.classList.remove("hidden");
-          } else {
-            refs.updatedText.textContent = "refresh failed";
-            window.setTimeout(() => {
-              if (!state.isRefreshing) {
-                updateRelativeTime();
-              }
-            }, 2400);
-          }
+          state.shops = [];
+          state.listings = [];
+          state.itemCatalog = { options: [], exactPhrases: new Set() };
+          state.market = {
+            currencyValues: { emerald: 1 },
+            productStats: {},
+          };
+          state.lastDumpedAt = null;
+          state.lastDataSource = "error";
+          state.loadingError = true;
+          refs.errorCopy.textContent =
+            "The local /api/shops function could not load the PVC market data. Try again in a moment.";
+          refs.resultsGrid.innerHTML = "";
+          refs.resultsTail.classList.remove("visible");
+          refs.resultsTail.textContent = "";
+          refs.emptyState.classList.add("hidden");
+          refs.soldOutState.classList.add("hidden");
+          refs.resultsMeta.classList.remove("visible");
+          refs.errorState.classList.remove("hidden");
+          updateStats();
         } finally {
           if (requestId !== state.activeRequestId) {
             return;
