@@ -61,6 +61,10 @@
         overflow-x: hidden;
       }
 
+      body.site-locked {
+        overflow: hidden;
+      }
+
       body::before {
         content: "";
         position: fixed;
@@ -621,16 +625,146 @@
         margin: 0 auto;
       }
 
+      .construction-gate {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(18px, 5vw, 54px);
+        background: #080604;
+        overflow: hidden;
+      }
+
+      .construction-gate.hidden {
+        display: none;
+      }
+
+      .construction-gate-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.9) contrast(1.04) brightness(0.72);
+        transform: scale(1.03);
+      }
+
+      .construction-gate::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(5, 4, 3, 0.9), rgba(5, 4, 3, 0.52) 48%, rgba(5, 4, 3, 0.88)),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.82));
+        z-index: 1;
+      }
+
+      .construction-panel {
+        position: relative;
+        z-index: 2;
+        width: min(620px, 100%);
+        border: 1px solid rgba(246, 211, 138, 0.38);
+        background:
+          linear-gradient(180deg, rgba(22, 15, 9, 0.92), rgba(8, 6, 4, 0.94)),
+          repeating-linear-gradient(
+            135deg,
+            rgba(246, 142, 44, 0.1) 0 12px,
+            rgba(0, 0, 0, 0.12) 12px 24px
+          );
+        padding: clamp(20px, 4vw, 34px);
+        box-shadow:
+          0 32px 90px rgba(0, 0, 0, 0.66),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+      }
+
+      .construction-kicker {
+        color: #f6d38a;
+        font-size: 8px;
+      }
+
+      .construction-title {
+        margin-top: 12px;
+        color: #fff6e4;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(2.2rem, 7vw, 4.6rem);
+        line-height: 0.94;
+        letter-spacing: 0;
+      }
+
+      .construction-copy {
+        margin-top: 14px;
+        max-width: 520px;
+        color: rgba(255, 246, 228, 0.74);
+        line-height: 1.65;
+      }
+
+      .construction-form {
+        display: grid;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .construction-field {
+        display: grid;
+        gap: 8px;
+        color: rgba(255, 246, 228, 0.68);
+        font-size: 9px;
+      }
+
+      .construction-input {
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid rgba(246, 211, 138, 0.36);
+        background: rgba(5, 4, 3, 0.72);
+        color: #fff6e4;
+        padding: 12px 13px;
+        outline: none;
+        font: inherit;
+      }
+
+      .construction-input:focus {
+        border-color: #f6d38a;
+        box-shadow: 0 0 0 2px rgba(246, 211, 138, 0.14);
+      }
+
+      .construction-action {
+        min-height: 44px;
+        border: 1px solid rgba(246, 211, 138, 0.6);
+        background: linear-gradient(180deg, #f0a14a, #b9621f);
+        color: #160f09;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .construction-error {
+        min-height: 18px;
+        color: #ffb199;
+        font-size: 11px;
+      }
+
+      .construction-credit {
+        position: absolute;
+        right: 18px;
+        bottom: 14px;
+        z-index: 2;
+        color: rgba(255, 246, 228, 0.54);
+        font-size: 10px;
+        text-decoration: none;
+      }
+
       .loading-screen {
         position: fixed;
         inset: 0;
         z-index: 40;
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
-        padding: 24px;
-        background: var(--bg);
-        transition: opacity 300ms ease;
+        padding: clamp(28px, 6vw, 72px);
+        background: #050403;
+        overflow: hidden;
+        transition: opacity 480ms ease;
       }
 
       body.app-ready .loading-screen {
@@ -638,41 +772,138 @@
         pointer-events: none;
       }
 
+      .loading-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.04);
+        filter: saturate(0.86) contrast(1.08) brightness(0.8);
+      }
+
+      .loading-screen::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(2, 2, 2, 0.78), rgba(2, 2, 2, 0.2) 45%, rgba(2, 2, 2, 0.72)),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.2) 42%, rgba(0, 0, 0, 0.88));
+        z-index: 1;
+      }
+
+      .loading-screen::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.035) 0 1px,
+            transparent 1px 5px
+          );
+        mix-blend-mode: overlay;
+        opacity: 0.22;
+      }
+
       .loading-stack {
+        position: relative;
+        z-index: 3;
+        width: min(760px, 100%);
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 28px;
+        align-items: stretch;
+        gap: 18px;
+        color: #f7efe0;
+        text-shadow: 0 2px 18px rgba(0, 0, 0, 0.72);
       }
 
       .loading-logo {
-        height: 120px;
+        width: 82px;
+        height: auto;
         image-rendering: pixelated;
-        animation: bob 2s ease-in-out infinite;
-        filter: drop-shadow(0 0 24px rgba(232, 118, 10, 0.5));
+        filter: drop-shadow(0 0 18px rgba(232, 118, 10, 0.35));
+        opacity: 0.94;
+      }
+
+      .loading-kicker {
+        font-size: 8px;
+        color: rgba(246, 211, 138, 0.84);
+        letter-spacing: 0;
+      }
+
+      .loading-phrase {
+        max-width: 720px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.65rem, 4.2vw, 3.7rem);
+        line-height: 0.98;
+        letter-spacing: 0;
+        color: #fff8e9;
       }
 
       .loading-bar {
-        width: 260px;
-        height: 14px;
-        border: 2px solid var(--border-mid);
-        background: rgba(0, 0, 0, 0.2);
+        width: 100%;
+        height: 10px;
+        border: 1px solid rgba(246, 211, 138, 0.48);
+        background: rgba(10, 8, 6, 0.72);
         overflow: hidden;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.65),
+          0 10px 32px rgba(0, 0, 0, 0.46);
       }
 
       .loading-bar-fill {
         width: 0%;
         height: 100%;
-        background: var(--accent);
-        box-shadow: inset 0 0 10px rgba(232, 118, 10, 0.6);
+        background:
+          linear-gradient(90deg, #806136, #f6d38a 55%, #fff2bd);
+        box-shadow:
+          inset 0 0 10px rgba(255, 255, 255, 0.18),
+          0 0 18px rgba(246, 211, 138, 0.36);
         transition: width 120ms linear;
       }
 
       .loading-status {
         font-size: 8px;
-        color: var(--text-muted);
-        animation: blink 1.4s step-end infinite;
-        text-align: center;
+        color: rgba(255, 248, 233, 0.72);
+        text-align: left;
+      }
+
+      .loading-credit {
+        position: absolute;
+        right: clamp(16px, 3vw, 32px);
+        bottom: 14px;
+        z-index: 4;
+        font-size: 10px;
+        color: rgba(255, 248, 233, 0.54);
+        text-decoration: none;
+      }
+
+      .loading-credit:hover {
+        color: rgba(255, 248, 233, 0.86);
+      }
+
+      @media (max-width: 640px) {
+        .loading-screen {
+          align-items: flex-end;
+          padding: 28px 18px 48px;
+        }
+
+        .loading-logo {
+          width: 66px;
+        }
+
+        .loading-phrase {
+          font-size: clamp(1.55rem, 11vw, 2.7rem);
+        }
+
+        .loading-credit {
+          left: 18px;
+          right: auto;
+          bottom: 14px;
+        }
       }
 
       .site-header {
@@ -935,6 +1166,10 @@
         justify-content: center;
         gap: 10px;
         flex-wrap: wrap;
+      }
+
+      .hero-action-button {
+        min-height: 32px;
       }
 
       .search-wrap {
@@ -2185,6 +2420,27 @@
         gap: 12px;
       }
 
+      .card-action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .card-tool-button {
+        border-color: rgba(232, 118, 10, 0.34);
+        background: linear-gradient(
+          180deg,
+          rgba(34, 24, 16, 0.98),
+          rgba(15, 11, 8, 0.98)
+        );
+        color: var(--text-bright);
+      }
+
+      .card-tool-button:hover {
+        border-color: var(--accent);
+        color: #fff4da;
+      }
+
       .footer-coords {
         width: 100%;
         border: 1px solid rgba(94, 112, 151, 0.28);
@@ -2335,6 +2591,361 @@
 
       .footer-accent {
         color: var(--accent);
+      }
+
+      .feature-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(8px, 1.4vw, 16px);
+      }
+
+      .feature-modal.open {
+        display: flex;
+      }
+
+      .feature-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(4, 3, 2, 0.78);
+        backdrop-filter: blur(6px);
+      }
+
+      .feature-modal-panel {
+        position: relative;
+        width: min(1380px, 100%);
+        max-height: min(940px, calc(100vh - 16px));
+        overflow: hidden;
+        border: 1px solid var(--border-mid);
+        background:
+          linear-gradient(180deg, rgba(24, 16, 10, 0.98), rgba(9, 7, 5, 0.99)),
+          repeating-linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.03) 0 2px,
+            transparent 2px 16px
+          );
+        box-shadow:
+          0 28px 80px rgba(0, 0, 0, 0.62),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .feature-modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 18px 14px;
+        border-bottom: 1px solid rgba(90, 52, 24, 0.82);
+      }
+
+      .feature-modal-kicker {
+        margin-bottom: 8px;
+        color: var(--accent);
+        font-size: 8px;
+      }
+
+      .feature-modal-title {
+        color: var(--text-bright);
+        font-size: 18px;
+        line-height: 1.35;
+      }
+
+      .feature-modal-subtitle {
+        margin-top: 8px;
+        color: var(--text-muted);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .feature-modal-close {
+        flex: 0 0 auto;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--border);
+        background: rgba(8, 6, 4, 0.58);
+        color: var(--text-bright);
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .feature-modal-close:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .feature-modal-body {
+        max-height: calc(min(940px, 100vh - 16px) - 104px);
+        overflow-y: auto;
+        padding: 18px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(232, 118, 10, 0.72) rgba(15, 17, 23, 0.88);
+      }
+
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .modal-search-panel {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .modal-search-box {
+        position: relative;
+      }
+
+      .modal-search-input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--border-mid);
+        background: rgba(8, 6, 4, 0.68);
+        color: var(--text-bright);
+        padding: 12px 14px;
+        font: inherit;
+        outline: none;
+      }
+
+      .modal-search-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(232, 118, 10, 0.16);
+      }
+
+      .modal-search-results {
+        display: none;
+        position: static;
+        z-index: 5;
+        margin-top: 8px;
+        max-height: min(360px, 42vh);
+        overflow-y: auto;
+        border: 1px solid rgba(90, 52, 24, 0.88);
+        background: rgba(10, 7, 5, 0.98);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-search-results.visible {
+        display: grid;
+      }
+
+      .modal-search-option {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        border: 0;
+        border-bottom: 1px solid rgba(90, 52, 24, 0.45);
+        background: transparent;
+        color: var(--text-bright);
+        padding: 11px 12px;
+        text-align: left;
+      }
+
+      .modal-search-option:hover,
+      .modal-search-option.active {
+        background: rgba(232, 118, 10, 0.12);
+      }
+
+      .modal-search-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .modal-search-meta {
+        color: var(--text-muted);
+        font-size: 10px;
+      }
+
+      .trend-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .trend-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .trend-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid rgba(90, 52, 24, 0.5);
+        background: rgba(8, 6, 4, 0.28);
+        padding: 10px;
+      }
+
+      .trend-name {
+        color: var(--text-bright);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .trend-change {
+        color: var(--accent);
+        font-size: 11px;
+      }
+
+      .trend-change.down {
+        color: #74d49b;
+      }
+
+      .sparkline {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 34px;
+      }
+
+      .sparkline-bar {
+        flex: 1 1 0;
+        min-width: 3px;
+        min-height: 3px;
+        background: rgba(232, 118, 10, 0.78);
+      }
+
+      .sparkline.down .sparkline-bar {
+        background: rgba(116, 212, 155, 0.78);
+      }
+
+      .selected-analytics {
+        margin-top: 14px;
+      }
+
+      .watch-selected-item {
+        border: 1px solid rgba(90, 52, 24, 0.74);
+        background: rgba(8, 6, 4, 0.34);
+        padding: 12px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      .metric-tile {
+        border: 1px solid rgba(90, 52, 24, 0.74);
+        background: rgba(8, 6, 4, 0.38);
+        padding: 12px;
+        min-height: 74px;
+      }
+
+      .metric-label {
+        color: var(--text-muted);
+        font-size: 8px;
+        line-height: 1.6;
+      }
+
+      .metric-value {
+        margin-top: 8px;
+        color: var(--text-bright);
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .analytics-section {
+        margin-top: 14px;
+        border: 1px solid rgba(90, 52, 24, 0.74);
+        background: rgba(8, 6, 4, 0.34);
+        padding: 12px;
+      }
+
+      .analytics-section-title {
+        color: var(--text-bright);
+        font-size: 10px;
+        line-height: 1.7;
+      }
+
+      .chart-bars {
+        height: 180px;
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        padding-top: 14px;
+      }
+
+      .chart-bar {
+        flex: 1 1 0;
+        min-width: 8px;
+        background: linear-gradient(
+          180deg,
+          rgba(232, 118, 10, 0.96),
+          rgba(74, 222, 128, 0.66)
+        );
+        border: 1px solid rgba(255, 220, 160, 0.18);
+        min-height: 4px;
+      }
+
+      .analytics-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 11px;
+      }
+
+      .analytics-table th,
+      .analytics-table td {
+        border-bottom: 1px solid rgba(90, 52, 24, 0.55);
+        padding: 8px 6px;
+        text-align: left;
+      }
+
+      .analytics-table th {
+        color: var(--accent);
+        font-size: 8px;
+      }
+
+      .watch-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .watch-fields {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .field-label {
+        display: grid;
+        gap: 8px;
+        color: var(--text-muted);
+        font-size: 9px;
+      }
+
+      .field-input {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: rgba(8, 6, 4, 0.62);
+        color: var(--text-bright);
+        padding: 11px 12px;
+        font-size: 13px;
+        outline: none;
+      }
+
+      .field-input:focus {
+        border-color: var(--accent);
+      }
+
+      .modal-status {
+        color: var(--text-muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
+      .modal-status.ok {
+        color: var(--emerald);
+      }
+
+      .modal-status.error {
+        color: #fca5a5;
       }
 
       @keyframes bob {
@@ -2669,8 +3280,13 @@
         }
 
         .card-footer-main {
-          flex-direction: column;
-          align-items: stretch;
+          grid-template-columns: 1fr;
+        }
+
+        .analytics-grid,
+        .trend-grid,
+        .watch-fields {
+          grid-template-columns: 1fr;
         }
 
         .map-button {
@@ -2747,7 +3363,7 @@
       }
     </style>
   </head>
-  <body data-sky-mode="auto">
+  <body class="site-locked" data-sky-mode="auto">
     <div class="minecraft-backdrop" aria-hidden="true">
       <div class="backdrop-sky backdrop-sky-day"></div>
       <div class="backdrop-sky backdrop-sky-night"></div>
@@ -2766,14 +3382,69 @@
     </div>
     <canvas class="particles-canvas" id="particles" aria-hidden="true"></canvas>
 
+    <section class="construction-gate" id="constructionGate" aria-label="Site under construction">
+      <img
+        class="construction-gate-bg"
+        src="https://images.unsplash.com/photo-1724204408341-adb2e4538a73?auto=format&fit=crop&w=2200&q=82"
+        alt=""
+        decoding="async"
+      />
+      <div class="construction-panel">
+        <div class="construction-kicker pixel-font">PVC FINDER ACCESS</div>
+        <div class="construction-title">Under construction</div>
+        <div class="construction-copy">
+          The market tools are being rebuilt. Enter the site password to preview the current build.
+        </div>
+        <form class="construction-form" id="constructionForm">
+          <label class="construction-field pixel-font">
+            PASSWORD
+            <input
+              class="construction-input"
+              id="constructionPassword"
+              type="password"
+              autocomplete="current-password"
+              inputmode="text"
+            />
+          </label>
+          <button class="construction-action pixel-font" type="submit">ENTER PREVIEW</button>
+          <div class="construction-error" id="constructionError" aria-live="polite"></div>
+        </form>
+      </div>
+      <a
+        class="construction-credit"
+        href="https://unsplash.com/photos/construction-signs-and-cones-on-a-city-street-tyR9iw8E8AI"
+        target="_blank"
+        rel="noreferrer"
+      >Photo: Surinder Pal Singh / Unsplash</a>
+    </section>
+
     <div class="loading-screen" id="loadingScreen">
+      <img
+        class="loading-bg"
+        id="loadingSceneImage"
+        src="https://images.unsplash.com/photo-1516688159204-9d197444383b?auto=format&fit=crop&w=2200&q=82"
+        alt=""
+        decoding="async"
+        fetchpriority="high"
+      />
       <div class="loading-stack">
         <img class="loading-logo" src="assets/pvc-logo.png" alt="PVC" />
+        <div class="loading-kicker pixel-font">PVC FINDER</div>
+        <div class="loading-phrase" id="loadingScenePhrase">
+          Rumores viajam rapido quando ha emerald na mesa.
+        </div>
         <div class="loading-bar" aria-hidden="true">
           <div class="loading-bar-fill" id="loadingBarFill"></div>
         </div>
         <div class="loading-status pixel-font">LOADING MARKET DATA...</div>
       </div>
+      <a
+        class="loading-credit"
+        id="loadingSceneCredit"
+        href="https://unsplash.com/photos/xPmdw_RliUA"
+        target="_blank"
+        rel="noreferrer"
+      >Photo: Thom Milkovic / Unsplash</a>
     </div>
 
     <div class="app-shell" id="appShell">
@@ -2838,6 +3509,20 @@
             <a class="mini-action active pixel-font" href="/mods"
               >INSTALL MODS</a
             >
+            <button
+              class="mini-action hero-action-button pixel-font"
+              id="heroAnalyticsButton"
+              type="button"
+            >
+              ANALYTICS
+            </button>
+            <button
+              class="mini-action hero-action-button pixel-font"
+              id="heroWatchButton"
+              type="button"
+            >
+              WATCH STORES
+            </button>
           </div>
 
           <div class="search-wrap" id="searchWrap">
@@ -3070,10 +3755,49 @@
       </footer>
     </div>
 
+    <div
+      class="feature-modal"
+      id="featureModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="featureModalTitle"
+      aria-hidden="true"
+    >
+      <div class="feature-modal-backdrop" data-modal-close></div>
+      <div class="feature-modal-panel">
+        <div class="feature-modal-head">
+          <div>
+            <div class="feature-modal-kicker pixel-font" id="featureModalKicker">
+              ANALYTICS
+            </div>
+            <div class="feature-modal-title pixel-font" id="featureModalTitle">
+              Item market
+            </div>
+            <div class="feature-modal-subtitle" id="featureModalSubtitle">
+              Pick an item from the market.
+            </div>
+          </div>
+          <button
+            class="feature-modal-close"
+            type="button"
+            data-modal-close
+            aria-label="Close modal"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="feature-modal-body" id="featureModalBody"></div>
+      </div>
+    </div>
+
     <script src="data/item-textures.js"></script>
     <script>
       const CONFIG = {
         dataUrl: "/api/shops",
+        configUrl: "/api/config",
+        analyticsUrl: "/api/analytics",
+        analyticsTrendsUrl: "/api/analytics/trends",
+        watchSubscribeUrl: "/api/watch/subscribe",
         loadingDuration: 1800,
         loadingPause: 300,
         searchDebounce: 150,
@@ -3081,6 +3805,38 @@
         pageSize: 100,
         mobilePageSize: 36,
       };
+      const PREVIEW_PASSWORD = "leo123";
+
+      const LOADING_SCENES = [
+        {
+          image:
+            "https://images.unsplash.com/photo-1516688159204-9d197444383b?auto=format&fit=crop&w=2200&q=82",
+          credit: "Photo: Thom Milkovic / Unsplash",
+          creditUrl: "https://unsplash.com/photos/xPmdw_RliUA",
+          phrase: "Rumores viajam rapido quando ha emerald na mesa.",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1728998888241-5b31364203a5?auto=format&fit=crop&w=2200&q=82",
+          credit: "Photo: Michael Fousert / Unsplash",
+          creditUrl: "https://unsplash.com/photos/guYxs04Yti8",
+          phrase: "A nevoa cobre as lojas, mas nao os bons negocios.",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1768684160371-566aadb7785e?auto=format&fit=crop&w=2200&q=82",
+          credit: "Photo: Filip Kvasnak / Unsplash",
+          creditUrl: "https://unsplash.com/photos/tvJX2DTeCiQ",
+          phrase: "Antes de comprar, espere a montanha responder.",
+        },
+        {
+          image:
+            "https://images.unsplash.com/photo-1754657540687-76e77adc3919?auto=format&fit=crop&w=2200&q=82",
+          credit: "Photo: Wolfgang Hasselmann / Unsplash",
+          creditUrl: "https://unsplash.com/photos/QinEroxw8dg",
+          phrase: "Toda alvorada traz um preco esquecido por alguem.",
+        },
+      ];
 
       const MC_ASSET_VERSION = "1.21.8";
       const MC_ASSET_TEXTURE_BASE =
@@ -3172,8 +3928,15 @@
       const marketDisplayOrder = ["emerald", "diamond", "netherite"];
 
       const refs = {
+        constructionGate: document.getElementById("constructionGate"),
+        constructionForm: document.getElementById("constructionForm"),
+        constructionPassword: document.getElementById("constructionPassword"),
+        constructionError: document.getElementById("constructionError"),
         loadingBarFill: document.getElementById("loadingBarFill"),
         loadingScreen: document.getElementById("loadingScreen"),
+        loadingSceneImage: document.getElementById("loadingSceneImage"),
+        loadingScenePhrase: document.getElementById("loadingScenePhrase"),
+        loadingSceneCredit: document.getElementById("loadingSceneCredit"),
         appShell: document.getElementById("appShell"),
         searchWrap: document.getElementById("searchWrap"),
         searchInput: document.getElementById("searchInput"),
@@ -3185,6 +3948,8 @@
         updatedText: document.getElementById("updatedText"),
         refreshButton: document.getElementById("refreshButton"),
         refreshLabel: document.getElementById("refreshLabel"),
+        heroAnalyticsButton: document.getElementById("heroAnalyticsButton"),
+        heroWatchButton: document.getElementById("heroWatchButton"),
         skyCycleButton: document.getElementById("skyCycleButton"),
         skyCycleIcon: document.getElementById("skyCycleIcon"),
         skyCycleLabel: document.getElementById("skyCycleLabel"),
@@ -3206,6 +3971,11 @@
         soldOutState: document.getElementById("soldOutState"),
         clearFiltersButton: document.getElementById("clearFiltersButton"),
         particles: document.getElementById("particles"),
+        featureModal: document.getElementById("featureModal"),
+        featureModalKicker: document.getElementById("featureModalKicker"),
+        featureModalTitle: document.getElementById("featureModalTitle"),
+        featureModalSubtitle: document.getElementById("featureModalSubtitle"),
+        featureModalBody: document.getElementById("featureModalBody"),
       };
 
       const state = {
@@ -3240,6 +4010,13 @@
         requestSerial: 0,
         activeRequestId: 0,
         lastDataSource: "unknown",
+        appConfig: {
+          vapidPublicKey: "",
+          supabaseConfigured: false,
+          pushConfigured: false,
+        },
+        modalListing: null,
+        openedUrlItem: false,
       };
 
       let searchTimer = null;
@@ -3250,6 +4027,21 @@
 
       function init() {
         try {
+          applyLoadingScene();
+          bindConstructionGate();
+          if (isConstructionUnlocked()) {
+            unlockConstructionGate();
+            bootApp();
+          } else if (refs.constructionPassword) {
+            refs.constructionPassword.focus();
+          }
+        } catch (error) {
+          handleBootError(error);
+        }
+      }
+
+      function bootApp() {
+        try {
           initSkyMode();
           initParticles();
           bindEvents();
@@ -3258,10 +4050,74 @@
           syncIntentChips();
           syncMobileFilterUI();
           initInfiniteScroll();
+          loadAppConfig();
+          registerServiceWorker();
           tickLoadingBar();
           loadData();
         } catch (error) {
           handleBootError(error);
+        }
+      }
+
+      function bindConstructionGate() {
+        if (!refs.constructionForm) {
+          return;
+        }
+
+        refs.constructionForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const password = String(refs.constructionPassword.value || "").trim();
+
+          if (password !== PREVIEW_PASSWORD) {
+            refs.constructionError.textContent = "Wrong password.";
+            refs.constructionPassword.select();
+            return;
+          }
+
+          try {
+            window.sessionStorage.setItem("pvc-preview-unlocked", "1");
+          } catch (error) {
+            // Session storage can be unavailable in strict privacy modes.
+          }
+          unlockConstructionGate();
+          bootApp();
+        });
+      }
+
+      function isConstructionUnlocked() {
+        try {
+          return window.sessionStorage.getItem("pvc-preview-unlocked") === "1";
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function unlockConstructionGate() {
+        document.body.classList.remove("site-locked");
+        if (refs.constructionGate) {
+          refs.constructionGate.classList.add("hidden");
+          refs.constructionGate.setAttribute("aria-hidden", "true");
+        }
+      }
+
+      function applyLoadingScene() {
+        if (!LOADING_SCENES.length) {
+          return;
+        }
+
+        const scene = LOADING_SCENES[Math.floor(Math.random() * LOADING_SCENES.length)];
+
+        if (refs.loadingSceneImage) {
+          refs.loadingSceneImage.src = scene.image;
+        }
+
+        if (refs.loadingScenePhrase) {
+          refs.loadingScenePhrase.textContent = scene.phrase;
+        }
+
+        if (refs.loadingSceneCredit) {
+          refs.loadingSceneCredit.textContent = scene.credit;
+          refs.loadingSceneCredit.href = scene.creditUrl;
         }
       }
 
@@ -3354,6 +4210,14 @@
           }
 
           loadData({ showLoadingScreen: false, forceFresh: true });
+        });
+
+        refs.heroAnalyticsButton.addEventListener("click", () => {
+          openAnalyticsModal(null);
+        });
+
+        refs.heroWatchButton.addEventListener("click", () => {
+          openWatchModal(null);
         });
 
         refs.mobileFilterToggle.addEventListener("click", () => {
@@ -3458,6 +4322,24 @@
         });
 
         refs.resultsGrid.addEventListener("click", (event) => {
+          const analyticsButton = event.target.closest("[data-open-analytics]");
+          if (analyticsButton) {
+            const listing = getListingById(
+              analyticsButton.getAttribute("data-open-analytics"),
+            );
+            openAnalyticsModal(listing);
+            return;
+          }
+
+          const watchButton = event.target.closest("[data-open-watch]");
+          if (watchButton) {
+            const listing = getListingById(
+              watchButton.getAttribute("data-open-watch"),
+            );
+            openWatchModal(listing);
+            return;
+          }
+
           const coordsCopy = event.target.closest("[data-copy-coords]");
           if (coordsCopy) {
             const value = coordsCopy.getAttribute("data-copy-coords") || "";
@@ -3508,6 +4390,18 @@
           enchantToggle.textContent = isOpen
             ? "▼  HIDE ENCHANTS"
             : "▶  VIEW ENCHANTS";
+        });
+
+        refs.featureModal.addEventListener("click", (event) => {
+          if (event.target.closest("[data-modal-close]")) {
+            closeFeatureModal();
+          }
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && refs.featureModal.classList.contains("open")) {
+            closeFeatureModal();
+          }
         });
 
         document.addEventListener("click", (event) => {
@@ -3686,6 +4580,7 @@
           refs.errorState.classList.add("hidden");
           updateStats();
           renderAll();
+          openUrlItemModalIfNeeded();
           startRelativeTime();
           requestSucceeded = true;
         } catch (error) {
@@ -3743,6 +4638,9 @@
 
           const response = await Promise.race([
             fetch(url, {
+              method: options.method || "GET",
+              headers: options.headers || undefined,
+              body: options.body,
               cache: "no-store",
               signal: controller ? controller.signal : undefined,
             }),
@@ -3776,6 +4674,792 @@
             window.clearTimeout(timeoutId);
           }
         }
+      }
+
+      async function loadAppConfig() {
+        try {
+          const config = await fetchJsonUrl(CONFIG.configUrl);
+          state.appConfig = {
+            vapidPublicKey: config.vapidPublicKey || "",
+            supabaseConfigured: Boolean(config.supabaseConfigured),
+            pushConfigured: Boolean(config.pushConfigured),
+          };
+        } catch (error) {
+          console.warn("Could not load app config.", error);
+        }
+      }
+
+      function registerServiceWorker() {
+        if (!("serviceWorker" in navigator)) {
+          return;
+        }
+
+        navigator.serviceWorker.register("/sw.js").catch((error) => {
+          console.warn("Could not register service worker.", error);
+        });
+      }
+
+      function getListingById(id) {
+        return state.listings.find((listing) => listing.id === id) || null;
+      }
+
+      function getPrimaryListingForModal() {
+        if (state.filtered && state.filtered.length) {
+          return state.filtered[0];
+        }
+
+        return state.listings[0] || null;
+      }
+
+      function openUrlItemModalIfNeeded() {
+        if (state.openedUrlItem) {
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const itemId = params.get("item");
+        if (!itemId) {
+          return;
+        }
+
+        const listing = state.listings.find((entry) => entry.marketKey === itemId);
+        if (!listing) {
+          return;
+        }
+
+        state.openedUrlItem = true;
+        openAnalyticsModal(listing);
+      }
+
+      function openFeatureModal({ kicker, title, subtitle, bodyHtml }) {
+        refs.featureModalKicker.textContent = kicker;
+        refs.featureModalTitle.textContent = title;
+        refs.featureModalSubtitle.textContent = subtitle;
+        refs.featureModalBody.innerHTML = bodyHtml;
+        refs.featureModal.classList.add("open");
+        refs.featureModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeFeatureModal() {
+        refs.featureModal.classList.remove("open");
+        refs.featureModal.setAttribute("aria-hidden", "true");
+        refs.featureModalBody.innerHTML = "";
+        state.modalListing = null;
+        document.body.style.overflow = "";
+      }
+
+      function openEmptyFeatureModal(mode) {
+        openFeatureModal({
+          kicker: mode === "watch" ? "WATCH STORES" : "ANALYTICS",
+          title: mode === "watch" ? "Choose an item to watch" : "Market analytics",
+          subtitle: "Search the market catalog to inspect an item.",
+          bodyHtml:
+            '<div class="modal-status">Load market data, then choose a result to inspect.</div>',
+        });
+      }
+
+      function buildAnalyticsHomeMarkup(selectedListing) {
+        return [
+          buildModalItemSearchMarkup("analytics", selectedListing),
+          '<div class="trend-grid">',
+          '  <div class="analytics-section">',
+          '    <div class="analytics-section-title pixel-font">RISING THIS MONTH</div>',
+          '    <div class="trend-list" data-trend-list="rising"><div class="modal-status">Loading 30-day movers...</div></div>',
+          "  </div>",
+          '  <div class="analytics-section">',
+          '    <div class="analytics-section-title pixel-font">FALLING THIS MONTH</div>',
+          '    <div class="trend-list" data-trend-list="falling"><div class="modal-status">Loading 30-day movers...</div></div>',
+          "  </div>",
+          "</div>",
+          '<div class="selected-analytics" data-selected-analytics>',
+          selectedListing
+            ? '<div class="modal-status">Loading price history...</div>'
+            : '<div class="modal-status">Search an item above to inspect stores, daily lows, and price logs.</div>',
+          "</div>",
+        ].join("");
+      }
+
+      function buildModalItemSearchMarkup(mode, selectedListing) {
+        const placeholder =
+          mode === "watch"
+            ? "Search item to watch, ex: cobblestone"
+            : "Search item for price analytics";
+        const value = selectedListing ? selectedListing.displayName : "";
+
+        return [
+          '<div class="modal-search-panel">',
+          '  <div class="modal-search-box">',
+          '    <input class="modal-search-input" data-modal-item-search="' +
+            escapeAttribute(mode) +
+            '" type="search" autocomplete="off" placeholder="' +
+            escapeAttribute(placeholder) +
+            '" value="' +
+            escapeAttribute(value) +
+            '" />',
+          '    <div class="modal-search-results" data-modal-item-results="' +
+            escapeAttribute(mode) +
+            '"></div>',
+          "  </div>",
+          "</div>",
+        ].join("");
+      }
+
+      function bindModalItemSearch(mode) {
+        const input = refs.featureModalBody.querySelector(
+          '[data-modal-item-search="' + cssEscape(mode) + '"]',
+        );
+        const results = refs.featureModalBody.querySelector(
+          '[data-modal-item-results="' + cssEscape(mode) + '"]',
+        );
+
+        if (!input || !results) {
+          return;
+        }
+
+        const renderResults = () => {
+          const options = searchSellItemOptions(input.value).slice(0, 12);
+          if (!options.length) {
+            results.classList.remove("visible");
+            results.innerHTML = "";
+            return;
+          }
+
+          results.innerHTML = options
+            .map((option, index) => {
+              return [
+                '<button class="modal-search-option' +
+                  (index === 0 ? " active" : "") +
+                  '" type="button" data-modal-item-key="' +
+                  escapeAttribute(option.marketKey) +
+                  '">',
+                '  <span class="modal-search-name">' +
+                  escapeHtml(option.displayName) +
+                  "</span>",
+                '  <span class="modal-search-meta pixel-font">' +
+                  escapeHtml(formatPrice(option.currentPrice)) +
+                  " · " +
+                  escapeHtml(formatNumber(option.offers)) +
+                  " offers</span>",
+                "</button>",
+              ].join("");
+            })
+            .join("");
+          results.classList.add("visible");
+        };
+
+        input.addEventListener("input", renderResults);
+        input.addEventListener("focus", renderResults);
+        input.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") {
+            return;
+          }
+
+          const first = searchSellItemOptions(input.value)[0];
+          if (!first) {
+            return;
+          }
+
+          event.preventDefault();
+          selectModalItem(mode, first.marketKey);
+        });
+
+        results.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-modal-item-key]");
+          if (!button) {
+            return;
+          }
+
+          selectModalItem(mode, button.getAttribute("data-modal-item-key") || "");
+        });
+      }
+
+      function bindTrendPicker() {
+        const trendGrid = refs.featureModalBody.querySelector(".trend-grid");
+        if (!trendGrid) {
+          return;
+        }
+
+        trendGrid.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-modal-item-key]");
+          if (!button) {
+            return;
+          }
+
+          selectModalItem("analytics", button.getAttribute("data-modal-item-key") || "");
+        });
+      }
+
+      function selectModalItem(mode, marketKey) {
+        const listing = getBestListingForMarketKey(marketKey);
+        if (!listing) {
+          return;
+        }
+
+        if (mode === "watch") {
+          openWatchModal(listing);
+          return;
+        }
+
+        state.modalListing = listing;
+        refs.featureModalTitle.textContent = "Market analytics";
+        refs.featureModalSubtitle.textContent =
+          listing.displayName + " · " + buildCurrentPriceLabel(listing);
+        const input = refs.featureModalBody.querySelector('[data-modal-item-search="analytics"]');
+        const results = refs.featureModalBody.querySelector('[data-modal-item-results="analytics"]');
+        if (input) {
+          input.value = listing.displayName;
+        }
+        if (results) {
+          results.classList.remove("visible");
+          results.innerHTML = "";
+        }
+        loadSelectedAnalytics(listing);
+      }
+
+      function getSellItemOptions() {
+        const byKey = new Map();
+        state.listings.forEach((listing) => {
+          const price = getListingUnitPrice(listing);
+          if (!listing.marketKey || !Number.isFinite(price)) {
+            return;
+          }
+
+          const existing = byKey.get(listing.marketKey);
+          if (!existing) {
+            byKey.set(listing.marketKey, {
+              marketKey: listing.marketKey,
+              displayName: listing.displayName,
+              normalized: normalizeForSearch(listing.displayName),
+              currentPrice: price,
+              offers: 1,
+            });
+            return;
+          }
+
+          existing.offers += 1;
+          if (price < existing.currentPrice) {
+            existing.currentPrice = price;
+            existing.displayName = listing.displayName;
+            existing.normalized = normalizeForSearch(listing.displayName);
+          }
+        });
+
+        return Array.from(byKey.values()).sort((left, right) => {
+          return (
+            compareNumber(left.normalized.localeCompare(right.normalized), 0) ||
+            compareNumber(left.currentPrice, right.currentPrice)
+          );
+        });
+      }
+
+      function searchSellItemOptions(query) {
+        const normalizedQuery = normalizeForSearch(query);
+        const terms = tokenize(query);
+        const options = getSellItemOptions();
+
+        if (!normalizedQuery) {
+          return options.slice(0, 20);
+        }
+
+        return options
+          .filter((option) => {
+            if (option.normalized === normalizedQuery) {
+              return true;
+            }
+            if (option.normalized.startsWith(normalizedQuery)) {
+              return true;
+            }
+            return terms.every((term) => option.normalized.includes(term));
+          })
+          .sort((left, right) => {
+            const leftExact = left.normalized === normalizedQuery ? 1 : 0;
+            const rightExact = right.normalized === normalizedQuery ? 1 : 0;
+            const leftPrefix = left.normalized.startsWith(normalizedQuery) ? 1 : 0;
+            const rightPrefix = right.normalized.startsWith(normalizedQuery) ? 1 : 0;
+            return (
+              compareNumber(rightExact, leftExact) ||
+              compareNumber(rightPrefix, leftPrefix) ||
+              compareNumber(left.displayName.length, right.displayName.length) ||
+              left.displayName.localeCompare(right.displayName)
+            );
+          });
+      }
+
+      function getBestListingForMarketKey(marketKey) {
+        return state.listings
+          .filter((listing) => listing.marketKey === marketKey)
+          .sort((left, right) => {
+            return compareNullableNumber(getListingUnitPrice(left), getListingUnitPrice(right));
+          })[0] || null;
+      }
+
+      function getItemOfferCountLabel(marketKey) {
+        const count = state.listings.filter((listing) => listing.marketKey === marketKey).length;
+        return formatNumber(count) + (count === 1 ? " offer" : " offers");
+      }
+
+      async function loadAnalyticsTrends() {
+        const risingNode = refs.featureModalBody.querySelector('[data-trend-list="rising"]');
+        const fallingNode = refs.featureModalBody.querySelector('[data-trend-list="falling"]');
+        if (!risingNode || !fallingNode) {
+          return;
+        }
+
+        try {
+          const payload = await fetchJsonUrl(CONFIG.analyticsTrendsUrl + "?days=30");
+          risingNode.innerHTML = buildTrendListMarkup(payload.rising || [], "up", payload.configured);
+          fallingNode.innerHTML = buildTrendListMarkup(payload.falling || [], "down", payload.configured);
+        } catch (error) {
+          const markup =
+            '<div class="modal-status error">Could not load 30-day trends: ' +
+            escapeHtml(error.message || String(error)) +
+            "</div>";
+          risingNode.innerHTML = markup;
+          fallingNode.innerHTML = markup;
+        }
+      }
+
+      function buildTrendListMarkup(rows, direction, configured) {
+        if (!configured) {
+          return '<div class="modal-status">Trend charts need Supabase snapshots. The cron keeps at most the last 30 days in this view.</div>';
+        }
+
+        if (!rows.length) {
+          return '<div class="modal-status">No two-day movement found in the last 30 days yet.</div>';
+        }
+
+        return rows
+          .map((row) => {
+            const percent = Number(row.changePercent);
+            const sign = percent > 0 ? "+" : "";
+            return [
+              '<button class="trend-row" type="button" data-modal-item-key="' +
+                escapeAttribute(row.itemId) +
+                '">',
+              '  <span class="trend-name">' + escapeHtml(row.itemName || row.itemId) + "</span>",
+              '  <span class="trend-change ' +
+                (direction === "down" ? "down" : "up") +
+                '">' +
+                escapeHtml(sign + Math.round(percent * 1000) / 10 + "%") +
+                "</span>",
+              buildSparklineMarkup(row.daily || [], direction),
+              "</button>",
+            ].join("");
+          })
+          .join("");
+      }
+
+      function buildSparklineMarkup(daily, direction) {
+        const values = daily.map((day) => Number(day.low)).filter(Number.isFinite);
+        const max = values.length ? Math.max(...values) : 0;
+        const bars = daily
+          .map((day) => {
+            const value = Number(day.low);
+            const height = max > 0 && Number.isFinite(value) ? Math.max(10, (value / max) * 100) : 10;
+            return '<span class="sparkline-bar" style="height:' + height + '%"></span>';
+          })
+          .join("");
+        return '<span class="sparkline ' + (direction === "down" ? "down" : "up") + '">' + bars + "</span>";
+      }
+
+      async function openAnalyticsModal(listing) {
+        state.modalListing = listing || null;
+        openFeatureModal({
+          kicker: "ANALYTICS",
+          title: "Market analytics",
+          subtitle: listing
+            ? listing.displayName + " · " + buildCurrentPriceLabel(listing)
+            : "Search an item, then compare its stores and price history.",
+          bodyHtml: buildAnalyticsHomeMarkup(listing),
+        });
+
+        bindModalItemSearch("analytics");
+        bindTrendPicker();
+        loadAnalyticsTrends();
+
+        if (listing) {
+          await loadSelectedAnalytics(listing);
+        }
+      }
+
+      async function loadSelectedAnalytics(listing) {
+        const target = refs.featureModalBody.querySelector("[data-selected-analytics]");
+        if (!target || !listing) {
+          return;
+        }
+
+        target.innerHTML = '<div class="modal-status">Loading price history...</div>';
+
+        try {
+          const payload = await fetchJsonUrl(
+            CONFIG.analyticsUrl + "?days=30&itemId=" + encodeURIComponent(listing.marketKey),
+          );
+          if (state.modalListing !== listing) {
+            return;
+          }
+          target.innerHTML = buildAnalyticsMarkup(listing, payload);
+        } catch (error) {
+          target.innerHTML =
+            '<div class="modal-status error">Could not load analytics: ' +
+            escapeHtml(error.message || String(error)) +
+            "</div>" +
+            buildAnalyticsMarkup(listing, { configured: false });
+        }
+      }
+
+      function openWatchModal(listing) {
+        state.modalListing = listing || null;
+        openFeatureModal({
+          kicker: "WATCH STORES",
+          title: "Watch price",
+          subtitle: "Choose the item first, then set the price that should trigger an alert.",
+          bodyHtml: buildWatchMarkup(listing),
+        });
+
+        bindModalItemSearch("watch");
+
+        const form = refs.featureModalBody.querySelector("[data-watch-form]");
+        if (!form) {
+          return;
+        }
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          await submitWatchForm(form, listing);
+        });
+      }
+
+      function buildWatchMarkup(listing) {
+        const currentPrice = listing ? getListingUnitPrice(listing) : null;
+        const targetValue = Number.isFinite(currentPrice)
+          ? formatModalNumber(currentPrice)
+          : "";
+        const configNote =
+          state.appConfig.supabaseConfigured
+            ? "Daily cron will compare this target against the cheapest current store."
+            : "Supabase env vars are missing, so saving will fail until they are set in Vercel.";
+
+        return [
+          buildModalItemSearchMarkup("watch", listing),
+          listing
+            ? '<div class="watch-selected-item"><strong>' +
+              escapeHtml(listing.displayName) +
+              "</strong><br />Current cheapest: " +
+              escapeHtml(formatPrice(currentPrice)) +
+              " · " +
+              escapeHtml(getItemOfferCountLabel(listing.marketKey)) +
+              "</div>"
+            : '<div class="modal-status">Search an item above before activating a price alert.</div>',
+          listing
+            ? [
+                '<form class="watch-form" data-watch-form>',
+                '  <div class="watch-fields">',
+                '    <label class="field-label pixel-font">IN-GAME NAME',
+                '      <input class="field-input" name="playerName" autocomplete="nickname" required />',
+                "    </label>",
+                '    <label class="field-label pixel-font">TARGET PRICE',
+                '      <input class="field-input" name="targetPrice" inputmode="decimal" type="number" step="0.0001" min="0.0001" value="' +
+                  escapeAttribute(targetValue) +
+                  '" required />',
+                "    </label>",
+                "  </div>",
+                '  <button class="mini-action active pixel-font" type="submit">ACTIVATE ALERT</button>',
+                '  <div class="modal-status" data-watch-status>' +
+                  escapeHtml(configNote) +
+                  "</div>",
+                "</form>",
+              ].join("")
+            : "",
+        ].join("");
+      }
+
+      async function submitWatchForm(form, listing) {
+        const status = form.querySelector("[data-watch-status]");
+        const submitButton = form.querySelector('button[type="submit"]');
+        const formData = new FormData(form);
+        const playerName = String(formData.get("playerName") || "").trim();
+        const targetPrice = Number(formData.get("targetPrice"));
+
+        if (!listing) {
+          setModalStatus(status, "error", "Choose an item to watch first.");
+          return;
+        }
+
+        if (!playerName || !Number.isFinite(targetPrice) || targetPrice <= 0) {
+          setModalStatus(status, "error", "Fill name and a valid target price.");
+          return;
+        }
+
+        submitButton.disabled = true;
+        setModalStatus(status, "", "Preparing browser notification permission...");
+
+        try {
+          const subscription = await getPushSubscription();
+          setModalStatus(status, "", "Saving watch subscription...");
+          await fetchJsonUrl(CONFIG.watchSubscribeUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              playerName,
+              targetPrice,
+              itemId: listing.marketKey,
+              itemName: listing.displayName,
+              subscription,
+            }),
+          });
+          setModalStatus(status, "ok", "Alert saved. The daily Vercel cron will check this item.");
+        } catch (error) {
+          setModalStatus(status, "error", error.message || String(error));
+        } finally {
+          submitButton.disabled = false;
+        }
+      }
+
+      function setModalStatus(node, tone, message) {
+        node.classList.toggle("ok", tone === "ok");
+        node.classList.toggle("error", tone === "error");
+        node.textContent = message;
+      }
+
+      async function getPushSubscription() {
+        if (!state.appConfig.pushConfigured || !state.appConfig.vapidPublicKey) {
+          return null;
+        }
+
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+          return null;
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          return null;
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+        const existing = await registration.pushManager.getSubscription();
+        if (existing) {
+          return existing.toJSON();
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            state.appConfig.vapidPublicKey,
+          ),
+        });
+        return subscription.toJSON();
+      }
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let index = 0; index < rawData.length; index += 1) {
+          outputArray[index] = rawData.charCodeAt(index);
+        }
+        return outputArray;
+      }
+
+      function buildAnalyticsMarkup(listing, payload) {
+        const local = buildLocalAnalytics(listing);
+        const summary = payload && payload.summary ? payload.summary : local.summary;
+        const daily = payload && payload.daily && payload.daily.length ? payload.daily : local.daily;
+        const stores = payload && payload.stores && payload.stores.length ? payload.stores : local.stores;
+        const rows = payload && payload.rows && payload.rows.length ? payload.rows : local.rows;
+        const configured = payload && payload.configured !== false;
+        const notice = configured
+          ? ""
+          : '<div class="modal-status">Historical Supabase data is not active yet. Showing the current loaded market as a preview.</div>';
+
+        return [
+          notice,
+          '<div class="analytics-grid">',
+          buildMetricTile("CURRENT", formatPrice(summary.currentPrice)),
+          buildMetricTile("LOW 30D", formatPrice(summary.historicalLow)),
+          buildMetricTile("HIGH 30D", formatPrice(summary.historicalHigh)),
+          buildMetricTile("AVG 7D", formatPrice(summary.average7d)),
+          buildMetricTile("AVG 30D", formatPrice(summary.average30d)),
+          buildMetricTile("STORES", formatNumber(summary.storesSelling || 0)),
+          buildMetricTile("CHEAP STORE", summary.cheapestStore || "--"),
+          buildMetricTile("FAST GONE", summary.fastestGoneStore || "--"),
+          "</div>",
+          buildChartSection(daily),
+          buildStoreTable(stores),
+          buildSnapshotTable(rows),
+        ].join("");
+      }
+
+      function buildLocalAnalytics(listing) {
+        const offers = state.listings
+          .filter((entry) => entry.marketKey === listing.marketKey)
+          .map((entry) => ({
+            item_id: entry.marketKey,
+            item_name: entry.displayName,
+            store_name: entry.shopName,
+            price: getListingUnitPrice(entry),
+            stock: entry.offerStock,
+            available: entry.offerStock > 0,
+            snapshot_date: "current",
+          }))
+          .filter((entry) => Number.isFinite(entry.price));
+        const available = offers.filter((entry) => entry.available);
+        const prices = offers.map((entry) => Number(entry.price));
+        const cheapest = offers.slice().sort((left, right) => left.price - right.price)[0];
+        const averagePrice = averageNumbers(prices);
+
+        return {
+          summary: {
+            currentPrice: cheapest ? cheapest.price : null,
+            historicalLow: prices.length ? Math.min(...prices) : null,
+            historicalHigh: prices.length ? Math.max(...prices) : null,
+            average7d: averagePrice,
+            average30d: averagePrice,
+            storesSelling: new Set(available.map((entry) => entry.store_name)).size,
+            cheapestStore: cheapest ? cheapest.store_name : "",
+            fastestGoneStore: "",
+          },
+          daily: [
+            {
+              date: "current",
+              low: cheapest ? cheapest.price : null,
+              average: averagePrice,
+              stores: offers.length,
+              availableStores: available.length,
+            },
+          ],
+          stores: offers
+            .map((entry) => ({
+              storeName: entry.store_name,
+              low: entry.price,
+              average: entry.price,
+              daysAvailable: entry.available ? 1 : 0,
+              samples: 1,
+            }))
+            .sort((left, right) => left.average - right.average),
+          rows: offers,
+        };
+      }
+
+      function buildMetricTile(label, value) {
+        return [
+          '<div class="metric-tile">',
+          '  <div class="metric-label pixel-font">' + escapeHtml(label) + "</div>",
+          '  <div class="metric-value">' + escapeHtml(value || "--") + "</div>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildChartSection(daily) {
+        const values = daily.map((day) => Number(day.low)).filter(Number.isFinite);
+        const max = values.length ? Math.max(...values) : 0;
+        const bars = daily
+          .slice(-30)
+          .map((day) => {
+            const value = Number(day.low);
+            const height = max > 0 && Number.isFinite(value) ? Math.max(4, (value / max) * 100) : 4;
+            return (
+              '<div class="chart-bar" style="height:' +
+              height +
+              '%" title="' +
+              escapeAttribute(day.date + " · " + formatPrice(value)) +
+              '"></div>'
+            );
+          })
+          .join("");
+
+        return [
+          '<div class="analytics-section">',
+          '  <div class="analytics-section-title pixel-font">DAILY LOW PRICE</div>',
+          '  <div class="chart-bars" aria-label="Daily low price chart">' + bars + "</div>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildStoreTable(stores) {
+        const rows = stores
+          .slice(0, 8)
+          .map((store) => {
+            return [
+              "<tr>",
+              "<td>" + escapeHtml(store.storeName || "--") + "</td>",
+              "<td>" + escapeHtml(formatPrice(store.low)) + "</td>",
+              "<td>" + escapeHtml(formatPrice(store.average)) + "</td>",
+              "<td>" + escapeHtml(formatNumber(store.daysAvailable || 0)) + "</td>",
+              "</tr>",
+            ].join("");
+          })
+          .join("");
+
+        return [
+          '<div class="analytics-section">',
+          '  <div class="analytics-section-title pixel-font">STORE SIGNALS</div>',
+          '  <table class="analytics-table">',
+          "    <thead><tr><th>STORE</th><th>LOW</th><th>AVG</th><th>DAYS</th></tr></thead>",
+          "    <tbody>" + rows + "</tbody>",
+          "  </table>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildSnapshotTable(rows) {
+        const body = rows
+          .slice(0, 12)
+          .map((row) => {
+            return [
+              "<tr>",
+              "<td>" + escapeHtml(row.snapshot_date || "current") + "</td>",
+              "<td>" + escapeHtml(row.store_name || row.storeName || "--") + "</td>",
+              "<td>" + escapeHtml(formatPrice(Number(row.price))) + "</td>",
+              "<td>" + escapeHtml(formatNumber(numberOrZero(row.stock))) + "</td>",
+              "</tr>",
+            ].join("");
+          })
+          .join("");
+
+        return [
+          '<div class="analytics-section">',
+          '  <div class="analytics-section-title pixel-font">DAY AND STORE LOG</div>',
+          '  <table class="analytics-table">',
+          "    <thead><tr><th>DAY</th><th>STORE</th><th>PRICE</th><th>STOCK</th></tr></thead>",
+          "    <tbody>" + body + "</tbody>",
+          "  </table>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildCurrentPriceLabel(listing) {
+        return "current " + formatPrice(getListingUnitPrice(listing));
+      }
+
+      function getListingUnitPrice(listing) {
+        if (
+          listing &&
+          Number.isFinite(listing.paymentMarketValue) &&
+          Number.isFinite(listing.outputUnits) &&
+          listing.outputUnits > 0
+        ) {
+          return listing.paymentMarketValue / listing.outputUnits;
+        }
+
+        return null;
+      }
+
+      function formatPrice(value) {
+        return Number.isFinite(value) ? formatMarketNumber(value) + " market" : "--";
+      }
+
+      function formatModalNumber(value) {
+        return Number.isFinite(value) ? String(Math.round(value * 10000) / 10000) : "";
+      }
+
+      function averageNumbers(values) {
+        const safeValues = values.filter(Number.isFinite);
+        if (!safeValues.length) {
+          return null;
+        }
+        return safeValues.reduce((sum, value) => sum + value, 0) / safeValues.length;
       }
 
       function getSellerRawName(ownerName) {
@@ -4667,6 +6351,14 @@
           '    <a class="footer-button map-button" href="' +
             escapeAttribute(listing.mapUrl) +
             '" target="_blank" rel="noreferrer">VIEW SHOP →</a>',
+          "    </div>",
+          '    <div class="card-action-grid">',
+          '      <button class="footer-button card-tool-button" type="button" data-open-analytics="' +
+            escapeAttribute(listing.id) +
+            '">ANALYTICS</button>',
+          '      <button class="footer-button card-tool-button" type="button" data-open-watch="' +
+            escapeAttribute(listing.id) +
+            '">WATCH PRICE</button>',
           "    </div>",
           '    <button class="footer-coords" type="button" data-copy-coords="' +
             escapeAttribute(coordsCopyValue) +

@@ -6,5 +6,8 @@
     "dev": "node scripts/local-dev-server.js",
     "start": "node scripts/local-dev-server.js",
     "textures:generate": "node scripts/generate-item-textures.mjs"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
   }
 }

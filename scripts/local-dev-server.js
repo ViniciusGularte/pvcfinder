@@ -4,6 +4,12 @@ const path = require("path");
 const { URL } = require("url");
 
 const shopsHandler = require("../api/shops");
+const configHandler = require("../api/config");
+const analyticsHandler = require("../api/analytics");
+const analyticsTrendsHandler = require("../api/analytics/trends");
+const watchSubscribeHandler = require("../api/watch/subscribe");
+const dailySnapshotHandler = require("../api/cron/daily-snapshot");
+const cronStatusHandler = require("../api/cron/status");
 
 const rootDir = path.resolve(__dirname, "..");
 const host = process.env.HOST || "127.0.0.1";
@@ -58,6 +64,10 @@ function safePathname(requestUrl) {
     return "mods.html";
   }
 
+  if (normalizedPath === "/analytics" || normalizedPath === "/analytics/") {
+    return "index.html";
+  }
+
   return normalizedPath.replace(/^[/\\]+/, "");
 }
 
@@ -102,6 +112,78 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/shops") {
     try {
       await shopsHandler(req, enhancedRes);
+    } catch (error) {
+      sendJson(enhancedRes, 500, {
+        error: "Unexpected local server error",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+    return;
+  }
+
+  if (pathname === "/api/config") {
+    try {
+      await configHandler(req, enhancedRes);
+    } catch (error) {
+      sendJson(enhancedRes, 500, {
+        error: "Unexpected local server error",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+    return;
+  }
+
+  if (pathname === "/api/analytics") {
+    try {
+      await analyticsHandler(req, enhancedRes);
+    } catch (error) {
+      sendJson(enhancedRes, 500, {
+        error: "Unexpected local server error",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+    return;
+  }
+
+  if (pathname === "/api/analytics/trends") {
+    try {
+      await analyticsTrendsHandler(req, enhancedRes);
+    } catch (error) {
+      sendJson(enhancedRes, 500, {
+        error: "Unexpected local server error",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+    return;
+  }
+
+  if (pathname === "/api/watch/subscribe") {
+    try {
+      await watchSubscribeHandler(req, enhancedRes);
+    } catch (error) {
+      sendJson(enhancedRes, 500, {
+        error: "Unexpected local server error",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+    return;
+  }
+
+  if (pathname === "/api/cron/daily-snapshot") {
+    try {
+      await dailySnapshotHandler(req, enhancedRes);
+    } catch (error) {
+      sendJson(enhancedRes, 500, {
+        error: "Unexpected local server error",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+    return;
+  }
+
+  if (pathname === "/api/cron/status") {
+    try {
+      await cronStatusHandler(req, enhancedRes);
     } catch (error) {
       sendJson(enhancedRes, 500, {
         error: "Unexpected local server error",

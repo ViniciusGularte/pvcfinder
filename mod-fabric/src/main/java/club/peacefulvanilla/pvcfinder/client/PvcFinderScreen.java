@@ -347,7 +347,7 @@ public final class PvcFinderScreen extends Screen {
                 mouseY,
                 left + 68,
                 y,
-                jesusChipLabel(),
+                partyChipLabel(),
                 PvcFinderClient.isImaginaryFriendActive(),
                 COLOR_DIAMOND,
                 false
@@ -464,10 +464,10 @@ public final class PvcFinderScreen extends Screen {
             return true;
         }
 
-        int jesusX = left + 68;
-        int jesusY = nukeRowY();
-        int jesusWidth = chipWidth(jesusChipLabel(), false);
-        if (isInside(mouseX, mouseY, jesusX, jesusY, jesusWidth, CHIP_HEIGHT)) {
+        int partyX = left + 68;
+        int partyY = nukeRowY();
+        int partyWidth = chipWidth(partyChipLabel(), false);
+        if (isInside(mouseX, mouseY, partyX, partyY, partyWidth, CHIP_HEIGHT)) {
             PvcFinderClient.toggleImaginaryFriend(minecraft);
             return true;
         }
@@ -852,11 +852,11 @@ public final class PvcFinderScreen extends Screen {
         guiGraphics.drawString(font, label, x, y, COLOR_TEXT_GHOST, false);
     }
 
-    private String jesusChipLabel() {
+    private String partyChipLabel() {
         return Component.translatable(
                 PvcFinderClient.isImaginaryFriendActive()
-                        ? "screen.pvcfinder.hide_jesus"
-                        : "screen.pvcfinder.spawn_jesus"
+                        ? "screen.pvcfinder.hide_party"
+                        : "screen.pvcfinder.spawn_party"
         ).getString();
     }
 
