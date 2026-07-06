@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/daily-snapshot",
-      "schedule": "0 * * * *"
+      "schedule": "0 5 * * *"
     }
   ],
   "rewrites": [
