@@ -4155,12 +4155,8 @@
       function init() {
         try {
           bindConstructionGate();
-          if (isConstructionUnlocked()) {
-            unlockConstructionGate();
-            bootApp();
-          } else if (refs.constructionPassword) {
-            refs.constructionPassword.focus();
-          }
+          unlockConstructionGate();
+          bootApp();
         } catch (error) {
           handleBootError(error);
         }
