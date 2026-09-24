@@ -518,9 +518,21 @@
         position: absolute;
         inset: -18vh -16vw;
         background:
-          radial-gradient(circle at 20% 20%, rgba(103, 232, 249, 0.22), transparent 18%),
-          radial-gradient(circle at 78% 18%, rgba(232, 118, 10, 0.14), transparent 15%),
-          radial-gradient(circle at 50% 48%, rgba(74, 222, 128, 0.08), transparent 24%),
+          radial-gradient(
+            circle at 20% 20%,
+            rgba(103, 232, 249, 0.22),
+            transparent 18%
+          ),
+          radial-gradient(
+            circle at 78% 18%,
+            rgba(232, 118, 10, 0.14),
+            transparent 15%
+          ),
+          radial-gradient(
+            circle at 50% 48%,
+            rgba(74, 222, 128, 0.08),
+            transparent 24%
+          ),
           linear-gradient(180deg, #020207 0%, #05030b 44%, #080604 100%);
       }
 
@@ -532,9 +544,22 @@
         height: 42vh;
         transform: rotate(-12deg);
         background:
-          radial-gradient(ellipse at center, rgba(215, 231, 255, 0.24), transparent 12%),
-          radial-gradient(ellipse at center, rgba(103, 232, 249, 0.12), transparent 30%),
-          linear-gradient(90deg, transparent, rgba(255, 245, 215, 0.14), transparent);
+          radial-gradient(
+            ellipse at center,
+            rgba(215, 231, 255, 0.24),
+            transparent 12%
+          ),
+          radial-gradient(
+            ellipse at center,
+            rgba(103, 232, 249, 0.12),
+            transparent 30%
+          ),
+          linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 245, 215, 0.14),
+            transparent
+          );
         filter: blur(12px);
         opacity: 0.7;
         animation: galaxyDrift 42s ease-in-out infinite alternate;
@@ -552,27 +577,54 @@
 
       .galaxy-starfield {
         background-image:
-          radial-gradient(circle, rgba(255, 255, 255, 0.98) 0 1px, transparent 1.6px),
-          radial-gradient(circle, rgba(103, 232, 249, 0.88) 0 1px, transparent 1.7px);
-        background-size: 140px 140px, 220px 220px;
-        background-position: 8px 18px, 60px 44px;
+          radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.98) 0 1px,
+            transparent 1.6px
+          ),
+          radial-gradient(
+            circle,
+            rgba(103, 232, 249, 0.88) 0 1px,
+            transparent 1.7px
+          );
+        background-size:
+          140px 140px,
+          220px 220px;
+        background-position:
+          8px 18px,
+          60px 44px;
         opacity: 0.62;
         animation: starCrawlSlow 70s linear infinite;
       }
 
       .galaxy-starfield::before {
         background-image:
-          radial-gradient(circle, rgba(255, 244, 211, 0.9) 0 1px, transparent 1.5px),
-          radial-gradient(circle, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.5px);
-        background-size: 86px 86px, 164px 164px;
-        background-position: 24px 8px, 14px 82px;
+          radial-gradient(
+            circle,
+            rgba(255, 244, 211, 0.9) 0 1px,
+            transparent 1.5px
+          ),
+          radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.72) 0 1px,
+            transparent 1.5px
+          );
+        background-size:
+          86px 86px,
+          164px 164px;
+        background-position:
+          24px 8px,
+          14px 82px;
         opacity: 0.5;
         animation: starCrawlFast 38s linear infinite;
       }
 
       .galaxy-starfield::after {
-        background-image:
-          radial-gradient(circle, rgba(255, 255, 255, 0.58) 0 1px, transparent 1.4px);
+        background-image: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.58) 0 1px,
+          transparent 1.4px
+        );
         background-size: 56px 56px;
         background-position: 18px 28px;
         opacity: 0.36;
@@ -597,8 +649,17 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 50% 25%, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.58) 70%),
-          linear-gradient(180deg, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.72) 78%, rgba(0, 0, 0, 0.88));
+          radial-gradient(
+            circle at 50% 25%,
+            rgba(0, 0, 0, 0.16),
+            rgba(0, 0, 0, 0.58) 70%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.26),
+            rgba(0, 0, 0, 0.72) 78%,
+            rgba(0, 0, 0, 0.88)
+          );
       }
 
       @keyframes galaxyDrift {
@@ -614,13 +675,17 @@
 
       @keyframes starCrawlSlow {
         to {
-          background-position: 260px 150px, 320px 244px;
+          background-position:
+            260px 150px,
+            320px 244px;
         }
       }
 
       @keyframes starCrawlFast {
         to {
-          background-position: 220px 124px, 190px 248px;
+          background-position:
+            220px 124px,
+            190px 248px;
         }
       }
 
@@ -670,16 +735,56 @@
         position: absolute;
         inset: -18vh -14vw;
         background:
-          radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.5px),
-          radial-gradient(circle at 18% 62%, rgba(103, 232, 249, 0.84) 0 1px, transparent 1.6px),
-          radial-gradient(circle at 34% 10%, rgba(255, 246, 228, 0.86) 0 1px, transparent 1.5px),
-          radial-gradient(circle at 66% 24%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.5px),
-          radial-gradient(circle at 78% 72%, rgba(103, 232, 249, 0.78) 0 1px, transparent 1.6px),
-          radial-gradient(circle at 92% 34%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.5px),
-          radial-gradient(circle at 24% 20%, rgba(103, 232, 249, 0.24), transparent 18%),
-          radial-gradient(circle at 78% 18%, rgba(246, 211, 138, 0.2), transparent 16%),
-          radial-gradient(ellipse at 50% 46%, rgba(255, 255, 255, 0.24), transparent 13%),
-          radial-gradient(ellipse at 50% 46%, rgba(103, 232, 249, 0.17), transparent 34%),
+          radial-gradient(
+            circle at 8% 18%,
+            rgba(255, 255, 255, 0.9) 0 1px,
+            transparent 1.5px
+          ),
+          radial-gradient(
+            circle at 18% 62%,
+            rgba(103, 232, 249, 0.84) 0 1px,
+            transparent 1.6px
+          ),
+          radial-gradient(
+            circle at 34% 10%,
+            rgba(255, 246, 228, 0.86) 0 1px,
+            transparent 1.5px
+          ),
+          radial-gradient(
+            circle at 66% 24%,
+            rgba(255, 255, 255, 0.82) 0 1px,
+            transparent 1.5px
+          ),
+          radial-gradient(
+            circle at 78% 72%,
+            rgba(103, 232, 249, 0.78) 0 1px,
+            transparent 1.6px
+          ),
+          radial-gradient(
+            circle at 92% 34%,
+            rgba(255, 255, 255, 0.82) 0 1px,
+            transparent 1.5px
+          ),
+          radial-gradient(
+            circle at 24% 20%,
+            rgba(103, 232, 249, 0.24),
+            transparent 18%
+          ),
+          radial-gradient(
+            circle at 78% 18%,
+            rgba(246, 211, 138, 0.2),
+            transparent 16%
+          ),
+          radial-gradient(
+            ellipse at 50% 46%,
+            rgba(255, 255, 255, 0.24),
+            transparent 13%
+          ),
+          radial-gradient(
+            ellipse at 50% 46%,
+            rgba(103, 232, 249, 0.17),
+            transparent 34%
+          ),
           linear-gradient(180deg, rgba(2, 2, 10, 0.4), rgba(0, 0, 0, 0.86));
         filter: saturate(1.15);
         animation: galaxyDrift 46s ease-in-out infinite alternate;
@@ -690,8 +795,17 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 50% 20%, rgba(103, 232, 249, 0.1), transparent 28%),
-          linear-gradient(90deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.48) 48%, rgba(0, 0, 0, 0.82)),
+          radial-gradient(
+            circle at 50% 20%,
+            rgba(103, 232, 249, 0.1),
+            transparent 28%
+          ),
+          linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.82),
+            rgba(0, 0, 0, 0.48) 48%,
+            rgba(0, 0, 0, 0.82)
+          ),
           linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.82));
         z-index: 1;
       }
@@ -2954,7 +3068,11 @@
         width: 2px;
         min-height: 8px;
         transform: translateX(-50%);
-        background: linear-gradient(180deg, rgba(232, 118, 10, 0.8), rgba(74, 222, 128, 0.6));
+        background: linear-gradient(
+          180deg,
+          rgba(232, 118, 10, 0.8),
+          rgba(74, 222, 128, 0.6)
+        );
       }
 
       .price-history-dot {
@@ -3105,7 +3223,6 @@
         .price-history-label {
           font-size: 8px;
         }
-
       }
 
       @keyframes bob {
@@ -3367,10 +3484,10 @@
           grid-template-columns: 1fr;
         }
 
-	        .analytics-grid,
-	        .trend-grid {
-	          grid-template-columns: 1fr;
-	        }
+        .analytics-grid,
+        .trend-grid {
+          grid-template-columns: 1fr;
+        }
 
         .map-button {
           width: 100%;
@@ -3455,13 +3572,18 @@
     </div>
     <canvas class="particles-canvas" id="particles" aria-hidden="true"></canvas>
 
-    <section class="construction-gate" id="constructionGate" aria-label="Site under construction">
+    <section
+      class="construction-gate"
+      id="constructionGate"
+      aria-label="Site under construction"
+    >
       <div class="construction-gate-bg" aria-hidden="true"></div>
       <div class="construction-panel">
         <div class="construction-kicker pixel-font">PVC FINDER ACCESS</div>
         <div class="construction-title">Under construction</div>
         <div class="construction-copy">
-          The market tools are being rebuilt. Enter the site password to preview the current build.
+          The market tools are being rebuilt. Enter the site password to preview
+          the current build.
         </div>
         <form class="construction-form" id="constructionForm">
           <label class="construction-field pixel-font">
@@ -3474,8 +3596,14 @@
               inputmode="text"
             />
           </label>
-          <button class="construction-action pixel-font" type="submit">ENTER PREVIEW</button>
-          <div class="construction-error" id="constructionError" aria-live="polite"></div>
+          <button class="construction-action pixel-font" type="submit">
+            ENTER PREVIEW
+          </button>
+          <div
+            class="construction-error"
+            id="constructionError"
+            aria-live="polite"
+          ></div>
         </form>
       </div>
     </section>
@@ -3795,7 +3923,10 @@
       <div class="feature-modal-panel">
         <div class="feature-modal-head">
           <div>
-            <div class="feature-modal-kicker pixel-font" id="featureModalKicker">
+            <div
+              class="feature-modal-kicker pixel-font"
+              id="featureModalKicker"
+            >
               MARKET HISTORY
             </div>
             <div class="feature-modal-title pixel-font" id="featureModalTitle">
@@ -3827,10 +3958,7 @@
           "data/shops-snapshot.json",
           "/pvc/data/shops-snapshot.json",
         ],
-        historyUrls: [
-          "/api/pvc/history",
-          "/api/history",
-        ],
+        historyUrls: ["/api/pvc/history", "/api/history"],
         loadingDuration: 8500,
         loadingPause: 300,
         searchDebounce: 150,
@@ -3923,7 +4051,11 @@
       const marketCurrencyDisplay = {
         emerald: { icon: "💚", short: "emerald", color: "var(--emerald)" },
         diamond: { icon: "💎", short: "diamond", color: "var(--diamond)" },
-        netherite: { icon: "🖤", short: "netherite", color: "var(--text-bright)" },
+        netherite: {
+          icon: "🖤",
+          short: "netherite",
+          color: "var(--text-bright)",
+        },
         debris: { icon: "🌑", short: "debris", color: "var(--text-muted)" },
         gold: { icon: "🟡", short: "gold", color: "#f59e0b" },
         iron: { icon: "⚙️", short: "iron", color: "var(--text)" },
@@ -4048,6 +4180,7 @@
           handleBootError(error);
         }
       }
+      window.sessionStorage.setItem("pvc-preview-unlocked", "1");
 
       function bindConstructionGate() {
         if (!refs.constructionForm) {
@@ -4101,12 +4234,17 @@
 
         if (refs.loadingScreen) {
           refs.loadingScreen.style.display = visible ? "flex" : "none";
-          refs.loadingScreen.setAttribute("aria-hidden", visible ? "false" : "true");
+          refs.loadingScreen.setAttribute(
+            "aria-hidden",
+            visible ? "false" : "true",
+          );
         }
 
         if (refs.appShell) {
           refs.appShell.style.opacity = visible ? "0" : "1";
-          refs.appShell.style.transform = visible ? "translateY(10px)" : "translateY(0)";
+          refs.appShell.style.transform = visible
+            ? "translateY(10px)"
+            : "translateY(0)";
         }
       }
 
@@ -4377,7 +4515,9 @@
               analyticsTab.getAttribute("data-analytics-tab") === "sell"
                 ? "sell"
                 : "buy";
-            const target = refs.featureModalBody.querySelector("[data-selected-analytics]");
+            const target = refs.featureModalBody.querySelector(
+              "[data-selected-analytics]",
+            );
             if (target && state.modalListing) {
               target.innerHTML = buildAnalyticsMarkup(
                 state.modalListing,
@@ -4389,8 +4529,11 @@
 
           const rangeTab = event.target.closest("[data-history-range]");
           if (rangeTab) {
-            state.marketHistoryRange = Number(rangeTab.getAttribute("data-history-range")) || 7;
-            const target = refs.featureModalBody.querySelector("[data-selected-analytics]");
+            state.marketHistoryRange =
+              Number(rangeTab.getAttribute("data-history-range")) || 7;
+            const target = refs.featureModalBody.querySelector(
+              "[data-selected-analytics]",
+            );
             if (target && state.modalListing) {
               target.innerHTML = buildAnalyticsMarkup(
                 state.modalListing,
@@ -4401,7 +4544,10 @@
         });
 
         document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape" && refs.featureModal.classList.contains("open")) {
+          if (
+            event.key === "Escape" &&
+            refs.featureModal.classList.contains("open")
+          ) {
             closeFeatureModal();
           }
         });
@@ -4484,9 +4630,10 @@
       }
 
       async function fetchMarketData(forceFresh) {
-        const urls = Array.isArray(CONFIG.dataUrls) && CONFIG.dataUrls.length
-          ? CONFIG.dataUrls
-          : ["/api/pvc/shops"];
+        const urls =
+          Array.isArray(CONFIG.dataUrls) && CONFIG.dataUrls.length
+            ? CONFIG.dataUrls
+            : ["/api/pvc/shops"];
         const errors = [];
 
         for (const dataUrl of urls) {
@@ -4533,7 +4680,8 @@
         setRefreshState(true);
 
         try {
-          const { payload, response, sourceUrl } = await fetchMarketData(forceFresh);
+          const { payload, response, sourceUrl } =
+            await fetchMarketData(forceFresh);
 
           if (requestId !== state.activeRequestId) {
             return;
@@ -4544,12 +4692,11 @@
             payload.information && payload.information.timeDumped
               ? new Date(payload.information.timeDumped)
               : null;
-          state.lastDataSource =
-            (
-              response.headers.get("x-pvc-data-source") ||
-              (sourceUrl.includes("snapshot") ? "snapshot" : "") ||
-              "live"
-            ).toLowerCase();
+          state.lastDataSource = (
+            response.headers.get("x-pvc-data-source") ||
+            (sourceUrl.includes("snapshot") ? "snapshot" : "") ||
+            "live"
+          ).toLowerCase();
           const flattened = flattenListings(state.shops);
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
@@ -4721,19 +4868,24 @@
         grouped.forEach((entry, itemId) => {
           const available = entry.offers.filter((offer) => offer.available);
           const priced = available.length ? available : entry.offers;
-          const prices = priced.map((offer) => offer.price).filter(Number.isFinite);
+          const prices = priced
+            .map((offer) => offer.price)
+            .filter(Number.isFinite);
           if (!prices.length) {
             return;
           }
 
-          const cheapest = priced.slice().sort((left, right) => left.price - right.price)[0];
+          const cheapest = priced
+            .slice()
+            .sort((left, right) => left.price - right.price)[0];
           const row = {
             date,
             itemName: entry.itemName,
             low: Math.min(...prices),
             average: averageNumbers(prices),
             high: Math.max(...prices),
-            availableStores: new Set(available.map((offer) => offer.storeName)).size,
+            availableStores: new Set(available.map((offer) => offer.storeName))
+              .size,
             stores: new Set(entry.offers.map((offer) => offer.storeName)).size,
             offers: entry.offers.length,
             totalStock: available.reduce((sum, offer) => sum + offer.stock, 0),
@@ -4743,7 +4895,9 @@
           const rows = Array.isArray(store[itemId]) ? store[itemId] : [];
           const nextRows = rows.filter((existing) => existing.date !== date);
           nextRows.push(row);
-          nextRows.sort((left, right) => String(left.date).localeCompare(String(right.date)));
+          nextRows.sort((left, right) =>
+            String(left.date).localeCompare(String(right.date)),
+          );
           store[itemId] = nextRows.slice(-MARKET_HISTORY_MAX_DAYS);
         });
 
@@ -4756,7 +4910,9 @@
         const limit = Math.max(1, Number(days) || 7);
         return safeRows
           .slice()
-          .sort((left, right) => String(left.date).localeCompare(String(right.date)))
+          .sort((left, right) =>
+            String(left.date).localeCompare(String(right.date)),
+          )
           .slice(-limit);
       }
 
@@ -4765,9 +4921,10 @@
           return null;
         }
 
-        const urls = Array.isArray(CONFIG.historyUrls) && CONFIG.historyUrls.length
-          ? CONFIG.historyUrls
-          : ["/api/pvc/history"];
+        const urls =
+          Array.isArray(CONFIG.historyUrls) && CONFIG.historyUrls.length
+            ? CONFIG.historyUrls
+            : ["/api/pvc/history"];
         const query =
           "?itemId=" +
           encodeURIComponent(listing.marketKey) +
@@ -4779,7 +4936,11 @@
             const payload = await fetchJsonUrl(
               new URL(historyUrl + query, window.location.href).href,
             );
-            if (payload && Array.isArray(payload.daily) && payload.daily.length) {
+            if (
+              payload &&
+              Array.isArray(payload.daily) &&
+              payload.daily.length
+            ) {
               return payload;
             }
           } catch (error) {
@@ -4813,7 +4974,9 @@
           return;
         }
 
-        const listing = state.listings.find((entry) => entry.marketKey === itemId);
+        const listing = state.listings.find(
+          (entry) => entry.marketKey === itemId,
+        );
         if (!listing) {
           return;
         }
@@ -4949,7 +5112,10 @@
             return;
           }
 
-          selectModalItem(mode, button.getAttribute("data-modal-item-key") || "");
+          selectModalItem(
+            mode,
+            button.getAttribute("data-modal-item-key") || "",
+          );
         });
       }
 
@@ -4965,7 +5131,10 @@
             return;
           }
 
-          selectModalItem("analytics", button.getAttribute("data-modal-item-key") || "");
+          selectModalItem(
+            "analytics",
+            button.getAttribute("data-modal-item-key") || "",
+          );
         });
       }
 
@@ -4981,8 +5150,12 @@
         refs.featureModalTitle.textContent = "Market history";
         refs.featureModalSubtitle.textContent =
           listing.displayName + " · " + buildCurrentPriceLabel(listing);
-        const input = refs.featureModalBody.querySelector('[data-modal-item-search="analytics"]');
-        const results = refs.featureModalBody.querySelector('[data-modal-item-results="analytics"]');
+        const input = refs.featureModalBody.querySelector(
+          '[data-modal-item-search="analytics"]',
+        );
+        const results = refs.featureModalBody.querySelector(
+          '[data-modal-item-results="analytics"]',
+        );
         if (input) {
           input.value = listing.displayName;
         }
@@ -5051,33 +5224,51 @@
           .sort((left, right) => {
             const leftExact = left.normalized === normalizedQuery ? 1 : 0;
             const rightExact = right.normalized === normalizedQuery ? 1 : 0;
-            const leftPrefix = left.normalized.startsWith(normalizedQuery) ? 1 : 0;
-            const rightPrefix = right.normalized.startsWith(normalizedQuery) ? 1 : 0;
+            const leftPrefix = left.normalized.startsWith(normalizedQuery)
+              ? 1
+              : 0;
+            const rightPrefix = right.normalized.startsWith(normalizedQuery)
+              ? 1
+              : 0;
             return (
               compareNumber(rightExact, leftExact) ||
               compareNumber(rightPrefix, leftPrefix) ||
-              compareNumber(left.displayName.length, right.displayName.length) ||
+              compareNumber(
+                left.displayName.length,
+                right.displayName.length,
+              ) ||
               left.displayName.localeCompare(right.displayName)
             );
           });
       }
 
       function getBestListingForMarketKey(marketKey) {
-        return state.listings
-          .filter((listing) => listing.marketKey === marketKey)
-          .sort((left, right) => {
-            return compareNullableNumber(getListingUnitPrice(left), getListingUnitPrice(right));
-          })[0] || null;
+        return (
+          state.listings
+            .filter((listing) => listing.marketKey === marketKey)
+            .sort((left, right) => {
+              return compareNullableNumber(
+                getListingUnitPrice(left),
+                getListingUnitPrice(right),
+              );
+            })[0] || null
+        );
       }
 
       function getItemOfferCountLabel(marketKey) {
-        const count = state.listings.filter((listing) => listing.marketKey === marketKey).length;
+        const count = state.listings.filter(
+          (listing) => listing.marketKey === marketKey,
+        ).length;
         return formatNumber(count) + (count === 1 ? " offer" : " offers");
       }
 
       async function loadAnalyticsTrends() {
-        const risingNode = refs.featureModalBody.querySelector('[data-trend-list="rising"]');
-        const fallingNode = refs.featureModalBody.querySelector('[data-trend-list="falling"]');
+        const risingNode = refs.featureModalBody.querySelector(
+          '[data-trend-list="rising"]',
+        );
+        const fallingNode = refs.featureModalBody.querySelector(
+          '[data-trend-list="falling"]',
+        );
         const trendGrid = refs.featureModalBody.querySelector(".trend-grid");
         if (!risingNode || !fallingNode) {
           return;
@@ -5110,7 +5301,9 @@
               '<button class="trend-row" type="button" data-modal-item-key="' +
                 escapeAttribute(row.itemId) +
                 '">',
-              '  <span class="trend-name">' + escapeHtml(row.itemName || row.itemId) + "</span>",
+              '  <span class="trend-name">' +
+                escapeHtml(row.itemName || row.itemId) +
+                "</span>",
               '  <span class="trend-change ' +
                 (direction === "down" ? "down" : "up") +
                 '">' +
@@ -5124,16 +5317,31 @@
       }
 
       function buildSparklineMarkup(daily, direction) {
-        const values = daily.map((day) => Number(day.low)).filter(Number.isFinite);
+        const values = daily
+          .map((day) => Number(day.low))
+          .filter(Number.isFinite);
         const max = values.length ? Math.max(...values) : 0;
         const bars = daily
           .map((day) => {
             const value = Number(day.low);
-            const height = max > 0 && Number.isFinite(value) ? Math.max(10, (value / max) * 100) : 10;
-            return '<span class="sparkline-bar" style="height:' + height + '%"></span>';
+            const height =
+              max > 0 && Number.isFinite(value)
+                ? Math.max(10, (value / max) * 100)
+                : 10;
+            return (
+              '<span class="sparkline-bar" style="height:' +
+              height +
+              '%"></span>'
+            );
           })
           .join("");
-        return '<span class="sparkline ' + (direction === "down" ? "down" : "up") + '">' + bars + "</span>";
+        return (
+          '<span class="sparkline ' +
+          (direction === "down" ? "down" : "up") +
+          '">' +
+          bars +
+          "</span>"
+        );
       }
 
       async function openAnalyticsModal(listing) {
@@ -5157,22 +5365,37 @@
       }
 
       async function loadSelectedAnalytics(listing) {
-        const target = refs.featureModalBody.querySelector("[data-selected-analytics]");
+        const target = refs.featureModalBody.querySelector(
+          "[data-selected-analytics]",
+        );
         if (!target || !listing) {
           return;
         }
 
         const centralHistory = await fetchCentralMarketHistory(listing);
         state.modalAnalyticsPayload = centralHistory || { configured: false };
-        target.innerHTML = buildAnalyticsMarkup(listing, state.modalAnalyticsPayload);
+        target.innerHTML = buildAnalyticsMarkup(
+          listing,
+          state.modalAnalyticsPayload,
+        );
       }
 
       function buildAnalyticsMarkup(listing, payload) {
         const local = buildLocalAnalytics(listing);
-        const summary = payload && payload.summary ? payload.summary : local.summary;
-        const daily = payload && payload.daily && payload.daily.length ? payload.daily : local.daily;
-        const stores = payload && payload.stores && payload.stores.length ? payload.stores : local.stores;
-        const rows = payload && payload.rows && payload.rows.length ? payload.rows : local.rows;
+        const summary =
+          payload && payload.summary ? payload.summary : local.summary;
+        const daily =
+          payload && payload.daily && payload.daily.length
+            ? payload.daily
+            : local.daily;
+        const stores =
+          payload && payload.stores && payload.stores.length
+            ? payload.stores
+            : local.stores;
+        const rows =
+          payload && payload.rows && payload.rows.length
+            ? payload.rows
+            : local.rows;
         const mode = "buy";
         const activeData = { summary, daily, stores, rows };
         const insights = buildAnalyticsInsights(
@@ -5182,9 +5405,10 @@
           activeData.rows,
           mode,
         );
-        const notice = insights.dataDays > 1
-          ? ""
-          : '<div class="modal-status">First local snapshot saved. Keep checking the market over time to build the 7d and 30d history.</div>';
+        const notice =
+          insights.dataDays > 1
+            ? ""
+            : '<div class="modal-status">First local snapshot saved. Keep checking the market over time to build the 7d and 30d history.</div>';
 
         return [
           notice,
@@ -5192,12 +5416,30 @@
           buildAnalyticsPriceGuide(),
           buildAnalyticsCallout(insights, mode),
           '<div class="analytics-grid">',
-          buildMetricTile("CHEAPEST NOW", formatPrice(insights.currentPrice), formatPriceEquivalenceText(insights.currentPrice)),
-          buildMetricTile("AVG PRICE", formatPrice(insights.averagePrice), formatPriceEquivalenceText(insights.averagePrice)),
-          buildMetricTile("LOWEST SAVED", formatPrice(insights.bestPrice), formatPriceEquivalenceText(insights.bestPrice)),
+          buildMetricTile(
+            "CHEAPEST NOW",
+            formatPrice(insights.currentPrice),
+            formatPriceEquivalenceText(insights.currentPrice),
+          ),
+          buildMetricTile(
+            "AVG PRICE",
+            formatPrice(insights.averagePrice),
+            formatPriceEquivalenceText(insights.averagePrice),
+          ),
+          buildMetricTile(
+            "LOWEST SAVED",
+            formatPrice(insights.bestPrice),
+            formatPriceEquivalenceText(insights.bestPrice),
+          ),
           buildMetricTile("STORE TO CHECK", insights.cheapestStore || "--"),
-          buildMetricTile("IN-STOCK STORES", formatNumber(insights.storesSelling || 0)),
-          buildMetricTile("TOTAL STOCK", formatNumber(insights.totalStock || 0)),
+          buildMetricTile(
+            "IN-STOCK STORES",
+            formatNumber(insights.storesSelling || 0),
+          ),
+          buildMetricTile(
+            "TOTAL STOCK",
+            formatNumber(insights.totalStock || 0),
+          ),
           "</div>",
           buildChartSection(insights.daily, insights, mode),
           buildStoreTable(insights.stores, mode),
@@ -5208,24 +5450,30 @@
       function buildHistoryRangeTabs() {
         return [
           '<div class="history-range-tabs" role="tablist" aria-label="Market history range">',
-          [1, 7, 30].map((days) => {
-            return (
-              '<button class="history-range-tab' +
-              (state.marketHistoryRange === days ? " active" : "") +
-              '" type="button" data-history-range="' +
-              days +
-              '">' +
-              days +
-              "d</button>"
-            );
-          }).join(""),
+          [1, 7, 30]
+            .map((days) => {
+              return (
+                '<button class="history-range-tab' +
+                (state.marketHistoryRange === days ? " active" : "") +
+                '" type="button" data-history-range="' +
+                days +
+                '">' +
+                days +
+                "d</button>"
+              );
+            })
+            .join(""),
           "</div>",
         ].join("");
       }
 
       function buildAnalyticsTabs(mode, buyData, sellData) {
-        const buyCount = buyData && buyData.summary ? buyData.summary.storesSelling || 0 : 0;
-        const sellCount = sellData && sellData.summary ? sellData.summary.storesSelling || 0 : 0;
+        const buyCount =
+          buyData && buyData.summary ? buyData.summary.storesSelling || 0 : 0;
+        const sellCount =
+          sellData && sellData.summary
+            ? sellData.summary.storesSelling || 0
+            : 0;
         return [
           '<div class="analytics-tabs" role="tablist" aria-label="Price check side">',
           '  <button class="analytics-tab' +
@@ -5249,48 +5497,76 @@
           .map((day) => ({
             ...day,
             low: Number(day.low),
-            average: Number.isFinite(Number(day.average)) ? Number(day.average) : null,
+            average: Number.isFinite(Number(day.average))
+              ? Number(day.average)
+              : null,
           }))
-          .sort((left, right) => String(left.date).localeCompare(String(right.date)));
+          .sort((left, right) =>
+            String(left.date).localeCompare(String(right.date)),
+          );
         const safeStores = (Array.isArray(stores) ? stores : [])
           .map((store) => ({
             ...store,
             low: Number.isFinite(Number(store.low)) ? Number(store.low) : null,
-            current: Number.isFinite(Number(store.current)) ? Number(store.current) : null,
-            average: Number.isFinite(Number(store.average)) ? Number(store.average) : null,
+            current: Number.isFinite(Number(store.current))
+              ? Number(store.current)
+              : null,
+            average: Number.isFinite(Number(store.average))
+              ? Number(store.average)
+              : null,
           }))
           .filter((store) => Number.isFinite(store.low))
           .sort((left, right) => {
-            const leftCurrent = Number.isFinite(left.current) ? left.current : Number.POSITIVE_INFINITY;
-            const rightCurrent = Number.isFinite(right.current) ? right.current : Number.POSITIVE_INFINITY;
+            const leftCurrent = Number.isFinite(left.current)
+              ? left.current
+              : Number.POSITIVE_INFINITY;
+            const rightCurrent = Number.isFinite(right.current)
+              ? right.current
+              : Number.POSITIVE_INFINITY;
             if (higherIsBetter) {
-              const leftBest = Number.isFinite(left.current) ? left.current : left.low;
-              const rightBest = Number.isFinite(right.current) ? right.current : right.low;
+              const leftBest = Number.isFinite(left.current)
+                ? left.current
+                : left.low;
+              const rightBest = Number.isFinite(right.current)
+                ? right.current
+                : right.low;
               return rightBest - leftBest;
             }
             return leftCurrent - rightCurrent || left.low - right.low;
           });
-        const dailyLows = safeDaily.map((day) => day.low).filter(Number.isFinite);
-        const dailyAverages = safeDaily.map((day) => day.average).filter(Number.isFinite);
+        const dailyLows = safeDaily
+          .map((day) => day.low)
+          .filter(Number.isFinite);
+        const dailyAverages = safeDaily
+          .map((day) => day.average)
+          .filter(Number.isFinite);
         const latestDay = safeDaily[safeDaily.length - 1] || null;
-        const currentPrice = Number.isFinite(Number(summary && summary.currentPrice))
+        const currentPrice = Number.isFinite(
+          Number(summary && summary.currentPrice),
+        )
           ? Number(summary.currentPrice)
           : latestDay
             ? latestDay.low
             : safeStores[0]
               ? safeStores[0].current || safeStores[0].low
               : null;
-        const bestPrice = Number.isFinite(Number(summary && summary.historicalLow))
+        const bestPrice = Number.isFinite(
+          Number(summary && summary.historicalLow),
+        )
           ? Number(summary.historicalLow)
           : dailyLows.length
             ? higherIsBetter
               ? Math.max(...dailyLows)
               : Math.min(...dailyLows)
             : null;
-        const typicalLow = Number.isFinite(Number(summary && summary.typicalLow))
+        const typicalLow = Number.isFinite(
+          Number(summary && summary.typicalLow),
+        )
           ? Number(summary.typicalLow)
           : median(dailyLows);
-        const storesSelling = Number.isFinite(Number(summary && summary.storesSelling))
+        const storesSelling = Number.isFinite(
+          Number(summary && summary.storesSelling),
+        )
           ? Number(summary.storesSelling)
           : latestDay
             ? Number(latestDay.availableStores || latestDay.stores || 0)
@@ -5300,7 +5576,9 @@
           : Number.isFinite(Number(summary && summary.average7d))
             ? Number(summary.average7d)
             : null;
-        const totalStock = Number.isFinite(Number(summary && summary.totalStock))
+        const totalStock = Number.isFinite(
+          Number(summary && summary.totalStock),
+        )
           ? Number(summary.totalStock)
           : latestDay
             ? numberOrZero(latestDay.totalStock)
@@ -5321,7 +5599,9 @@
           storesSelling,
           cheapestStore,
           dataDays,
-          latestDate: (summary && summary.latestDate) || (latestDay ? latestDay.date : ""),
+          latestDate:
+            (summary && summary.latestDate) ||
+            (latestDay ? latestDay.date : ""),
           daily: safeDaily,
           stores: safeStores,
           rows: Array.isArray(rows) ? rows : [],
@@ -5342,8 +5622,7 @@
           copy = Number.isFinite(current)
             ? "This tab is for selling your item to a shop. Higher emerald value is better here, because it is what you receive."
             : "No current recipe has this item on the payment side with stock available.";
-        } else
-        if (Number.isFinite(current)) {
+        } else if (Number.isFinite(current)) {
           if (insights.dataDays < 2) {
             title = "First saved price: use it as a baseline.";
             copy =
@@ -5366,7 +5645,9 @@
         return [
           '<div class="analytics-callout">',
           "  <div>",
-          '    <div class="analytics-callout-title">' + escapeHtml(title) + "</div>",
+          '    <div class="analytics-callout-title">' +
+            escapeHtml(title) +
+            "</div>",
           '    <div class="analytics-callout-copy">' +
             escapeHtml(copy) +
             (insights.cheapestStore
@@ -5399,7 +5680,9 @@
             if (!Number.isFinite(value)) {
               return "";
             }
-            return "1 " + base + " is being estimated around " + formatPrice(value);
+            return (
+              "1 " + base + " is being estimated around " + formatPrice(value)
+            );
           })
           .filter(Boolean);
 
@@ -5428,7 +5711,9 @@
           .filter((entry) => Number.isFinite(entry.price));
         const available = offers.filter((entry) => entry.available);
         const prices = offers.map((entry) => Number(entry.price));
-        const cheapest = offers.slice().sort((left, right) => left.price - right.price)[0];
+        const cheapest = offers
+          .slice()
+          .sort((left, right) => left.price - right.price)[0];
         const averagePrice = averageNumbers(prices);
         const historyRows = getMarketHistoryRows(
           listing.marketKey,
@@ -5441,26 +5726,37 @@
           average: averagePrice,
           high: prices.length ? Math.max(...prices) : null,
           stores: new Set(offers.map((entry) => entry.store_name)).size,
-          availableStores: new Set(available.map((entry) => entry.store_name)).size,
+          availableStores: new Set(available.map((entry) => entry.store_name))
+            .size,
           offers: offers.length,
-          totalStock: available.reduce((sum, entry) => sum + numberOrZero(entry.stock), 0),
+          totalStock: available.reduce(
+            (sum, entry) => sum + numberOrZero(entry.stock),
+            0,
+          ),
           cheapestStore: cheapest ? cheapest.store_name : "",
         };
-        const daily = (historyRows.length ? historyRows : [currentHistoryRow])
-          .map((row) => ({
-            date: row.date || "current",
-            low: Number.isFinite(Number(row.low)) ? Number(row.low) : null,
-            average: Number.isFinite(Number(row.average)) ? Number(row.average) : null,
-            high: Number.isFinite(Number(row.high)) ? Number(row.high) : null,
-            stores: numberOrZero(row.stores),
-            availableStores: numberOrZero(row.availableStores),
-            offers: numberOrZero(row.offers),
-            totalStock: numberOrZero(row.totalStock),
-            cheapestStore: row.cheapestStore || "",
-          }));
+        const daily = (
+          historyRows.length ? historyRows : [currentHistoryRow]
+        ).map((row) => ({
+          date: row.date || "current",
+          low: Number.isFinite(Number(row.low)) ? Number(row.low) : null,
+          average: Number.isFinite(Number(row.average))
+            ? Number(row.average)
+            : null,
+          high: Number.isFinite(Number(row.high)) ? Number(row.high) : null,
+          stores: numberOrZero(row.stores),
+          availableStores: numberOrZero(row.availableStores),
+          offers: numberOrZero(row.offers),
+          totalStock: numberOrZero(row.totalStock),
+          cheapestStore: row.cheapestStore || "",
+        }));
         const latestDaily = daily[daily.length - 1] || currentHistoryRow;
-        const lowValues = daily.map((row) => Number(row.low)).filter(Number.isFinite);
-        const averageValues = daily.map((row) => Number(row.average)).filter(Number.isFinite);
+        const lowValues = daily
+          .map((row) => Number(row.low))
+          .filter(Number.isFinite);
+        const averageValues = daily
+          .map((row) => Number(row.average))
+          .filter(Number.isFinite);
 
         return {
           summary: {
@@ -5471,7 +5767,8 @@
             average30d: averageNumbers(averageValues),
             typicalLow: averageNumbers(lowValues),
             storesSelling: latestDaily.availableStores,
-            totalStoresSeen: new Set(available.map((entry) => entry.store_name)).size,
+            totalStoresSeen: new Set(available.map((entry) => entry.store_name))
+              .size,
             cheapestStore: cheapest ? cheapest.store_name : "",
             fastestGoneStore: "",
             latestDate: latestDaily.date || "current",
@@ -5527,7 +5824,9 @@
           .filter(Boolean);
         const available = offers.filter((entry) => entry.available);
         const prices = available.map((entry) => Number(entry.price));
-        const best = available.slice().sort((left, right) => right.price - left.price)[0];
+        const best = available
+          .slice()
+          .sort((left, right) => right.price - left.price)[0];
         const averagePrice = averageNumbers(prices);
 
         return {
@@ -5538,8 +5837,10 @@
             average7d: averagePrice,
             average30d: averagePrice,
             typicalLow: averagePrice,
-            storesSelling: new Set(available.map((entry) => entry.store_name)).size,
-            totalStoresSeen: new Set(available.map((entry) => entry.store_name)).size,
+            storesSelling: new Set(available.map((entry) => entry.store_name))
+              .size,
+            totalStoresSeen: new Set(available.map((entry) => entry.store_name))
+              .size,
             cheapestStore: best ? best.store_name : "",
             fastestGoneStore: "",
             latestDate: "current",
@@ -5566,7 +5867,10 @@
             }))
             .sort((left, right) => right.current - left.current),
           rows: offers.sort((left, right) => {
-            return Number(right.available) - Number(left.available) || right.price - left.price;
+            return (
+              Number(right.available) - Number(left.available) ||
+              right.price - left.price
+            );
           }),
         };
       }
@@ -5574,10 +5878,14 @@
       function buildMetricTile(label, value, subvalue) {
         return [
           '<div class="metric-tile">',
-          '  <div class="metric-label pixel-font">' + escapeHtml(label) + "</div>",
+          '  <div class="metric-label pixel-font">' +
+            escapeHtml(label) +
+            "</div>",
           '  <div class="metric-value">' + escapeHtml(value || "--") + "</div>",
           subvalue
-            ? '  <div class="metric-subvalue">' + escapeHtml(subvalue) + "</div>"
+            ? '  <div class="metric-subvalue">' +
+              escapeHtml(subvalue) +
+              "</div>"
             : "",
           "</div>",
         ].join("");
@@ -5593,7 +5901,11 @@
           return [
             '<div class="analytics-section">',
             '  <div class="analytics-section-title pixel-font">' +
-              escapeHtml(mode === "sell" ? "BEST PAYOUT BY DAY" : "CHEAPEST PRICE BY DAY") +
+              escapeHtml(
+                mode === "sell"
+                  ? "BEST PAYOUT BY DAY"
+                  : "CHEAPEST PRICE BY DAY",
+              ) +
               "</div>",
             '  <div class="chart-empty">' +
               escapeHtml(
@@ -5619,11 +5931,17 @@
               "price-history-dot",
               value === min ? "best" : "",
               index === points.length - 1 ? "latest" : "",
-            ].filter(Boolean).join(" ");
+            ]
+              .filter(Boolean)
+              .join(" ");
 
             return [
               '<div class="price-history-column" title="' +
-                escapeAttribute(formatShortDate(day.date) + " cheapest: " + formatPriceWithEquivalents(value)) +
+                escapeAttribute(
+                  formatShortDate(day.date) +
+                    " cheapest: " +
+                    formatPriceWithEquivalents(value),
+                ) +
                 '">',
               '  <span class="price-history-stem" style="height:' +
                 escapeAttribute(bottom.toFixed(2)) +
@@ -5657,13 +5975,16 @@
           '  <div class="price-history-head">',
           "    <div>",
           '      <div class="analytics-section-title pixel-font">' +
-            escapeHtml(mode === "sell" ? "BEST PAYOUT BY DAY" : "CHEAPEST PRICE BY DAY") +
+            escapeHtml(
+              mode === "sell" ? "BEST PAYOUT BY DAY" : "CHEAPEST PRICE BY DAY",
+            ) +
             "</div>",
           '      <div class="price-history-subtitle">' +
             escapeHtml(
               mode === "sell"
                 ? "Each point is the best payout found. Higher is better."
-                : state.marketHistoryRange + "d view. Each point is the cheapest available store saved that day. Lower is better.",
+                : state.marketHistoryRange +
+                    "d view. Each point is the cheapest available store saved that day. Lower is better.",
             ) +
             "</div>",
           "    </div>",
@@ -5692,9 +6013,13 @@
             return [
               "<tr>",
               "<td>" + escapeHtml(store.storeName || "--") + "</td>",
-              buildPriceTableCell(Number.isFinite(store.current) ? store.current : store.low),
+              buildPriceTableCell(
+                Number.isFinite(store.current) ? store.current : store.low,
+              ),
               buildPriceTableCell(store.low),
-              "<td>" + escapeHtml(formatNumber(store.daysAvailable || 0)) + "d</td>",
+              "<td>" +
+                escapeHtml(formatNumber(store.daysAvailable || 0)) +
+                "d</td>",
               "</tr>",
             ].join("");
           })
@@ -5703,7 +6028,11 @@
         return [
           '<div class="analytics-section">',
           '  <div class="analytics-section-title pixel-font">' +
-            escapeHtml(mode === "sell" ? "BEST SHOPS TO SELL TO" : "BEST STORES TO CHECK") +
+            escapeHtml(
+              mode === "sell"
+                ? "BEST SHOPS TO SELL TO"
+                : "BEST STORES TO CHECK",
+            ) +
             "</div>",
           '  <table class="analytics-table">',
           "    <thead><tr><th>STORE</th><th>" +
@@ -5727,17 +6056,22 @@
       }
 
       function buildSnapshotTable(rows, mode) {
-        const visibleRows = rows
-          .filter((row) => row.available !== false && numberOrZero(row.stock) > 0);
+        const visibleRows = rows.filter(
+          (row) => row.available !== false && numberOrZero(row.stock) > 0,
+        );
         const body = visibleRows
           .slice(0, 12)
           .map((row) => {
             return [
               "<tr>",
               "<td>" + escapeHtml(row.snapshot_date || "current") + "</td>",
-              "<td>" + escapeHtml(row.store_name || row.storeName || "--") + "</td>",
+              "<td>" +
+                escapeHtml(row.store_name || row.storeName || "--") +
+                "</td>",
               buildPriceTableCell(Number(row.price)),
-              "<td>" + escapeHtml(formatNumber(numberOrZero(row.stock))) + "</td>",
+              "<td>" +
+                escapeHtml(formatNumber(numberOrZero(row.stock))) +
+                "</td>",
               "</tr>",
             ].join("");
           })
@@ -5746,7 +6080,9 @@
         return [
           '<div class="analytics-section">',
           '  <div class="analytics-section-title pixel-font">' +
-            escapeHtml(mode === "sell" ? "SHOPS BUYING NOW" : "RECENT IN-STOCK CHECKS") +
+            escapeHtml(
+              mode === "sell" ? "SHOPS BUYING NOW" : "RECENT IN-STOCK CHECKS",
+            ) +
             "</div>",
           '  <table class="analytics-table">',
           "    <thead><tr><th>DAY</th><th>STORE</th><th>" +
@@ -5855,7 +6191,11 @@
               '<span style="color:' +
               escapeAttribute(entry.meta.color) +
               '">' +
-              escapeHtml(entry.meta.icon + " " + formatCurrencyAmount(entry.base, entry.amount)) +
+              escapeHtml(
+                entry.meta.icon +
+                  " " +
+                  formatCurrencyAmount(entry.base, entry.amount),
+              ) +
               "</span>"
             );
           })
@@ -5863,9 +6203,13 @@
 
         return [
           '<span class="price-stack">',
-          '  <span class="price-stack-main">' + escapeHtml(formatPrice(value)) + "</span>",
+          '  <span class="price-stack-main">' +
+            escapeHtml(formatPrice(value)) +
+            "</span>",
           equivalents
-            ? '  <span class="price-stack-equivalents">' + equivalents + "</span>"
+            ? '  <span class="price-stack-equivalents">' +
+              equivalents +
+              "</span>"
             : "",
           "</span>",
         ].join("");
@@ -5878,7 +6222,7 @@
           escapeAttribute(formatPriceWithEquivalents(value)) +
           '">' +
           '<span class="analytics-table-price">' +
-          '<span>' +
+          "<span>" +
           escapeHtml(formatPrice(value)) +
           "</span>" +
           (equivalents
@@ -5892,7 +6236,9 @@
       }
 
       function formatModalNumber(value) {
-        return Number.isFinite(value) ? String(Math.round(value * 10000) / 10000) : "";
+        return Number.isFinite(value)
+          ? String(Math.round(value * 10000) / 10000)
+          : "";
       }
 
       function formatShortDate(value) {
@@ -5910,7 +6256,9 @@
         if (!safeValues.length) {
           return null;
         }
-        return safeValues.reduce((sum, value) => sum + value, 0) / safeValues.length;
+        return (
+          safeValues.reduce((sum, value) => sum + value, 0) / safeValues.length
+        );
       }
 
       function getSellerRawName(ownerName) {
@@ -5926,8 +6274,11 @@
       }
 
       function getSellerLookupKey(ownerName) {
-        const sellerType = isLikelyBedrockSeller(ownerName) ? "bedrock" : "java";
-        const baseKey = normalizeForSearch(getSellerGamertag(ownerName)) || "mhf_steve";
+        const sellerType = isLikelyBedrockSeller(ownerName)
+          ? "bedrock"
+          : "java";
+        const baseKey =
+          normalizeForSearch(getSellerGamertag(ownerName)) || "mhf_steve";
         return sellerType + "::" + baseKey;
       }
 
@@ -6814,7 +7165,8 @@
       function buildStockSummary(listing) {
         const unitLabel = listing.sellerDisplayStock === 1 ? "unit" : "units";
         const shulkerNote =
-          listing.isShulker && listing.sellerItemTotalStock > listing.sellerDisplayStock
+          listing.isShulker &&
+          listing.sellerItemTotalStock > listing.sellerDisplayStock
             ? '<span class="stock-summary-note">' +
               escapeHtml(
                 formatNumber(listing.sellerDisplayStock) +
@@ -6847,12 +7199,7 @@
         const copy = getTradeModeCopy(tradeMode, comparison);
         const paymentRows = listing.paymentParts
           .map((part, index) =>
-            buildPaymentPartMarkup(
-              listing,
-              part,
-              index,
-              terms,
-            ),
+            buildPaymentPartMarkup(listing, part, index, terms),
           )
           .join("");
         const resultRow = buildPriceSideRow(
@@ -7054,10 +7401,7 @@
             uniformShulkerFill: part.uniformShulkerFill,
             terms,
             wrapperClass: "card-shulker price-side-shulker",
-            label:
-              part.itemAmount > 1
-                ? "▣ INSIDE EACH BOX"
-                : "▣ INSIDE BOX",
+            label: part.itemAmount > 1 ? "▣ INSIDE EACH BOX" : "▣ INSIDE BOX",
             countText:
               String(part.shulkerContents.length) +
               " item lines" +
@@ -7114,7 +7458,10 @@
             );
           })
           .join("");
-        const moreCount = Math.max(0, shulkerContents.length - previewEntries.length);
+        const moreCount = Math.max(
+          0,
+          shulkerContents.length - previewEntries.length,
+        );
         const rows = shulkerContents
           .map((entry) => {
             return (
@@ -8639,7 +8986,8 @@
         }
 
         return (
-          "https://pvc.coolwebsite.uk/?profile=" + encodeURIComponent(profileName)
+          "https://pvc.coolwebsite.uk/?profile=" +
+          encodeURIComponent(profileName)
         );
       }
 
@@ -8662,7 +9010,9 @@
           "&z=" +
           encodeURIComponent(coords.z) +
           "&dimension=" +
-          encodeURIComponent(worldMap[normalizedWorld] || "minecraft_overworld") +
+          encodeURIComponent(
+            worldMap[normalizedWorld] || "minecraft_overworld",
+          ) +
           "&zoom=11"
         );
       }
@@ -8910,7 +9260,8 @@
             particle.y += particle.vy;
             particle.pulse += particle.pulseSpeed;
 
-            const glow = particle.opacity * (0.68 + Math.sin(particle.pulse) * 0.22);
+            const glow =
+              particle.opacity * (0.68 + Math.sin(particle.pulse) * 0.22);
             context.globalAlpha = Math.max(0.08, glow);
             context.strokeStyle = particle.color;
             context.lineWidth = Math.max(1, particle.size * 0.7);
@@ -8924,7 +9275,12 @@
 
             context.globalAlpha = Math.min(1, glow + 0.18);
             context.fillStyle = particle.color;
-            context.fillRect(particle.x, particle.y, particle.size, particle.size);
+            context.fillRect(
+              particle.x,
+              particle.y,
+              particle.size,
+              particle.size,
+            );
 
             if (
               particle.x + particle.tail < -80 ||
