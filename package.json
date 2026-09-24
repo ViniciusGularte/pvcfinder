@@ -4,12 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "build": "node -e \"console.log('No build step required for PVC Finder')\"",
-    "vercel-build": "npm run build",
     "dev": "node scripts/local-dev-server.js",
     "start": "node scripts/local-dev-server.js",
     "textures:generate": "node scripts/generate-item-textures.mjs"
-  },
-  "dependencies": {
-    "web-push": "^3.6.7"
   }
 }

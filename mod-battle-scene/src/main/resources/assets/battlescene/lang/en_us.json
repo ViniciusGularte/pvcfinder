@@ -1,0 +1,5 @@
+{
+  "key.battlescene.toggle": "Toggle Battle Scene",
+  "message.battlescene.spawned": "Battle scene started.",
+  "message.battlescene.despawned": "Battle scene removed."
+}

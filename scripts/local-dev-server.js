@@ -3,15 +3,44 @@ const fs = require("fs");
 const path = require("path");
 const { URL } = require("url");
 
-const shopsHandler = require("../api/shops");
-const configHandler = require("../api/config");
-const analyticsHandler = require("../api/analytics");
-const analyticsTrendsHandler = require("../api/analytics/trends");
-const watchSubscribeHandler = require("../api/watch/subscribe");
-const dailySnapshotHandler = require("../api/cron/daily-snapshot");
-const cronStatusHandler = require("../api/cron/status");
-
 const rootDir = path.resolve(__dirname, "..");
+
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+
+  const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      return;
+    }
+
+    const separatorIndex = trimmed.indexOf("=");
+    if (separatorIndex <= 0) {
+      return;
+    }
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    let value = trimmed.slice(separatorIndex + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
+      process.env[key] = value;
+    }
+  });
+}
+
+loadEnvFile(path.join(rootDir, ".env"));
+
+const shopsHandler = require("../api/shops");
+
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 3000);
 
@@ -109,81 +138,9 @@ const server = http.createServer(async (req, res) => {
   const requestUrl = req.url || "/";
   const { pathname } = new URL(requestUrl, `http://${host}:${port}`);
 
-  if (pathname === "/api/shops") {
+  if (pathname === "/api/shops" || pathname === "/api/pvc/shops") {
     try {
       await shopsHandler(req, enhancedRes);
-    } catch (error) {
-      sendJson(enhancedRes, 500, {
-        error: "Unexpected local server error",
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    return;
-  }
-
-  if (pathname === "/api/config") {
-    try {
-      await configHandler(req, enhancedRes);
-    } catch (error) {
-      sendJson(enhancedRes, 500, {
-        error: "Unexpected local server error",
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    return;
-  }
-
-  if (pathname === "/api/analytics") {
-    try {
-      await analyticsHandler(req, enhancedRes);
-    } catch (error) {
-      sendJson(enhancedRes, 500, {
-        error: "Unexpected local server error",
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    return;
-  }
-
-  if (pathname === "/api/analytics/trends") {
-    try {
-      await analyticsTrendsHandler(req, enhancedRes);
-    } catch (error) {
-      sendJson(enhancedRes, 500, {
-        error: "Unexpected local server error",
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    return;
-  }
-
-  if (pathname === "/api/watch/subscribe") {
-    try {
-      await watchSubscribeHandler(req, enhancedRes);
-    } catch (error) {
-      sendJson(enhancedRes, 500, {
-        error: "Unexpected local server error",
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    return;
-  }
-
-  if (pathname === "/api/cron/daily-snapshot") {
-    try {
-      await dailySnapshotHandler(req, enhancedRes);
-    } catch (error) {
-      sendJson(enhancedRes, 500, {
-        error: "Unexpected local server error",
-        details: error instanceof Error ? error.message : String(error)
-      });
-    }
-    return;
-  }
-
-  if (pathname === "/api/cron/status") {
-    try {
-      await cronStatusHandler(req, enhancedRes);
     } catch (error) {
       sendJson(enhancedRes, 500, {
         error: "Unexpected local server error",

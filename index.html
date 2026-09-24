@@ -512,97 +512,120 @@
         border-top: 2px solid rgba(201, 243, 126, 0.42);
       }
 
-      body[data-sky-mode="day"] .backdrop-sky-day {
-        opacity: 1;
+      .galaxy-core {
+        position: absolute;
+        inset: -18vh -16vw;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(103, 232, 249, 0.22), transparent 18%),
+          radial-gradient(circle at 78% 18%, rgba(232, 118, 10, 0.14), transparent 15%),
+          radial-gradient(circle at 50% 48%, rgba(74, 222, 128, 0.08), transparent 24%),
+          linear-gradient(180deg, #020207 0%, #05030b 44%, #080604 100%);
       }
 
-      body[data-sky-mode="day"] .backdrop-sky-night,
-      body[data-sky-mode="day"] .backdrop-stars,
-      body[data-sky-mode="day"] .backdrop-moon {
-        opacity: 0;
+      .galaxy-band {
+        position: absolute;
+        left: -20vw;
+        right: -20vw;
+        top: 12vh;
+        height: 42vh;
+        transform: rotate(-12deg);
+        background:
+          radial-gradient(ellipse at center, rgba(215, 231, 255, 0.24), transparent 12%),
+          radial-gradient(ellipse at center, rgba(103, 232, 249, 0.12), transparent 30%),
+          linear-gradient(90deg, transparent, rgba(255, 245, 215, 0.14), transparent);
+        filter: blur(12px);
+        opacity: 0.7;
+        animation: galaxyDrift 42s ease-in-out infinite alternate;
       }
 
-      body[data-sky-mode="day"] .backdrop-sun {
-        opacity: 0.84;
-        transform: translateX(-50%) translateY(0);
+      .galaxy-starfield,
+      .galaxy-starfield::before,
+      .galaxy-starfield::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background-repeat: repeat;
+        image-rendering: pixelated;
       }
 
-      body[data-sky-mode="day"] .backdrop-cloud {
-        opacity: 0.11;
+      .galaxy-starfield {
+        background-image:
+          radial-gradient(circle, rgba(255, 255, 255, 0.98) 0 1px, transparent 1.6px),
+          radial-gradient(circle, rgba(103, 232, 249, 0.88) 0 1px, transparent 1.7px);
+        background-size: 140px 140px, 220px 220px;
+        background-position: 8px 18px, 60px 44px;
+        opacity: 0.62;
+        animation: starCrawlSlow 70s linear infinite;
       }
 
-      body[data-sky-mode="day"] .backdrop-haze {
-        opacity: 1;
+      .galaxy-starfield::before {
+        background-image:
+          radial-gradient(circle, rgba(255, 244, 211, 0.9) 0 1px, transparent 1.5px),
+          radial-gradient(circle, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.5px);
+        background-size: 86px 86px, 164px 164px;
+        background-position: 24px 8px, 14px 82px;
+        opacity: 0.5;
+        animation: starCrawlFast 38s linear infinite;
       }
 
-      body[data-sky-mode="day"] .backdrop-readability {
-        opacity: 0.94;
+      .galaxy-starfield::after {
+        background-image:
+          radial-gradient(circle, rgba(255, 255, 255, 0.58) 0 1px, transparent 1.4px);
+        background-size: 56px 56px;
+        background-position: 18px 28px;
+        opacity: 0.36;
+        animation: starCrawlTiny 24s linear infinite;
       }
 
-      body[data-sky-mode="night"] .backdrop-sky-day {
-        opacity: 0.06;
+      .galaxy-grid {
+        position: absolute;
+        inset: auto -4vw 0;
+        height: 34vh;
+        background:
+          linear-gradient(rgba(103, 232, 249, 0.11) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(103, 232, 249, 0.08) 1px, transparent 1px);
+        background-size: 42px 42px;
+        transform: perspective(520px) rotateX(64deg);
+        transform-origin: bottom;
+        opacity: 0.22;
+        mask-image: linear-gradient(180deg, transparent, black 32%, black);
       }
 
-      body[data-sky-mode="night"] .backdrop-sky-night,
-      body[data-sky-mode="night"] .backdrop-stars {
-        opacity: 1;
+      .galaxy-readability {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 50% 25%, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.58) 70%),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.72) 78%, rgba(0, 0, 0, 0.88));
       }
 
-      body[data-sky-mode="night"] .backdrop-sun {
-        opacity: 0;
-        transform: translateX(-50%) translateY(16px);
+      @keyframes galaxyDrift {
+        from {
+          transform: rotate(-12deg) translate3d(-2vw, -1vh, 0) scale(1);
+          opacity: 0.58;
+        }
+        to {
+          transform: rotate(-10deg) translate3d(2vw, 1vh, 0) scale(1.05);
+          opacity: 0.82;
+        }
       }
 
-      body[data-sky-mode="night"] .backdrop-moon {
-        opacity: 0.94;
-        transform: translateY(0);
+      @keyframes starCrawlSlow {
+        to {
+          background-position: 260px 150px, 320px 244px;
+        }
       }
 
-      body[data-sky-mode="night"] .backdrop-cloud {
-        opacity: 0.08;
+      @keyframes starCrawlFast {
+        to {
+          background-position: 220px 124px, 190px 248px;
+        }
       }
 
-      body[data-sky-mode="night"] .backdrop-haze {
-        opacity: 0.42;
-      }
-
-      body[data-sky-mode="night"] .backdrop-readability {
-        opacity: 0.72;
-      }
-
-      body[data-sky-mode="night"] .backdrop-far,
-      body[data-sky-mode="night"] .backdrop-mid,
-      body[data-sky-mode="night"] .backdrop-forest,
-      body[data-sky-mode="night"] .backdrop-ground {
-        filter: brightness(0.76) saturate(0.92);
-      }
-
-      body[data-sky-mode="auto"] .backdrop-sky-day {
-        animation: autoDayFade 72s ease-in-out infinite;
-      }
-
-      body[data-sky-mode="auto"] .backdrop-sky-night {
-        animation: autoNightFade 72s ease-in-out infinite;
-      }
-
-      body[data-sky-mode="auto"] .backdrop-stars {
-        animation: autoNightFade 72s ease-in-out infinite;
-      }
-
-      body[data-sky-mode="auto"] .backdrop-sun {
-        animation: autoSunTraverse 72s ease-in-out infinite;
-      }
-
-      body[data-sky-mode="auto"] .backdrop-moon {
-        animation: autoMoonTraverse 72s ease-in-out infinite;
-      }
-
-      body[data-sky-mode="auto"] .backdrop-haze {
-        animation: autoHaze 72s ease-in-out infinite;
-      }
-
-      body[data-sky-mode="auto"] .backdrop-readability {
-        animation: autoReadability 72s ease-in-out infinite;
+      @keyframes starCrawlTiny {
+        to {
+          background-position: 160px 132px;
+        }
       }
 
       .app-shell {
@@ -633,7 +656,7 @@
         align-items: center;
         justify-content: center;
         padding: clamp(18px, 5vw, 54px);
-        background: #080604;
+        background: rgba(2, 2, 10, 0.48);
         overflow: hidden;
       }
 
@@ -643,12 +666,21 @@
 
       .construction-gate-bg {
         position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: saturate(0.9) contrast(1.04) brightness(0.72);
-        transform: scale(1.03);
+        inset: -18vh -14vw;
+        background:
+          radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.5px),
+          radial-gradient(circle at 18% 62%, rgba(103, 232, 249, 0.84) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 34% 10%, rgba(255, 246, 228, 0.86) 0 1px, transparent 1.5px),
+          radial-gradient(circle at 66% 24%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.5px),
+          radial-gradient(circle at 78% 72%, rgba(103, 232, 249, 0.78) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 92% 34%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.5px),
+          radial-gradient(circle at 24% 20%, rgba(103, 232, 249, 0.24), transparent 18%),
+          radial-gradient(circle at 78% 18%, rgba(246, 211, 138, 0.2), transparent 16%),
+          radial-gradient(ellipse at 50% 46%, rgba(255, 255, 255, 0.24), transparent 13%),
+          radial-gradient(ellipse at 50% 46%, rgba(103, 232, 249, 0.17), transparent 34%),
+          linear-gradient(180deg, rgba(2, 2, 10, 0.4), rgba(0, 0, 0, 0.86));
+        filter: saturate(1.15);
+        animation: galaxyDrift 46s ease-in-out infinite alternate;
       }
 
       .construction-gate::before {
@@ -656,8 +688,9 @@
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(90deg, rgba(5, 4, 3, 0.9), rgba(5, 4, 3, 0.52) 48%, rgba(5, 4, 3, 0.88)),
-          linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.82));
+          radial-gradient(circle at 50% 20%, rgba(103, 232, 249, 0.1), transparent 28%),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.48) 48%, rgba(0, 0, 0, 0.82)),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.82));
         z-index: 1;
       }
 
@@ -742,16 +775,6 @@
         min-height: 18px;
         color: #ffb199;
         font-size: 11px;
-      }
-
-      .construction-credit {
-        position: absolute;
-        right: 18px;
-        bottom: 14px;
-        z-index: 2;
-        color: rgba(255, 246, 228, 0.54);
-        font-size: 10px;
-        text-decoration: none;
       }
 
       .loading-screen {
@@ -986,7 +1009,6 @@
         white-space: nowrap;
       }
 
-      .sky-cycle-button,
       .refresh-button {
         display: inline-flex;
         align-items: center;
@@ -1018,7 +1040,6 @@
           background 140ms ease;
       }
 
-      .sky-cycle-button:hover,
       .refresh-button:hover {
         border-color: var(--accent);
         color: var(--text-bright);
@@ -1036,7 +1057,6 @@
         transform: translateY(-1px);
       }
 
-      .sky-cycle-button:active,
       .refresh-button:active {
         transform: translateY(0);
         box-shadow:
@@ -1088,43 +1108,6 @@
       }
 
       .refresh-label {
-        font-size: 10px;
-        color: var(--text-bright);
-        line-height: 1;
-      }
-
-      .sky-cycle-icon {
-        width: 18px;
-        text-align: center;
-        font-size: 13px;
-        line-height: 1;
-        color: var(--accent);
-        text-shadow: 0 0 14px rgba(232, 118, 10, 0.35);
-      }
-
-      .sky-cycle-pill {
-        width: 22px;
-        height: 22px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(232, 118, 10, 0.22);
-        background: rgba(8, 6, 4, 0.48);
-      }
-
-      .sky-cycle-copy {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-      }
-
-      .sky-cycle-kicker {
-        font-size: 6px;
-        color: var(--text-muted);
-      }
-
-      .sky-cycle-label {
         font-size: 10px;
         color: var(--text-bright);
         line-height: 1;
@@ -2164,6 +2147,12 @@
         text-shadow: 0 0 18px rgba(245, 158, 11, 0.28);
       }
 
+      .market-piece {
+        display: inline-block;
+        margin-right: 7px;
+        white-space: nowrap;
+      }
+
       .card-enchants {
         padding: 0 16px 12px;
         color: var(--enchant);
@@ -2767,6 +2756,10 @@
         margin-bottom: 14px;
       }
 
+      .trend-grid.single {
+        grid-template-columns: 1fr;
+      }
+
       .trend-list {
         display: grid;
         gap: 8px;
@@ -2822,19 +2815,111 @@
         margin-top: 14px;
       }
 
-      .watch-selected-item {
-        border: 1px solid rgba(90, 52, 24, 0.74);
-        background: rgba(8, 6, 4, 0.34);
-        padding: 12px;
-        color: var(--text-muted);
-        line-height: 1.6;
-      }
-
       .metric-tile {
         border: 1px solid rgba(90, 52, 24, 0.74);
         background: rgba(8, 6, 4, 0.38);
         padding: 12px;
         min-height: 74px;
+      }
+
+      .analytics-callout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+        gap: 12px;
+        border: 1px solid rgba(232, 118, 10, 0.54);
+        background:
+          linear-gradient(135deg, rgba(31, 19, 10, 0.72), rgba(10, 8, 6, 0.54)),
+          rgba(8, 6, 4, 0.34);
+        padding: 14px;
+        margin-bottom: 14px;
+      }
+
+      .analytics-callout-title {
+        color: var(--text-bright);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .analytics-callout-copy {
+        margin-top: 8px;
+        color: var(--text-muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
+      .analytics-callout-price {
+        align-self: stretch;
+        border: 1px solid rgba(74, 222, 128, 0.28);
+        background: rgba(8, 20, 15, 0.42);
+        padding: 12px;
+      }
+
+      .analytics-callout-price-label {
+        color: var(--emerald);
+        font-size: 8px;
+        line-height: 1.6;
+      }
+
+      .analytics-callout-price-value {
+        margin-top: 8px;
+        color: var(--text-bright);
+        font-size: 20px;
+        line-height: 1.25;
+      }
+
+      .price-stack {
+        display: grid;
+        gap: 6px;
+      }
+
+      .price-stack-main {
+        color: var(--text-bright);
+      }
+
+      .price-stack-equivalents {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.5;
+      }
+
+      .analytics-price-guide {
+        margin-bottom: 14px;
+        border: 1px solid rgba(103, 232, 249, 0.24);
+        background: rgba(8, 17, 21, 0.28);
+        padding: 12px;
+        color: var(--text-muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
+      .analytics-price-guide strong {
+        color: var(--text-bright);
+      }
+
+      .analytics-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .analytics-tab {
+        border: 1px solid var(--border);
+        background: rgba(20, 14, 10, 0.88);
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 10px;
+        line-height: 1.45;
+        text-align: center;
+      }
+
+      .analytics-tab.active {
+        border-color: var(--accent);
+        background: var(--surface2);
+        color: var(--text-bright);
       }
 
       .metric-label {
@@ -2848,6 +2933,13 @@
         color: var(--text-bright);
         font-size: 18px;
         line-height: 1.2;
+      }
+
+      .metric-subvalue {
+        margin-top: 6px;
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.5;
       }
 
       .analytics-section {
@@ -2883,6 +2975,112 @@
         min-height: 4px;
       }
 
+      .price-history-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .price-history-subtitle {
+        margin-top: 4px;
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.6;
+      }
+
+      .price-history-range {
+        color: var(--text-muted);
+        font-size: 10px;
+        line-height: 1.6;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .price-history-chart {
+        margin-top: 14px;
+        border: 1px solid rgba(56, 65, 86, 0.36);
+        background:
+          linear-gradient(180deg, rgba(10, 13, 21, 0.38), rgba(7, 8, 10, 0.22)),
+          repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.035) 0 1px,
+            transparent 1px 25%
+          );
+        padding: 14px 12px 8px;
+      }
+
+      .price-history-plot {
+        height: 180px;
+        display: grid;
+        grid-template-columns: repeat(var(--point-count), minmax(18px, 1fr));
+        align-items: end;
+        gap: 8px;
+      }
+
+      .price-history-column {
+        position: relative;
+        min-width: 0;
+        height: 100%;
+      }
+
+      .price-history-stem {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 2px;
+        min-height: 8px;
+        transform: translateX(-50%);
+        background: linear-gradient(180deg, rgba(232, 118, 10, 0.8), rgba(74, 222, 128, 0.6));
+      }
+
+      .price-history-dot {
+        position: absolute;
+        left: 50%;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #f6d38a;
+        background: #0b0805;
+        transform: translate(-50%, 50%);
+        box-shadow: 0 0 18px rgba(232, 118, 10, 0.26);
+      }
+
+      .price-history-dot.best {
+        border-color: var(--emerald);
+        box-shadow: 0 0 18px rgba(74, 222, 128, 0.3);
+      }
+
+      .price-history-dot.latest {
+        border-color: var(--diamond);
+        box-shadow: 0 0 18px rgba(103, 232, 249, 0.3);
+      }
+
+      .price-history-labels {
+        display: grid;
+        grid-template-columns: repeat(var(--point-count), minmax(18px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .price-history-label {
+        color: var(--text-ghost);
+        font-size: 9px;
+        line-height: 1.3;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: clip;
+        white-space: nowrap;
+      }
+
+      .chart-empty {
+        border: 1px solid rgba(90, 52, 24, 0.55);
+        background: rgba(8, 6, 4, 0.28);
+        padding: 16px;
+        color: var(--text-muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
       .analytics-table {
         width: 100%;
         border-collapse: collapse;
@@ -2902,15 +3100,15 @@
         font-size: 8px;
       }
 
-      .watch-form {
+      .analytics-table-price {
         display: grid;
-        gap: 14px;
+        gap: 3px;
       }
 
-      .watch-fields {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 12px;
+      .analytics-table-price-note {
+        color: var(--text-muted);
+        font-size: 9px;
+        line-height: 1.35;
       }
 
       .field-label {
@@ -2934,6 +3132,11 @@
         border-color: var(--accent);
       }
 
+      .field-select {
+        appearance: auto;
+        cursor: pointer;
+      }
+
       .modal-status {
         color: var(--text-muted);
         font-size: 11px;
@@ -2944,8 +3147,42 @@
         color: var(--emerald);
       }
 
+      .modal-status.warn {
+        color: #f6d38a;
+      }
+
       .modal-status.error {
         color: #fca5a5;
+      }
+
+      @media (max-width: 640px) {
+        .analytics-callout {
+          grid-template-columns: 1fr;
+        }
+
+        .price-history-head {
+          display: grid;
+        }
+
+        .price-history-range {
+          text-align: left;
+          white-space: normal;
+        }
+
+        .price-history-plot {
+          gap: 4px;
+          grid-template-columns: repeat(var(--point-count), minmax(10px, 1fr));
+        }
+
+        .price-history-labels {
+          gap: 4px;
+          grid-template-columns: repeat(var(--point-count), minmax(10px, 1fr));
+        }
+
+        .price-history-label {
+          font-size: 8px;
+        }
+
       }
 
       @keyframes bob {
@@ -3040,82 +3277,6 @@
         }
         to {
           transform: translateX(0.9vw);
-        }
-      }
-
-      @keyframes autoDayFade {
-        0%,
-        36% {
-          opacity: 1;
-        }
-        50%,
-        100% {
-          opacity: 0.08;
-        }
-      }
-
-      @keyframes autoNightFade {
-        0%,
-        36% {
-          opacity: 0;
-        }
-        50%,
-        100% {
-          opacity: 1;
-        }
-      }
-
-      @keyframes autoSunTraverse {
-        0% {
-          opacity: 0.95;
-          transform: translateX(-50%) translateY(0);
-        }
-        38% {
-          opacity: 0.92;
-          transform: translateX(22vw) translateY(3vh);
-        }
-        52%,
-        100% {
-          opacity: 0;
-          transform: translateX(28vw) translateY(8vh);
-        }
-      }
-
-      @keyframes autoMoonTraverse {
-        0%,
-        34% {
-          opacity: 0;
-          transform: translateY(14px);
-        }
-        48% {
-          opacity: 0.7;
-          transform: translateY(4px);
-        }
-        100% {
-          opacity: 0.94;
-          transform: translateY(-2px) translateX(-16vw);
-        }
-      }
-
-      @keyframes autoHaze {
-        0%,
-        36% {
-          opacity: 0.98;
-        }
-        50%,
-        100% {
-          opacity: 0.42;
-        }
-      }
-
-      @keyframes autoReadability {
-        0%,
-        36% {
-          opacity: 0.94;
-        }
-        50%,
-        100% {
-          opacity: 0.72;
         }
       }
 
@@ -3283,11 +3444,10 @@
           grid-template-columns: 1fr;
         }
 
-        .analytics-grid,
-        .trend-grid,
-        .watch-fields {
-          grid-template-columns: 1fr;
-        }
+	        .analytics-grid,
+	        .trend-grid {
+	          grid-template-columns: 1fr;
+	        }
 
         .map-button {
           width: 100%;
@@ -3309,7 +3469,6 @@
           display: none;
         }
 
-        .sky-cycle-kicker,
         .refresh-kicker {
           display: none;
         }
@@ -3363,32 +3522,18 @@
       }
     </style>
   </head>
-  <body class="site-locked" data-sky-mode="auto">
+  <body class="site-locked">
     <div class="minecraft-backdrop" aria-hidden="true">
-      <div class="backdrop-sky backdrop-sky-day"></div>
-      <div class="backdrop-sky backdrop-sky-night"></div>
-      <div class="backdrop-stars"></div>
-      <div class="backdrop-moon"></div>
-      <div class="backdrop-sun"></div>
-      <div class="backdrop-cloud backdrop-cloud-a"></div>
-      <div class="backdrop-cloud backdrop-cloud-b"></div>
-      <div class="backdrop-cloud backdrop-cloud-c"></div>
-      <div class="backdrop-haze"></div>
-      <div class="backdrop-layer backdrop-far"></div>
-      <div class="backdrop-layer backdrop-mid"></div>
-      <div class="backdrop-layer backdrop-forest"></div>
-      <div class="backdrop-ground"></div>
-      <div class="backdrop-readability"></div>
+      <div class="galaxy-core"></div>
+      <div class="galaxy-band"></div>
+      <div class="galaxy-starfield"></div>
+      <div class="galaxy-grid"></div>
+      <div class="galaxy-readability"></div>
     </div>
     <canvas class="particles-canvas" id="particles" aria-hidden="true"></canvas>
 
     <section class="construction-gate" id="constructionGate" aria-label="Site under construction">
-      <img
-        class="construction-gate-bg"
-        src="https://images.unsplash.com/photo-1724204408341-adb2e4538a73?auto=format&fit=crop&w=2200&q=82"
-        alt=""
-        decoding="async"
-      />
+      <div class="construction-gate-bg" aria-hidden="true"></div>
       <div class="construction-panel">
         <div class="construction-kicker pixel-font">PVC FINDER ACCESS</div>
         <div class="construction-title">Under construction</div>
@@ -3410,12 +3555,6 @@
           <div class="construction-error" id="constructionError" aria-live="polite"></div>
         </form>
       </div>
-      <a
-        class="construction-credit"
-        href="https://unsplash.com/photos/construction-signs-and-cones-on-a-city-street-tyR9iw8E8AI"
-        target="_blank"
-        rel="noreferrer"
-      >Photo: Surinder Pal Singh / Unsplash</a>
     </section>
 
     <div class="loading-screen" id="loadingScreen">
@@ -3431,7 +3570,7 @@
         <img class="loading-logo" src="assets/pvc-logo.png" alt="PVC" />
         <div class="loading-kicker pixel-font">PVC FINDER</div>
         <div class="loading-phrase" id="loadingScenePhrase">
-          Rumores viajam rapido quando ha emerald na mesa.
+          Market rumors travel fast when emeralds are on the table.
         </div>
         <div class="loading-bar" aria-hidden="true">
           <div class="loading-bar-fill" id="loadingBarFill"></div>
@@ -3478,21 +3617,6 @@
                 >
               </span>
             </button>
-            <button
-              class="sky-cycle-button"
-              id="skyCycleButton"
-              type="button"
-              aria-label="Cycle sky mode"
-              title="Sky mode: Auto"
-            >
-              <span class="sky-cycle-pill" aria-hidden="true">
-                <span class="sky-cycle-icon" id="skyCycleIcon">◐</span>
-              </span>
-              <span class="sky-cycle-copy">
-                <span class="sky-cycle-kicker pixel-font">SKY</span>
-                <span class="sky-cycle-label" id="skyCycleLabel">AUTO</span>
-              </span>
-            </button>
             <div class="updated-text" id="updatedText">synced --</div>
           </div>
         </div>
@@ -3514,14 +3638,7 @@
               id="heroAnalyticsButton"
               type="button"
             >
-              ANALYTICS
-            </button>
-            <button
-              class="mini-action hero-action-button pixel-font"
-              id="heroWatchButton"
-              type="button"
-            >
-              WATCH STORES
+              PRICE CHECK
             </button>
           </div>
 
@@ -3634,6 +3751,12 @@
                     <input id="includeShulkerToggle" type="checkbox" checked />
                     <span class="toggle-box" aria-hidden="true"></span>
                     <span class="toggle-label">Include Shulker items</span>
+                  </label>
+
+                  <label class="toggle">
+                    <input id="onlyShulkerToggle" type="checkbox" />
+                    <span class="toggle-box" aria-hidden="true"></span>
+                    <span class="toggle-label">Only Shulker deals</span>
                   </label>
                 </div>
               </div>
@@ -3768,7 +3891,7 @@
         <div class="feature-modal-head">
           <div>
             <div class="feature-modal-kicker pixel-font" id="featureModalKicker">
-              ANALYTICS
+              PRICE CHECK
             </div>
             <div class="feature-modal-title pixel-font" id="featureModalTitle">
               Item market
@@ -3793,13 +3916,9 @@
     <script src="data/item-textures.js"></script>
     <script>
       const CONFIG = {
-        dataUrl: "/api/shops",
-        configUrl: "/api/config",
-        analyticsUrl: "/api/analytics",
-        analyticsTrendsUrl: "/api/analytics/trends",
-        watchSubscribeUrl: "/api/watch/subscribe",
-        loadingDuration: 1800,
-        loadingPause: 300,
+        dataUrl: "/api/pvc/shops",
+        loadingDuration: 5000,
+        loadingPause: 0,
         searchDebounce: 150,
         fetchTimeout: 15000,
         pageSize: 100,
@@ -3813,28 +3932,7 @@
             "https://images.unsplash.com/photo-1516688159204-9d197444383b?auto=format&fit=crop&w=2200&q=82",
           credit: "Photo: Thom Milkovic / Unsplash",
           creditUrl: "https://unsplash.com/photos/xPmdw_RliUA",
-          phrase: "Rumores viajam rapido quando ha emerald na mesa.",
-        },
-        {
-          image:
-            "https://images.unsplash.com/photo-1728998888241-5b31364203a5?auto=format&fit=crop&w=2200&q=82",
-          credit: "Photo: Michael Fousert / Unsplash",
-          creditUrl: "https://unsplash.com/photos/guYxs04Yti8",
-          phrase: "A nevoa cobre as lojas, mas nao os bons negocios.",
-        },
-        {
-          image:
-            "https://images.unsplash.com/photo-1768684160371-566aadb7785e?auto=format&fit=crop&w=2200&q=82",
-          credit: "Photo: Filip Kvasnak / Unsplash",
-          creditUrl: "https://unsplash.com/photos/tvJX2DTeCiQ",
-          phrase: "Antes de comprar, espere a montanha responder.",
-        },
-        {
-          image:
-            "https://images.unsplash.com/photo-1754657540687-76e77adc3919?auto=format&fit=crop&w=2200&q=82",
-          credit: "Photo: Wolfgang Hasselmann / Unsplash",
-          creditUrl: "https://unsplash.com/photos/QinEroxw8dg",
-          phrase: "Toda alvorada traz um preco esquecido por alguem.",
+          phrase: "Opening the market ledger before the next shop bell.",
         },
       ];
 
@@ -3917,9 +4015,9 @@
       };
 
       const marketCurrencyDisplay = {
-        emerald: { icon: "💚", short: "em", color: "var(--emerald)" },
-        diamond: { icon: "💎", short: "dmnd", color: "var(--diamond)" },
-        netherite: { icon: "🖤", short: "net", color: "var(--text-bright)" },
+        emerald: { icon: "💚", short: "emerald", color: "var(--emerald)" },
+        diamond: { icon: "💎", short: "diamond", color: "var(--diamond)" },
+        netherite: { icon: "🖤", short: "netherite", color: "var(--text-bright)" },
         debris: { icon: "🌑", short: "debris", color: "var(--text-muted)" },
         gold: { icon: "🟡", short: "gold", color: "#f59e0b" },
         iron: { icon: "⚙️", short: "iron", color: "var(--text)" },
@@ -3949,10 +4047,6 @@
         refreshButton: document.getElementById("refreshButton"),
         refreshLabel: document.getElementById("refreshLabel"),
         heroAnalyticsButton: document.getElementById("heroAnalyticsButton"),
-        heroWatchButton: document.getElementById("heroWatchButton"),
-        skyCycleButton: document.getElementById("skyCycleButton"),
-        skyCycleIcon: document.getElementById("skyCycleIcon"),
-        skyCycleLabel: document.getElementById("skyCycleLabel"),
         filterBar: document.querySelector(".filter-bar"),
         sortChips: document.getElementById("sortChips"),
         searchScopeChips: document.getElementById("searchScopeChips"),
@@ -3961,6 +4055,7 @@
         mobileFilterCount: document.getElementById("mobileFilterCount"),
         inStockOnlyToggle: document.getElementById("inStockOnlyToggle"),
         includeShulkerToggle: document.getElementById("includeShulkerToggle"),
+        onlyShulkerToggle: document.getElementById("onlyShulkerToggle"),
         resultsMeta: document.getElementById("resultsMeta"),
         resultsGrid: document.getElementById("resultsGrid"),
         resultsTail: document.getElementById("resultsTail"),
@@ -3984,9 +4079,9 @@
         searchScope: "item",
         tradeIntent: "both",
         mobileFiltersOpen: false,
-        skyMode: "auto",
         inStockOnly: true,
         includeShulker: true,
+        onlyShulker: false,
         lastDumpedAt: null,
         shops: [],
         listings: [],
@@ -4010,11 +4105,8 @@
         requestSerial: 0,
         activeRequestId: 0,
         lastDataSource: "unknown",
-        appConfig: {
-          vapidPublicKey: "",
-          supabaseConfigured: false,
-          pushConfigured: false,
-        },
+        analyticsTradeMode: "buy",
+        modalAnalyticsPayload: null,
         modalListing: null,
         openedUrlItem: false,
       };
@@ -4042,7 +4134,6 @@
 
       function bootApp() {
         try {
-          initSkyMode();
           initParticles();
           bindEvents();
           syncSortChips();
@@ -4050,8 +4141,6 @@
           syncIntentChips();
           syncMobileFilterUI();
           initInfiniteScroll();
-          loadAppConfig();
-          registerServiceWorker();
           tickLoadingBar();
           loadData();
         } catch (error) {
@@ -4203,7 +4292,6 @@
           );
         });
 
-        refs.skyCycleButton.addEventListener("click", cycleSkyMode);
         refs.refreshButton.addEventListener("click", () => {
           if (state.isRefreshing) {
             return;
@@ -4214,10 +4302,6 @@
 
         refs.heroAnalyticsButton.addEventListener("click", () => {
           openAnalyticsModal(null);
-        });
-
-        refs.heroWatchButton.addEventListener("click", () => {
-          openWatchModal(null);
         });
 
         refs.mobileFilterToggle.addEventListener("click", () => {
@@ -4270,6 +4354,20 @@
 
         refs.includeShulkerToggle.addEventListener("change", () => {
           state.includeShulker = refs.includeShulkerToggle.checked;
+          if (!state.includeShulker && state.onlyShulker) {
+            state.onlyShulker = false;
+            refs.onlyShulkerToggle.checked = false;
+          }
+          closeMobileFiltersIfNeeded();
+          renderAll();
+        });
+
+        refs.onlyShulkerToggle.addEventListener("change", () => {
+          state.onlyShulker = refs.onlyShulkerToggle.checked;
+          if (state.onlyShulker) {
+            state.includeShulker = true;
+            refs.includeShulkerToggle.checked = true;
+          }
           closeMobileFiltersIfNeeded();
           renderAll();
         });
@@ -4313,6 +4411,9 @@
           } else if (filter === "shulker") {
             refs.includeShulkerToggle.checked = true;
             state.includeShulker = true;
+          } else if (filter === "only-shulker") {
+            refs.onlyShulkerToggle.checked = false;
+            state.onlyShulker = false;
           } else if (filter === "sort") {
             state.sort = "relevance";
             syncSortChips();
@@ -4328,15 +4429,6 @@
               analyticsButton.getAttribute("data-open-analytics"),
             );
             openAnalyticsModal(listing);
-            return;
-          }
-
-          const watchButton = event.target.closest("[data-open-watch]");
-          if (watchButton) {
-            const listing = getListingById(
-              watchButton.getAttribute("data-open-watch"),
-            );
-            openWatchModal(listing);
             return;
           }
 
@@ -4396,6 +4488,25 @@
           if (event.target.closest("[data-modal-close]")) {
             closeFeatureModal();
           }
+        });
+
+        refs.featureModalBody.addEventListener("click", (event) => {
+          const analyticsTab = event.target.closest("[data-analytics-tab]");
+          if (analyticsTab) {
+            state.analyticsTradeMode =
+              analyticsTab.getAttribute("data-analytics-tab") === "sell"
+                ? "sell"
+                : "buy";
+            const target = refs.featureModalBody.querySelector("[data-selected-analytics]");
+            if (target && state.modalListing) {
+              target.innerHTML = buildAnalyticsMarkup(
+                state.modalListing,
+                state.modalAnalyticsPayload,
+              );
+            }
+            return;
+          }
+
         });
 
         document.addEventListener("keydown", (event) => {
@@ -4468,53 +4579,6 @@
         );
 
         resultsObserver.observe(refs.resultsTail);
-      }
-
-      function initSkyMode() {
-        const savedMode = readSavedSkyMode();
-        applySkyMode(savedMode, false);
-      }
-
-      function cycleSkyMode() {
-        const modes = ["auto", "day", "night"];
-        const currentIndex = modes.indexOf(state.skyMode);
-        const nextMode = modes[(currentIndex + 1) % modes.length];
-        applySkyMode(nextMode, true);
-      }
-
-      function applySkyMode(mode, persist) {
-        const safeMode = ["auto", "day", "night"].includes(mode)
-          ? mode
-          : "auto";
-        const labelMap = {
-          auto: { label: "AUTO", icon: "◐", title: "Sky mode: Auto cycle" },
-          day: { label: "DAY", icon: "☀", title: "Sky mode: Day" },
-          night: { label: "NIGHT", icon: "☾", title: "Sky mode: Night" },
-        };
-        const current = labelMap[safeMode];
-
-        state.skyMode = safeMode;
-        document.body.dataset.skyMode = safeMode;
-        refs.skyCycleLabel.textContent = current.label;
-        refs.skyCycleIcon.textContent = current.icon;
-        refs.skyCycleButton.setAttribute("title", current.title);
-        refs.skyCycleButton.setAttribute("aria-label", current.title);
-
-        if (persist) {
-          try {
-            window.localStorage.setItem("pvc-sky-mode", safeMode);
-          } catch (error) {
-            console.warn("Could not persist sky mode.", error);
-          }
-        }
-      }
-
-      function readSavedSkyMode() {
-        try {
-          return window.localStorage.getItem("pvc-sky-mode") || "auto";
-        } catch (error) {
-          return "auto";
-        }
       }
 
       function buildMarketDataUrl(forceFresh) {
@@ -4600,7 +4664,7 @@
           state.lastDataSource = "error";
           state.loadingError = true;
           refs.errorCopy.textContent =
-            "The local /api/shops function could not load the PVC market data. Try again in a moment.";
+            "The PVC hub could not load the market data. Try again in a moment.";
           refs.resultsGrid.innerHTML = "";
           refs.resultsTail.classList.remove("visible");
           refs.resultsTail.textContent = "";
@@ -4676,29 +4740,6 @@
         }
       }
 
-      async function loadAppConfig() {
-        try {
-          const config = await fetchJsonUrl(CONFIG.configUrl);
-          state.appConfig = {
-            vapidPublicKey: config.vapidPublicKey || "",
-            supabaseConfigured: Boolean(config.supabaseConfigured),
-            pushConfigured: Boolean(config.pushConfigured),
-          };
-        } catch (error) {
-          console.warn("Could not load app config.", error);
-        }
-      }
-
-      function registerServiceWorker() {
-        if (!("serviceWorker" in navigator)) {
-          return;
-        }
-
-        navigator.serviceWorker.register("/sw.js").catch((error) => {
-          console.warn("Could not register service worker.", error);
-        });
-      }
-
       function getListingById(id) {
         return state.listings.find((listing) => listing.id === id) || null;
       }
@@ -4746,13 +4787,14 @@
         refs.featureModal.setAttribute("aria-hidden", "true");
         refs.featureModalBody.innerHTML = "";
         state.modalListing = null;
+        state.modalAnalyticsPayload = null;
         document.body.style.overflow = "";
       }
 
       function openEmptyFeatureModal(mode) {
         openFeatureModal({
-          kicker: mode === "watch" ? "WATCH STORES" : "ANALYTICS",
-          title: mode === "watch" ? "Choose an item to watch" : "Market analytics",
+          kicker: "PRICE CHECK",
+          title: "Item price check",
           subtitle: "Search the market catalog to inspect an item.",
           bodyHtml:
             '<div class="modal-status">Load market data, then choose a result to inspect.</div>',
@@ -4764,27 +4806,24 @@
           buildModalItemSearchMarkup("analytics", selectedListing),
           '<div class="trend-grid">',
           '  <div class="analytics-section">',
-          '    <div class="analytics-section-title pixel-font">RISING THIS MONTH</div>',
-          '    <div class="trend-list" data-trend-list="rising"><div class="modal-status">Loading 30-day movers...</div></div>',
+          '    <div class="analytics-section-title pixel-font">GETTING PRICIER</div>',
+          '    <div class="trend-list" data-trend-list="rising"><div class="modal-status">Loading saved price moves...</div></div>',
           "  </div>",
           '  <div class="analytics-section">',
-          '    <div class="analytics-section-title pixel-font">FALLING THIS MONTH</div>',
-          '    <div class="trend-list" data-trend-list="falling"><div class="modal-status">Loading 30-day movers...</div></div>',
+          '    <div class="analytics-section-title pixel-font">GETTING CHEAPER</div>',
+          '    <div class="trend-list" data-trend-list="falling"><div class="modal-status">Loading saved price moves...</div></div>',
           "  </div>",
           "</div>",
           '<div class="selected-analytics" data-selected-analytics>',
           selectedListing
             ? '<div class="modal-status">Loading price history...</div>'
-            : '<div class="modal-status">Search an item above to inspect stores, daily lows, and price logs.</div>',
+            : '<div class="modal-status">Search an item above to see whether it is a good buy and which store to check.</div>',
           "</div>",
         ].join("");
       }
 
       function buildModalItemSearchMarkup(mode, selectedListing) {
-        const placeholder =
-          mode === "watch"
-            ? "Search item to watch, ex: cobblestone"
-            : "Search item for price analytics";
+        const placeholder = "Search item for price analytics";
         const value = selectedListing ? selectedListing.displayName : "";
 
         return [
@@ -4896,13 +4935,10 @@
           return;
         }
 
-        if (mode === "watch") {
-          openWatchModal(listing);
-          return;
-        }
-
         state.modalListing = listing;
-        refs.featureModalTitle.textContent = "Market analytics";
+        state.analyticsTradeMode = "buy";
+        state.modalAnalyticsPayload = null;
+        refs.featureModalTitle.textContent = "Item price check";
         refs.featureModalSubtitle.textContent =
           listing.displayName + " · " + buildCurrentPriceLabel(listing);
         const input = refs.featureModalBody.querySelector('[data-modal-item-search="analytics"]');
@@ -5002,31 +5038,28 @@
       async function loadAnalyticsTrends() {
         const risingNode = refs.featureModalBody.querySelector('[data-trend-list="rising"]');
         const fallingNode = refs.featureModalBody.querySelector('[data-trend-list="falling"]');
+        const trendGrid = refs.featureModalBody.querySelector(".trend-grid");
         if (!risingNode || !fallingNode) {
           return;
         }
 
-        try {
-          const payload = await fetchJsonUrl(CONFIG.analyticsTrendsUrl + "?days=30");
-          risingNode.innerHTML = buildTrendListMarkup(payload.rising || [], "up", payload.configured);
-          fallingNode.innerHTML = buildTrendListMarkup(payload.falling || [], "down", payload.configured);
-        } catch (error) {
-          const markup =
-            '<div class="modal-status error">Could not load 30-day trends: ' +
-            escapeHtml(error.message || String(error)) +
+        if (trendGrid) {
+          trendGrid.classList.add("single");
+          trendGrid.innerHTML =
+            '<div class="analytics-section">' +
+            '<div class="analytics-section-title pixel-font">PRICE TRENDS</div>' +
+            '<div class="modal-status">Saved trend history is offline while PVC Finder runs without a database.</div>' +
             "</div>";
-          risingNode.innerHTML = markup;
-          fallingNode.innerHTML = markup;
         }
       }
 
       function buildTrendListMarkup(rows, direction, configured) {
         if (!configured) {
-          return '<div class="modal-status">Trend charts need Supabase snapshots. The cron keeps at most the last 30 days in this view.</div>';
+          return '<div class="modal-status">Market movers need saved daily snapshots first.</div>';
         }
 
         if (!rows.length) {
-          return '<div class="modal-status">No two-day movement found in the last 30 days yet.</div>';
+          return '<div class="modal-status">Not enough saved history yet.</div>';
         }
 
         return rows
@@ -5065,12 +5098,14 @@
 
       async function openAnalyticsModal(listing) {
         state.modalListing = listing || null;
+        state.analyticsTradeMode = "buy";
+        state.modalAnalyticsPayload = null;
         openFeatureModal({
-          kicker: "ANALYTICS",
-          title: "Market analytics",
+          kicker: "PRICE CHECK",
+          title: "Item price check",
           subtitle: listing
             ? listing.displayName + " · " + buildCurrentPriceLabel(listing)
-            : "Search an item, then compare its stores and price history.",
+            : "Search an item, then check buy timing, stores, and saved price history.",
           bodyHtml: buildAnalyticsHomeMarkup(listing),
         });
 
@@ -5089,205 +5124,227 @@
           return;
         }
 
-        target.innerHTML = '<div class="modal-status">Loading price history...</div>';
-
-        try {
-          const payload = await fetchJsonUrl(
-            CONFIG.analyticsUrl + "?days=30&itemId=" + encodeURIComponent(listing.marketKey),
-          );
-          if (state.modalListing !== listing) {
-            return;
-          }
-          target.innerHTML = buildAnalyticsMarkup(listing, payload);
-        } catch (error) {
-          target.innerHTML =
-            '<div class="modal-status error">Could not load analytics: ' +
-            escapeHtml(error.message || String(error)) +
-            "</div>" +
-            buildAnalyticsMarkup(listing, { configured: false });
-        }
-      }
-
-      function openWatchModal(listing) {
-        state.modalListing = listing || null;
-        openFeatureModal({
-          kicker: "WATCH STORES",
-          title: "Watch price",
-          subtitle: "Choose the item first, then set the price that should trigger an alert.",
-          bodyHtml: buildWatchMarkup(listing),
-        });
-
-        bindModalItemSearch("watch");
-
-        const form = refs.featureModalBody.querySelector("[data-watch-form]");
-        if (!form) {
-          return;
-        }
-
-        form.addEventListener("submit", async (event) => {
-          event.preventDefault();
-          await submitWatchForm(form, listing);
-        });
-      }
-
-      function buildWatchMarkup(listing) {
-        const currentPrice = listing ? getListingUnitPrice(listing) : null;
-        const targetValue = Number.isFinite(currentPrice)
-          ? formatModalNumber(currentPrice)
-          : "";
-        const configNote =
-          state.appConfig.supabaseConfigured
-            ? "Daily cron will compare this target against the cheapest current store."
-            : "Supabase env vars are missing, so saving will fail until they are set in Vercel.";
-
-        return [
-          buildModalItemSearchMarkup("watch", listing),
-          listing
-            ? '<div class="watch-selected-item"><strong>' +
-              escapeHtml(listing.displayName) +
-              "</strong><br />Current cheapest: " +
-              escapeHtml(formatPrice(currentPrice)) +
-              " · " +
-              escapeHtml(getItemOfferCountLabel(listing.marketKey)) +
-              "</div>"
-            : '<div class="modal-status">Search an item above before activating a price alert.</div>',
-          listing
-            ? [
-                '<form class="watch-form" data-watch-form>',
-                '  <div class="watch-fields">',
-                '    <label class="field-label pixel-font">IN-GAME NAME',
-                '      <input class="field-input" name="playerName" autocomplete="nickname" required />',
-                "    </label>",
-                '    <label class="field-label pixel-font">TARGET PRICE',
-                '      <input class="field-input" name="targetPrice" inputmode="decimal" type="number" step="0.0001" min="0.0001" value="' +
-                  escapeAttribute(targetValue) +
-                  '" required />',
-                "    </label>",
-                "  </div>",
-                '  <button class="mini-action active pixel-font" type="submit">ACTIVATE ALERT</button>',
-                '  <div class="modal-status" data-watch-status>' +
-                  escapeHtml(configNote) +
-                  "</div>",
-                "</form>",
-              ].join("")
-            : "",
-        ].join("");
-      }
-
-      async function submitWatchForm(form, listing) {
-        const status = form.querySelector("[data-watch-status]");
-        const submitButton = form.querySelector('button[type="submit"]');
-        const formData = new FormData(form);
-        const playerName = String(formData.get("playerName") || "").trim();
-        const targetPrice = Number(formData.get("targetPrice"));
-
-        if (!listing) {
-          setModalStatus(status, "error", "Choose an item to watch first.");
-          return;
-        }
-
-        if (!playerName || !Number.isFinite(targetPrice) || targetPrice <= 0) {
-          setModalStatus(status, "error", "Fill name and a valid target price.");
-          return;
-        }
-
-        submitButton.disabled = true;
-        setModalStatus(status, "", "Preparing browser notification permission...");
-
-        try {
-          const subscription = await getPushSubscription();
-          setModalStatus(status, "", "Saving watch subscription...");
-          await fetchJsonUrl(CONFIG.watchSubscribeUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              playerName,
-              targetPrice,
-              itemId: listing.marketKey,
-              itemName: listing.displayName,
-              subscription,
-            }),
-          });
-          setModalStatus(status, "ok", "Alert saved. The daily Vercel cron will check this item.");
-        } catch (error) {
-          setModalStatus(status, "error", error.message || String(error));
-        } finally {
-          submitButton.disabled = false;
-        }
-      }
-
-      function setModalStatus(node, tone, message) {
-        node.classList.toggle("ok", tone === "ok");
-        node.classList.toggle("error", tone === "error");
-        node.textContent = message;
-      }
-
-      async function getPushSubscription() {
-        if (!state.appConfig.pushConfigured || !state.appConfig.vapidPublicKey) {
-          return null;
-        }
-
-        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-          return null;
-        }
-
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          return null;
-        }
-
-        const registration = await navigator.serviceWorker.ready;
-        const existing = await registration.pushManager.getSubscription();
-        if (existing) {
-          return existing.toJSON();
-        }
-
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(
-            state.appConfig.vapidPublicKey,
-          ),
-        });
-        return subscription.toJSON();
-      }
-
-      function urlBase64ToUint8Array(base64String) {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let index = 0; index < rawData.length; index += 1) {
-          outputArray[index] = rawData.charCodeAt(index);
-        }
-        return outputArray;
+        state.modalAnalyticsPayload = { configured: false };
+        target.innerHTML = buildAnalyticsMarkup(listing, { configured: false });
       }
 
       function buildAnalyticsMarkup(listing, payload) {
         const local = buildLocalAnalytics(listing);
+        const sellToShops = buildSellToShopsAnalytics(listing);
         const summary = payload && payload.summary ? payload.summary : local.summary;
         const daily = payload && payload.daily && payload.daily.length ? payload.daily : local.daily;
         const stores = payload && payload.stores && payload.stores.length ? payload.stores : local.stores;
         const rows = payload && payload.rows && payload.rows.length ? payload.rows : local.rows;
         const configured = payload && payload.configured !== false;
+        const mode = state.analyticsTradeMode === "sell" ? "sell" : "buy";
+        const activeData =
+          mode === "sell"
+            ? sellToShops
+            : { summary, daily, stores, rows };
+        const insights = buildAnalyticsInsights(
+          activeData.summary,
+          activeData.daily,
+          activeData.stores,
+          activeData.rows,
+          mode,
+        );
         const notice = configured
           ? ""
-          : '<div class="modal-status">Historical Supabase data is not active yet. Showing the current loaded market as a preview.</div>';
+          : '<div class="modal-status">Saved price history is offline. Showing the current loaded market as a preview.</div>';
 
         return [
           notice,
+          buildAnalyticsTabs(mode, local, sellToShops),
+          buildAnalyticsPriceGuide(),
+          buildAnalyticsCallout(insights, mode),
           '<div class="analytics-grid">',
-          buildMetricTile("CURRENT", formatPrice(summary.currentPrice)),
-          buildMetricTile("LOW 30D", formatPrice(summary.historicalLow)),
-          buildMetricTile("HIGH 30D", formatPrice(summary.historicalHigh)),
-          buildMetricTile("AVG 7D", formatPrice(summary.average7d)),
-          buildMetricTile("AVG 30D", formatPrice(summary.average30d)),
-          buildMetricTile("STORES", formatNumber(summary.storesSelling || 0)),
-          buildMetricTile("CHEAP STORE", summary.cheapestStore || "--"),
-          buildMetricTile("FAST GONE", summary.fastestGoneStore || "--"),
+          buildMetricTile(mode === "sell" ? "SELL FOR" : "BUY NOW", formatPrice(insights.currentPrice), formatPriceEquivalenceText(insights.currentPrice)),
+          buildMetricTile(mode === "sell" ? "BEST PAYOUT" : "BEST SAVED", formatPrice(insights.bestPrice), formatPriceEquivalenceText(insights.bestPrice)),
+          buildMetricTile(mode === "sell" ? "USUAL PAYOUT" : "USUAL LOW", formatPrice(insights.typicalLow), formatPriceEquivalenceText(insights.typicalLow)),
+          buildMetricTile(mode === "sell" ? "SHOP TO SELL TO" : "STORE TO CHECK", insights.cheapestStore || "--"),
+          buildMetricTile(mode === "sell" ? "BUYERS TODAY" : "SELLERS TODAY", formatNumber(insights.storesSelling || 0)),
+          buildMetricTile("HISTORY", formatNumber(insights.dataDays || 0) + " day" + (insights.dataDays === 1 ? "" : "s")),
           "</div>",
-          buildChartSection(daily),
-          buildStoreTable(stores),
-          buildSnapshotTable(rows),
+          buildChartSection(insights.daily, insights, mode),
+          buildStoreTable(insights.stores, mode),
+          buildSnapshotTable(activeData.rows, mode),
+        ].join("");
+      }
+
+      function buildAnalyticsTabs(mode, buyData, sellData) {
+        const buyCount = buyData && buyData.summary ? buyData.summary.storesSelling || 0 : 0;
+        const sellCount = sellData && sellData.summary ? sellData.summary.storesSelling || 0 : 0;
+        return [
+          '<div class="analytics-tabs" role="tablist" aria-label="Price check side">',
+          '  <button class="analytics-tab' +
+            (mode === "buy" ? " active" : "") +
+            '" type="button" data-analytics-tab="buy">BUY FROM SHOPS<br />' +
+            escapeHtml(formatNumber(buyCount) + " sellers") +
+            "</button>",
+          '  <button class="analytics-tab' +
+            (mode === "sell" ? " active" : "") +
+            '" type="button" data-analytics-tab="sell">SELL TO SHOPS<br />' +
+            escapeHtml(formatNumber(sellCount) + " buyers") +
+            "</button>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildAnalyticsInsights(summary, daily, stores, rows, mode) {
+        const higherIsBetter = mode === "sell";
+        const safeDaily = (Array.isArray(daily) ? daily : [])
+          .filter((day) => Number.isFinite(Number(day.low)))
+          .map((day) => ({
+            ...day,
+            low: Number(day.low),
+            average: Number.isFinite(Number(day.average)) ? Number(day.average) : null,
+          }))
+          .sort((left, right) => String(left.date).localeCompare(String(right.date)));
+        const safeStores = (Array.isArray(stores) ? stores : [])
+          .map((store) => ({
+            ...store,
+            low: Number.isFinite(Number(store.low)) ? Number(store.low) : null,
+            current: Number.isFinite(Number(store.current)) ? Number(store.current) : null,
+            average: Number.isFinite(Number(store.average)) ? Number(store.average) : null,
+          }))
+          .filter((store) => Number.isFinite(store.low))
+          .sort((left, right) => {
+            const leftCurrent = Number.isFinite(left.current) ? left.current : Number.POSITIVE_INFINITY;
+            const rightCurrent = Number.isFinite(right.current) ? right.current : Number.POSITIVE_INFINITY;
+            if (higherIsBetter) {
+              const leftBest = Number.isFinite(left.current) ? left.current : left.low;
+              const rightBest = Number.isFinite(right.current) ? right.current : right.low;
+              return rightBest - leftBest;
+            }
+            return leftCurrent - rightCurrent || left.low - right.low;
+          });
+        const dailyLows = safeDaily.map((day) => day.low).filter(Number.isFinite);
+        const latestDay = safeDaily[safeDaily.length - 1] || null;
+        const currentPrice = Number.isFinite(Number(summary && summary.currentPrice))
+          ? Number(summary.currentPrice)
+          : latestDay
+            ? latestDay.low
+            : safeStores[0]
+              ? safeStores[0].current || safeStores[0].low
+              : null;
+        const bestPrice = Number.isFinite(Number(summary && summary.historicalLow))
+          ? Number(summary.historicalLow)
+          : dailyLows.length
+            ? higherIsBetter
+              ? Math.max(...dailyLows)
+              : Math.min(...dailyLows)
+            : null;
+        const typicalLow = Number.isFinite(Number(summary && summary.typicalLow))
+          ? Number(summary.typicalLow)
+          : median(dailyLows);
+        const storesSelling = Number.isFinite(Number(summary && summary.storesSelling))
+          ? Number(summary.storesSelling)
+          : latestDay
+            ? Number(latestDay.availableStores || latestDay.stores || 0)
+            : 0;
+        const cheapestStore =
+          (summary && summary.cheapestStore) ||
+          (safeStores[0] ? safeStores[0].storeName : "");
+        const dataDays = Number.isFinite(Number(summary && summary.dataDays))
+          ? Number(summary.dataDays)
+          : safeDaily.length;
+
+        return {
+          currentPrice,
+          bestPrice,
+          typicalLow,
+          storesSelling,
+          cheapestStore,
+          dataDays,
+          latestDate: (summary && summary.latestDate) || (latestDay ? latestDay.date : ""),
+          daily: safeDaily,
+          stores: safeStores,
+          rows: Array.isArray(rows) ? rows : [],
+        };
+      }
+
+      function buildAnalyticsCallout(insights, mode) {
+        const current = insights.currentPrice;
+        const best = insights.bestPrice;
+        const typical = insights.typicalLow;
+        let title = "No clear buy signal yet.";
+        let copy = "There is not enough available-shop data for this item yet.";
+
+        if (mode === "sell") {
+          title = Number.isFinite(current)
+            ? "Best payout right now."
+            : "No shop is buying this item right now.";
+          copy = Number.isFinite(current)
+            ? "This tab is for selling your item to a shop. Higher emerald value is better here, because it is what you receive."
+            : "No current recipe has this item on the payment side with stock available.";
+        } else
+        if (Number.isFinite(current)) {
+          if (insights.dataDays < 2) {
+            title = "First saved price: use it as a baseline.";
+            copy =
+              "The cheapest available offer is saved, but trends need at least two different days. For now, compare stores instead of trusting a trend.";
+          } else if (Number.isFinite(best) && current <= best * 1.03) {
+            title = "Good buy: this is at the saved low.";
+            copy =
+              "Current cheapest is very close to the best saved price. If you need the item, this is a strong store to check.";
+          } else if (Number.isFinite(typical) && current <= typical * 1.08) {
+            title = "Fair buy: close to the usual low.";
+            copy =
+              "This price is near the normal cheapest range. Buy if you need it, or check back later for a lower offer.";
+          } else if (Number.isFinite(typical)) {
+            title = "Probably wait: current low is above usual.";
+            copy =
+              "The current cheapest offer is higher than the saved daily-low range. Waiting for a lower offer may make more sense.";
+          }
+        }
+
+        return [
+          '<div class="analytics-callout">',
+          "  <div>",
+          '    <div class="analytics-callout-title">' + escapeHtml(title) + "</div>",
+          '    <div class="analytics-callout-copy">' +
+            escapeHtml(copy) +
+            (insights.cheapestStore
+              ? " Store to check: " + escapeHtml(insights.cheapestStore) + "."
+              : "") +
+            "</div>",
+          "  </div>",
+          '  <div class="analytics-callout-price">',
+          '    <div class="analytics-callout-price-label pixel-font">' +
+            escapeHtml(mode === "sell" ? "BEST PAYOUT NOW" : "CHEAPEST NOW") +
+            "</div>",
+          '    <div class="analytics-callout-price-value">' +
+            buildPriceStackMarkup(current) +
+            "</div>",
+          mode === "sell"
+            ? '<div class="analytics-callout-copy">Meaning: a shop pays this much value for 1 item from you.</div>'
+            : '<div class="analytics-callout-copy">Alert idea: below ' +
+              escapeHtml(formatPrice(Number.isFinite(best) ? best : typical)) +
+              "</div>",
+          "  </div>",
+          "</div>",
+        ].join("");
+      }
+
+      function buildAnalyticsPriceGuide() {
+        const ratios = marketDisplayOrder
+          .filter((base) => base !== "emerald")
+          .map((base) => {
+            const value = getCurrencyBaseValue(base);
+            if (!Number.isFinite(value)) {
+              return "";
+            }
+            return "1 " + base + " is being estimated around " + formatPrice(value);
+          })
+          .filter(Boolean);
+
+        return [
+          '<div class="analytics-price-guide">',
+          "<strong>Price language:</strong> every number is an estimated per-item value. ",
+          "Emeralds are the base because most shops price from emerald trades. ",
+          ratios.length ? escapeHtml(ratios.join(" · ")) + ". " : "",
+          "Diamond and netherite amounts are live estimates from current player offers, not fixed server rules.",
+          "</div>",
         ].join("");
       }
 
@@ -5316,9 +5373,14 @@
             historicalHigh: prices.length ? Math.max(...prices) : null,
             average7d: averagePrice,
             average30d: averagePrice,
+            typicalLow: averagePrice,
             storesSelling: new Set(available.map((entry) => entry.store_name)).size,
+            totalStoresSeen: new Set(available.map((entry) => entry.store_name)).size,
             cheapestStore: cheapest ? cheapest.store_name : "",
             fastestGoneStore: "",
+            latestDate: "current",
+            dataDays: 1,
+            samples: available.length,
           },
           daily: [
             {
@@ -5333,6 +5395,7 @@
             .map((entry) => ({
               storeName: entry.store_name,
               low: entry.price,
+              current: entry.available ? entry.price : null,
               average: entry.price,
               daysAvailable: entry.available ? 1 : 0,
               samples: 1,
@@ -5342,51 +5405,207 @@
         };
       }
 
-      function buildMetricTile(label, value) {
+      function buildSellToShopsAnalytics(selectedListing) {
+        const offers = state.listings
+          .map((listing) => {
+            const matchedUnits = listing.paymentParts.reduce((sum, part) => {
+              return part.marketKey === selectedListing.marketKey
+                ? sum + part.comparableUnits
+                : sum;
+            }, 0);
+            const payoutValue = getResultOfferMarketValue(listing);
+            const unitPayout =
+              matchedUnits > 0 && Number.isFinite(payoutValue)
+                ? payoutValue / matchedUnits
+                : null;
+
+            if (!Number.isFinite(unitPayout)) {
+              return null;
+            }
+
+            return {
+              item_id: selectedListing.marketKey,
+              item_name: selectedListing.displayName,
+              store_name: listing.shopName,
+              storeName: listing.shopName,
+              price: unitPayout,
+              stock: listing.offerStock,
+              available: listing.offerStock > 0,
+              snapshot_date: "current",
+              resultName: listing.displayName,
+            };
+          })
+          .filter(Boolean);
+        const available = offers.filter((entry) => entry.available);
+        const prices = available.map((entry) => Number(entry.price));
+        const best = available.slice().sort((left, right) => right.price - left.price)[0];
+        const averagePrice = averageNumbers(prices);
+
+        return {
+          summary: {
+            currentPrice: best ? best.price : null,
+            historicalLow: prices.length ? Math.max(...prices) : null,
+            historicalHigh: prices.length ? Math.max(...prices) : null,
+            average7d: averagePrice,
+            average30d: averagePrice,
+            typicalLow: averagePrice,
+            storesSelling: new Set(available.map((entry) => entry.store_name)).size,
+            totalStoresSeen: new Set(available.map((entry) => entry.store_name)).size,
+            cheapestStore: best ? best.store_name : "",
+            fastestGoneStore: "",
+            latestDate: "current",
+            dataDays: 1,
+            samples: available.length,
+          },
+          daily: [
+            {
+              date: "current",
+              low: best ? best.price : null,
+              average: averagePrice,
+              stores: available.length,
+              availableStores: available.length,
+            },
+          ],
+          stores: available
+            .map((entry) => ({
+              storeName: entry.store_name,
+              low: entry.price,
+              current: entry.price,
+              average: entry.price,
+              daysAvailable: 1,
+              samples: 1,
+            }))
+            .sort((left, right) => right.current - left.current),
+          rows: offers.sort((left, right) => {
+            return Number(right.available) - Number(left.available) || right.price - left.price;
+          }),
+        };
+      }
+
+      function buildMetricTile(label, value, subvalue) {
         return [
           '<div class="metric-tile">',
           '  <div class="metric-label pixel-font">' + escapeHtml(label) + "</div>",
           '  <div class="metric-value">' + escapeHtml(value || "--") + "</div>",
+          subvalue
+            ? '  <div class="metric-subvalue">' + escapeHtml(subvalue) + "</div>"
+            : "",
           "</div>",
         ].join("");
       }
 
-      function buildChartSection(daily) {
-        const values = daily.map((day) => Number(day.low)).filter(Number.isFinite);
-        const max = values.length ? Math.max(...values) : 0;
-        const bars = daily
-          .slice(-30)
-          .map((day) => {
+      function buildChartSection(daily, insights, mode) {
+        const points = (Array.isArray(daily) ? daily : [])
+          .filter((day) => Number.isFinite(Number(day.low)))
+          .slice(-30);
+        const values = points.map((day) => Number(day.low));
+
+        if (!points.length) {
+          return [
+            '<div class="analytics-section">',
+            '  <div class="analytics-section-title pixel-font">' +
+              escapeHtml(mode === "sell" ? "BEST PAYOUT BY DAY" : "CHEAPEST PRICE BY DAY") +
+              "</div>",
+            '  <div class="chart-empty">' +
+              escapeHtml(
+                mode === "sell"
+                  ? "No shop is buying this item right now."
+                  : "No saved available-shop prices yet. Run the daily snapshot to build this history.",
+              ) +
+              "</div>",
+            "</div>",
+          ].join("");
+        }
+
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const bestChartValue = mode === "sell" ? max : min;
+        const range = max - min;
+        const count = Math.max(points.length, 1);
+        const columns = points
+          .map((day, index) => {
             const value = Number(day.low);
-            const height = max > 0 && Number.isFinite(value) ? Math.max(4, (value / max) * 100) : 4;
+            const bottom = range > 0 ? 8 + ((value - min) / range) * 84 : 50;
+            const classes = [
+              "price-history-dot",
+              value === min ? "best" : "",
+              index === points.length - 1 ? "latest" : "",
+            ].filter(Boolean).join(" ");
+
+            return [
+              '<div class="price-history-column" title="' +
+                escapeAttribute(formatShortDate(day.date) + " cheapest: " + formatPriceWithEquivalents(value)) +
+                '">',
+              '  <span class="price-history-stem" style="height:' +
+                escapeAttribute(bottom.toFixed(2)) +
+                '%"></span>',
+              '  <span class="' +
+                escapeAttribute(classes) +
+                '" style="bottom:' +
+                escapeAttribute(bottom.toFixed(2)) +
+                '%"></span>',
+              "</div>",
+            ].join("");
+          })
+          .join("");
+        const labels = points
+          .map((day, index) => {
+            const shouldLabel =
+              count <= 10 ||
+              index === 0 ||
+              index === count - 1 ||
+              index % Math.ceil(count / 6) === 0;
             return (
-              '<div class="chart-bar" style="height:' +
-              height +
-              '%" title="' +
-              escapeAttribute(day.date + " · " + formatPrice(value)) +
-              '"></div>'
+              '<span class="price-history-label">' +
+              (shouldLabel ? escapeHtml(formatShortDate(day.date)) : "") +
+              "</span>"
             );
           })
           .join("");
 
         return [
           '<div class="analytics-section">',
-          '  <div class="analytics-section-title pixel-font">DAILY LOW PRICE</div>',
-          '  <div class="chart-bars" aria-label="Daily low price chart">' + bars + "</div>",
+          '  <div class="price-history-head">',
+          "    <div>",
+          '      <div class="analytics-section-title pixel-font">' +
+            escapeHtml(mode === "sell" ? "BEST PAYOUT BY DAY" : "CHEAPEST PRICE BY DAY") +
+            "</div>",
+          '      <div class="price-history-subtitle">' +
+            escapeHtml(
+              mode === "sell"
+                ? "Each point is the best payout found. Higher is better."
+                : "Each point is the cheapest available store saved that day. Lower is better.",
+            ) +
+            "</div>",
+          "    </div>",
+          '    <div class="price-history-range">' +
+            escapeHtml(mode === "sell" ? "best payout " : "best ") +
+            escapeHtml(formatPrice(bestChartValue)) +
+            "<br />" +
+            escapeHtml(mode === "sell" ? "now " : "latest ") +
+            escapeHtml(formatPrice(insights.currentPrice)) +
+            "</div>",
+          "  </div>",
+          '  <div class="price-history-chart" style="--point-count:' +
+            escapeAttribute(String(count)) +
+            '">',
+          '    <div class="price-history-plot">' + columns + "</div>",
+          '    <div class="price-history-labels">' + labels + "</div>",
+          "  </div>",
           "</div>",
         ].join("");
       }
 
-      function buildStoreTable(stores) {
+      function buildStoreTable(stores, mode) {
         const rows = stores
           .slice(0, 8)
           .map((store) => {
             return [
               "<tr>",
               "<td>" + escapeHtml(store.storeName || "--") + "</td>",
-              "<td>" + escapeHtml(formatPrice(store.low)) + "</td>",
-              "<td>" + escapeHtml(formatPrice(store.average)) + "</td>",
-              "<td>" + escapeHtml(formatNumber(store.daysAvailable || 0)) + "</td>",
+              buildPriceTableCell(Number.isFinite(store.current) ? store.current : store.low),
+              buildPriceTableCell(store.low),
+              "<td>" + escapeHtml(formatNumber(store.daysAvailable || 0)) + "d</td>",
               "</tr>",
             ].join("");
           })
@@ -5394,24 +5613,41 @@
 
         return [
           '<div class="analytics-section">',
-          '  <div class="analytics-section-title pixel-font">STORE SIGNALS</div>',
+          '  <div class="analytics-section-title pixel-font">' +
+            escapeHtml(mode === "sell" ? "BEST SHOPS TO SELL TO" : "BEST STORES TO CHECK") +
+            "</div>",
           '  <table class="analytics-table">',
-          "    <thead><tr><th>STORE</th><th>LOW</th><th>AVG</th><th>DAYS</th></tr></thead>",
-          "    <tbody>" + rows + "</tbody>",
+          "    <thead><tr><th>STORE</th><th>" +
+            escapeHtml(mode === "sell" ? "PAYS NOW" : "NOW") +
+            "</th><th>" +
+            escapeHtml(mode === "sell" ? "BEST PAYOUT" : "BEST SEEN") +
+            "</th><th>SEEN</th></tr></thead>",
+          "    <tbody>" +
+            (rows ||
+              '<tr><td colspan="4">' +
+                escapeHtml(
+                  mode === "sell"
+                    ? "No in-stock shop is buying this item right now."
+                    : "No available stores saved for this item yet.",
+                ) +
+                "</td></tr>") +
+            "</tbody>",
           "  </table>",
           "</div>",
         ].join("");
       }
 
-      function buildSnapshotTable(rows) {
-        const body = rows
+      function buildSnapshotTable(rows, mode) {
+        const visibleRows = rows
+          .filter((row) => row.available !== false && numberOrZero(row.stock) > 0);
+        const body = visibleRows
           .slice(0, 12)
           .map((row) => {
             return [
               "<tr>",
               "<td>" + escapeHtml(row.snapshot_date || "current") + "</td>",
               "<td>" + escapeHtml(row.store_name || row.storeName || "--") + "</td>",
-              "<td>" + escapeHtml(formatPrice(Number(row.price))) + "</td>",
+              buildPriceTableCell(Number(row.price)),
               "<td>" + escapeHtml(formatNumber(numberOrZero(row.stock))) + "</td>",
               "</tr>",
             ].join("");
@@ -5420,10 +5656,23 @@
 
         return [
           '<div class="analytics-section">',
-          '  <div class="analytics-section-title pixel-font">DAY AND STORE LOG</div>',
+          '  <div class="analytics-section-title pixel-font">' +
+            escapeHtml(mode === "sell" ? "SHOPS BUYING NOW" : "RECENT IN-STOCK CHECKS") +
+            "</div>",
           '  <table class="analytics-table">',
-          "    <thead><tr><th>DAY</th><th>STORE</th><th>PRICE</th><th>STOCK</th></tr></thead>",
-          "    <tbody>" + body + "</tbody>",
+          "    <thead><tr><th>DAY</th><th>STORE</th><th>" +
+            escapeHtml(mode === "sell" ? "PAYOUT" : "PRICE") +
+            "</th><th>STOCK</th></tr></thead>",
+          "    <tbody>" +
+            (body ||
+              '<tr><td colspan="4">' +
+                escapeHtml(
+                  mode === "sell"
+                    ? "No in-stock shop is buying this item right now."
+                    : "No in-stock saved checks for this item yet.",
+                ) +
+                "</td></tr>") +
+            "</tbody>",
           "  </table>",
           "</div>",
         ].join("");
@@ -5447,11 +5696,124 @@
       }
 
       function formatPrice(value) {
-        return Number.isFinite(value) ? formatMarketNumber(value) + " market" : "--";
+        return Number.isFinite(value)
+          ? "≈ " + formatCurrencyAmount("emerald", value)
+          : "--";
+      }
+
+      function getCurrencyBaseValue(base) {
+        const values = (state.market && state.market.currencyValues) || {
+          emerald: 1,
+        };
+        const value = base === "emerald" ? 1 : Number(values[base]);
+        return Number.isFinite(value) && value > 0 ? value : null;
+      }
+
+      function getCurrencyConversions(value) {
+        if (!Number.isFinite(value)) {
+          return [];
+        }
+
+        return marketDisplayOrder
+          .map((base) => {
+            const baseValue = getCurrencyBaseValue(base);
+            if (!Number.isFinite(baseValue)) {
+              return null;
+            }
+
+            return {
+              base,
+              amount: value / baseValue,
+              meta: marketCurrencyDisplay[base],
+            };
+          })
+          .filter(Boolean);
+      }
+
+      function formatCurrencyAmount(base, amount) {
+        const safeAmount = Number(amount);
+        const name = base || "emerald";
+        if (!Number.isFinite(safeAmount)) {
+          return "--";
+        }
+
+        if (safeAmount > 0 && safeAmount < 0.001) {
+          return "< 0.001 " + name;
+        }
+
+        const label = Math.abs(safeAmount - 1) < 0.0001 ? name : name + "s";
+        return formatMarketNumber(safeAmount) + " " + label;
+      }
+
+      function formatPriceEquivalenceText(value) {
+        const parts = getCurrencyConversions(value)
+          .filter((entry) => entry.base !== "emerald")
+          .map((entry) => formatCurrencyAmount(entry.base, entry.amount));
+        return parts.length ? parts.join(" · ") : "";
+      }
+
+      function formatPriceWithEquivalents(value) {
+        const main = formatPrice(value);
+        const equivalents = formatPriceEquivalenceText(value);
+        return equivalents ? main + " · " + equivalents : main;
+      }
+
+      function buildPriceStackMarkup(value) {
+        const equivalents = getCurrencyConversions(value)
+          .filter((entry) => entry.base !== "emerald")
+          .map((entry) => {
+            return (
+              '<span style="color:' +
+              escapeAttribute(entry.meta.color) +
+              '">' +
+              escapeHtml(entry.meta.icon + " " + formatCurrencyAmount(entry.base, entry.amount)) +
+              "</span>"
+            );
+          })
+          .join("");
+
+        return [
+          '<span class="price-stack">',
+          '  <span class="price-stack-main">' + escapeHtml(formatPrice(value)) + "</span>",
+          equivalents
+            ? '  <span class="price-stack-equivalents">' + equivalents + "</span>"
+            : "",
+          "</span>",
+        ].join("");
+      }
+
+      function buildPriceTableCell(value) {
+        const equivalents = formatPriceEquivalenceText(value);
+        return (
+          '<td title="' +
+          escapeAttribute(formatPriceWithEquivalents(value)) +
+          '">' +
+          '<span class="analytics-table-price">' +
+          '<span>' +
+          escapeHtml(formatPrice(value)) +
+          "</span>" +
+          (equivalents
+            ? '<span class="analytics-table-price-note">' +
+              escapeHtml(equivalents) +
+              "</span>"
+            : "") +
+          "</span>" +
+          "</td>"
+        );
       }
 
       function formatModalNumber(value) {
         return Number.isFinite(value) ? String(Math.round(value * 10000) / 10000) : "";
+      }
+
+      function formatShortDate(value) {
+        const text = String(value || "");
+        const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) {
+          return text === "current" ? "now" : text;
+        }
+
+        return Number(match[2]) + "/" + Number(match[3]);
       }
 
       function averageNumbers(values) {
@@ -5849,9 +6211,11 @@
         refs.searchInput.value = "";
         refs.inStockOnlyToggle.checked = true;
         refs.includeShulkerToggle.checked = true;
+        refs.onlyShulkerToggle.checked = false;
         state.query = "";
         state.inStockOnly = true;
         state.includeShulker = true;
+        state.onlyShulker = false;
         state.sort = "relevance";
         state.searchScope = "item";
         state.tradeIntent = "both";
@@ -5992,6 +6356,7 @@
           state.tradeIntent,
           state.inStockOnly ? "1" : "0",
           state.includeShulker ? "1" : "0",
+          state.onlyShulker ? "1" : "0",
           listings.length,
           listings[0] ? listings[0].id : "",
           listings[listings.length - 1] ? listings[listings.length - 1].id : "",
@@ -6006,6 +6371,7 @@
           state.tradeIntent !== "both" ||
           state.inStockOnly ||
           !state.includeShulker ||
+          state.onlyShulker ||
           state.sort !== "relevance",
         );
 
@@ -6071,6 +6437,10 @@
 
         if (!state.includeShulker) {
           tags.push(buildFilterTag("shulker", "no shulker"));
+        }
+
+        if (state.onlyShulker) {
+          tags.push(buildFilterTag("only-shulker", "shulker deals"));
         }
 
         if (state.sort !== "relevance") {
@@ -6185,6 +6555,10 @@
             if (!directMatch) {
               return false;
             }
+          }
+
+          if (state.onlyShulker && !listing.isShulker) {
+            return false;
           }
 
           if (!terms.length) {
@@ -6355,10 +6729,7 @@
           '    <div class="card-action-grid">',
           '      <button class="footer-button card-tool-button" type="button" data-open-analytics="' +
             escapeAttribute(listing.id) +
-            '">ANALYTICS</button>',
-          '      <button class="footer-button card-tool-button" type="button" data-open-watch="' +
-            escapeAttribute(listing.id) +
-            '">WATCH PRICE</button>',
+            '">PRICE CHECK</button>',
           "    </div>",
           '    <button class="footer-coords" type="button" data-copy-coords="' +
             escapeAttribute(coordsCopyValue) +
@@ -7236,6 +7607,13 @@
         const shulkerContents = parseShulkerContents(item.lore);
         const customName = cleanText(item.name);
         const displayName = buildTradeItemDisplayName(item, shulkerContents);
+        const enchantKey = buildEnchantKey(item.enchant);
+        const marketKey = buildMarketKey({
+          type,
+          displayName,
+          enchantKey,
+          shulkerContents,
+        });
         const color = labelConfig ? labelConfig.color : "var(--text)";
         const note =
           type === "EMERALD_BLOCK" ? "(= " + amount * 9 + " em.)" : "";
@@ -7258,6 +7636,7 @@
           itemAmount: amount,
           comparableUnits: currencyMeta ? amount * currencyMeta.factor : amount,
           textureType: type,
+          marketKey,
           color,
           text: amount + " " + displayName,
           note,
@@ -8397,11 +8776,12 @@
         }
 
         const particles = [];
-        const particleCount = 80;
+        const particleCount = 96;
         const palette = [
-          { weight: 0.6, size: 2, color: "#E8760A" },
-          { weight: 0.25, size: 2, color: "#4ade80" },
-          { weight: 0.15, size: 3, color: "#67e8f9" },
+          { weight: 0.54, size: 1, color: "#ffffff" },
+          { weight: 0.28, size: 1.4, color: "#b8f3ff" },
+          { weight: 0.14, size: 1.8, color: "#f6d38a" },
+          { weight: 0.04, size: 2.2, color: "#67e8f9" },
         ];
         const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -8429,16 +8809,20 @@
 
         const spawn = (particle, randomY = true) => {
           const type = chooseType();
-          particle.x = Math.random() * window.innerWidth;
+          particle.x = randomY
+            ? Math.random() * window.innerWidth
+            : window.innerWidth + Math.random() * 180;
           particle.y = randomY
             ? Math.random() * window.innerHeight
-            : window.innerHeight + Math.random() * 40;
-          particle.vx = -0.1 + Math.random() * 0.2;
-          particle.vy = -0.6 + Math.random() * 0.4;
+            : Math.random() * window.innerHeight * 0.72;
+          particle.vx = -0.45 - Math.random() * 2.8;
+          particle.vy = 0.12 + Math.random() * 0.82;
           particle.size = type.size;
           particle.color = type.color;
-          particle.opacity = 0;
-          particle.fadeSpeed = 0.004 + Math.random() * 0.01;
+          particle.opacity = 0.18 + Math.random() * 0.62;
+          particle.tail = 12 + Math.random() * 58;
+          particle.pulse = Math.random() * Math.PI * 2;
+          particle.pulseSpeed = 0.015 + Math.random() * 0.035;
         };
 
         resize();
@@ -8455,35 +8839,28 @@
           particles.forEach((particle) => {
             particle.x += particle.vx;
             particle.y += particle.vy;
+            particle.pulse += particle.pulseSpeed;
 
-            const topRatio = Math.max(
-              0,
-              Math.min(1, particle.y / window.innerHeight),
+            const glow = particle.opacity * (0.68 + Math.sin(particle.pulse) * 0.22);
+            context.globalAlpha = Math.max(0.08, glow);
+            context.strokeStyle = particle.color;
+            context.lineWidth = Math.max(1, particle.size * 0.7);
+            context.beginPath();
+            context.moveTo(particle.x, particle.y);
+            context.lineTo(
+              particle.x - particle.vx * particle.tail,
+              particle.y - particle.vy * particle.tail,
             );
-            const fadeOutStart = 0.2;
+            context.stroke();
 
-            if (particle.opacity < 0.4 && topRatio > fadeOutStart) {
-              particle.opacity = Math.min(
-                0.4,
-                particle.opacity + particle.fadeSpeed,
-              );
-            } else if (topRatio <= fadeOutStart) {
-              particle.opacity = Math.max(
-                0,
-                particle.opacity - particle.fadeSpeed * 1.2,
-              );
-            }
-
-            context.globalAlpha = particle.opacity;
+            context.globalAlpha = Math.min(1, glow + 0.18);
             context.fillStyle = particle.color;
-            context.fillRect(
-              particle.x,
-              particle.y,
-              particle.size,
-              particle.size,
-            );
+            context.fillRect(particle.x, particle.y, particle.size, particle.size);
 
-            if (particle.y + particle.size < -4) {
+            if (
+              particle.x + particle.tail < -80 ||
+              particle.y - particle.tail > window.innerHeight + 80
+            ) {
               spawn(particle, false);
             }
           });

@@ -7,7 +7,7 @@ const fetchAttempts = [
     name: "minimal",
     headers: {
       accept: "application/json,text/plain,*/*",
-      "user-agent": "PVCFinder/1.0 (+https://pvcstorefinder.vercel.app/)",
+      "user-agent": "PVCFinder/1.0",
     },
   },
   {
@@ -78,7 +78,6 @@ module.exports = async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
     res.setHeader("CDN-Cache-Control", "no-store");
-    res.setHeader("Vercel-CDN-Cache-Control", "no-store");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
     res.setHeader("X-PVC-Data-Source", source);

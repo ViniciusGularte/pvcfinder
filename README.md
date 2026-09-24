@@ -22,11 +22,16 @@ Rotas importantes:
 
 - `/`
 - `/mods`
+- `/api/pvc/shops`
 - `/api/shops`
 
 Observacao:
 
-- O endpoint local busca os dados ao vivo em `/api/shops` sem fallback de snapshot/cache.
+- O endpoint local busca os dados ao vivo e cai para `data/shops-snapshot.json`
+  se a origem do PVC estiver indisponivel.
+- Supabase, Vercel Functions, cron, push notifications e migrations foram
+  removidos. Alertas ficam apenas no armazenamento local do navegador.
+- Na VPS do TheyAsked, o modulo roda em `/pvc` e consome `/api/pvc/shops`.
 
 Texturas dos itens:
 
