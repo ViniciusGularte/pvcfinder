@@ -2919,6 +2919,28 @@
         margin-bottom: 14px;
       }
 
+      .history-range-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .history-range-tab {
+        border: 1px solid var(--border);
+        background: rgba(20, 14, 10, 0.88);
+        color: var(--text);
+        padding: 8px 12px;
+        font-size: 10px;
+        line-height: 1.3;
+      }
+
+      .history-range-tab.active {
+        border-color: var(--diamond);
+        background: rgba(8, 17, 21, 0.64);
+        color: var(--text-bright);
+      }
+
       .analytics-tab {
         border: 1px solid var(--border);
         background: rgba(20, 14, 10, 0.88);
@@ -3654,7 +3676,7 @@
               id="heroAnalyticsButton"
               type="button"
             >
-              PRICE CHECK
+              MARKET HISTORY
             </button>
           </div>
 
@@ -3907,7 +3929,7 @@
         <div class="feature-modal-head">
           <div>
             <div class="feature-modal-kicker pixel-font" id="featureModalKicker">
-              PRICE CHECK
+              MARKET HISTORY
             </div>
             <div class="feature-modal-title pixel-font" id="featureModalTitle">
               Item market
@@ -3946,6 +3968,8 @@
         mobilePageSize: 36,
       };
       const PREVIEW_PASSWORD = "leo123";
+      const MARKET_HISTORY_STORAGE_KEY = "pvc-market-history-v1";
+      const MARKET_HISTORY_MAX_DAYS = 30;
 
       const LOADING_SCENES = [
         {
@@ -4272,6 +4296,7 @@
         activeRequestId: 0,
         lastDataSource: "unknown",
         analyticsTradeMode: "buy",
+        marketHistoryRange: 7,
         modalAnalyticsPayload: null,
         modalListing: null,
         openedUrlItem: false,
@@ -4681,6 +4706,17 @@
             return;
           }
 
+          const rangeTab = event.target.closest("[data-history-range]");
+          if (rangeTab) {
+            state.marketHistoryRange = Number(rangeTab.getAttribute("data-history-range")) || 7;
+            const target = refs.featureModalBody.querySelector("[data-selected-analytics]");
+            if (target && state.modalListing) {
+              target.innerHTML = buildAnalyticsMarkup(
+                state.modalListing,
+                state.modalAnalyticsPayload,
+              );
+            }
+          }
         });
 
         document.addEventListener("keydown", (event) => {
@@ -4837,6 +4873,7 @@
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
+          persistMarketHistorySnapshot();
           state.loadingError = false;
           refs.errorState.classList.add("hidden");
           updateStats();
@@ -4937,6 +4974,111 @@
         }
       }
 
+      function getMarketHistoryDate() {
+        const sourceDate =
+          state.lastDumpedAt && !Number.isNaN(state.lastDumpedAt.getTime())
+            ? state.lastDumpedAt
+            : new Date();
+        return sourceDate.toISOString().slice(0, 10);
+      }
+
+      function readMarketHistoryStore() {
+        try {
+          const parsed = JSON.parse(
+            window.localStorage.getItem(MARKET_HISTORY_STORAGE_KEY) || "{}",
+          );
+          return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed
+            : {};
+        } catch (error) {
+          console.warn("Could not read market history.", error);
+          return {};
+        }
+      }
+
+      function writeMarketHistoryStore(store) {
+        try {
+          window.localStorage.setItem(
+            MARKET_HISTORY_STORAGE_KEY,
+            JSON.stringify(store),
+          );
+        } catch (error) {
+          console.warn("Could not save market history.", error);
+        }
+      }
+
+      function persistMarketHistorySnapshot() {
+        if (!state.listings.length) {
+          return;
+        }
+
+        const date = getMarketHistoryDate();
+        const grouped = new Map();
+        state.listings.forEach((listing) => {
+          const price = getListingUnitPrice(listing);
+          if (!listing.marketKey || !Number.isFinite(price)) {
+            return;
+          }
+
+          if (!grouped.has(listing.marketKey)) {
+            grouped.set(listing.marketKey, {
+              itemId: listing.marketKey,
+              itemName: listing.displayName,
+              offers: [],
+            });
+          }
+
+          grouped.get(listing.marketKey).offers.push({
+            storeName: listing.shopName,
+            price,
+            stock: numberOrZero(listing.offerStock),
+            available: numberOrZero(listing.offerStock) > 0,
+          });
+        });
+
+        const store = readMarketHistoryStore();
+        grouped.forEach((entry, itemId) => {
+          const available = entry.offers.filter((offer) => offer.available);
+          const priced = available.length ? available : entry.offers;
+          const prices = priced.map((offer) => offer.price).filter(Number.isFinite);
+          if (!prices.length) {
+            return;
+          }
+
+          const cheapest = priced.slice().sort((left, right) => left.price - right.price)[0];
+          const row = {
+            date,
+            itemName: entry.itemName,
+            low: Math.min(...prices),
+            average: averageNumbers(prices),
+            high: Math.max(...prices),
+            availableStores: new Set(available.map((offer) => offer.storeName)).size,
+            stores: new Set(entry.offers.map((offer) => offer.storeName)).size,
+            offers: entry.offers.length,
+            totalStock: available.reduce((sum, offer) => sum + offer.stock, 0),
+            cheapestStore: cheapest ? cheapest.storeName : "",
+          };
+
+          const rows = Array.isArray(store[itemId]) ? store[itemId] : [];
+          const nextRows = rows.filter((existing) => existing.date !== date);
+          nextRows.push(row);
+          nextRows.sort((left, right) => String(left.date).localeCompare(String(right.date)));
+          store[itemId] = nextRows.slice(-MARKET_HISTORY_MAX_DAYS);
+        });
+
+        writeMarketHistoryStore(store);
+      }
+
+      function getMarketHistoryRows(itemId, days) {
+        const rows = readMarketHistoryStore()[itemId] || [];
+        const safeRows = Array.isArray(rows) ? rows : [];
+        const limit = Math.max(1, Number(days) || 7);
+        return safeRows
+          .slice()
+          .sort((left, right) => String(left.date).localeCompare(String(right.date)))
+          .slice(-limit);
+      }
+
       function getListingById(id) {
         return state.listings.find((listing) => listing.id === id) || null;
       }
@@ -4990,8 +5132,8 @@
 
       function openEmptyFeatureModal(mode) {
         openFeatureModal({
-          kicker: "PRICE CHECK",
-          title: "Item price check",
+          kicker: "MARKET HISTORY",
+          title: "Choose an item",
           subtitle: "Search the market catalog to inspect an item.",
           bodyHtml:
             '<div class="modal-status">Load market data, then choose a result to inspect.</div>',
@@ -5001,26 +5143,16 @@
       function buildAnalyticsHomeMarkup(selectedListing) {
         return [
           buildModalItemSearchMarkup("analytics", selectedListing),
-          '<div class="trend-grid">',
-          '  <div class="analytics-section">',
-          '    <div class="analytics-section-title pixel-font">GETTING PRICIER</div>',
-          '    <div class="trend-list" data-trend-list="rising"><div class="modal-status">Loading saved price moves...</div></div>',
-          "  </div>",
-          '  <div class="analytics-section">',
-          '    <div class="analytics-section-title pixel-font">GETTING CHEAPER</div>',
-          '    <div class="trend-list" data-trend-list="falling"><div class="modal-status">Loading saved price moves...</div></div>',
-          "  </div>",
-          "</div>",
           '<div class="selected-analytics" data-selected-analytics>',
           selectedListing
-            ? '<div class="modal-status">Loading price history...</div>'
-            : '<div class="modal-status">Search an item above to see whether it is a good buy and which store to check.</div>',
+            ? '<div class="modal-status">Loading market history...</div>'
+            : '<div class="modal-status">Choose an item above to see 1d, 7d, and 30d price movement from saved snapshots.</div>',
           "</div>",
         ].join("");
       }
 
       function buildModalItemSearchMarkup(mode, selectedListing) {
-        const placeholder = "Search item for price analytics";
+        const placeholder = "Choose item, ex: stone";
         const value = selectedListing ? selectedListing.displayName : "";
 
         return [
@@ -5135,7 +5267,7 @@
         state.modalListing = listing;
         state.analyticsTradeMode = "buy";
         state.modalAnalyticsPayload = null;
-        refs.featureModalTitle.textContent = "Item price check";
+        refs.featureModalTitle.textContent = "Market history";
         refs.featureModalSubtitle.textContent =
           listing.displayName + " · " + buildCurrentPriceLabel(listing);
         const input = refs.featureModalBody.querySelector('[data-modal-item-search="analytics"]');
@@ -5252,7 +5384,7 @@
 
       function buildTrendListMarkup(rows, direction, configured) {
         if (!configured) {
-          return '<div class="modal-status">Market movers need saved daily snapshots first.</div>';
+          return '<div class="modal-status">Market movers need saved local history first.</div>';
         }
 
         if (!rows.length) {
@@ -5298,17 +5430,15 @@
         state.analyticsTradeMode = "buy";
         state.modalAnalyticsPayload = null;
         openFeatureModal({
-          kicker: "PRICE CHECK",
-          title: "Item price check",
+          kicker: "MARKET HISTORY",
+          title: "Market history",
           subtitle: listing
             ? listing.displayName + " · " + buildCurrentPriceLabel(listing)
-            : "Search an item, then check buy timing, stores, and saved price history.",
+            : "Choose an item to inspect average price, cheapest store, stock, and saved history.",
           bodyHtml: buildAnalyticsHomeMarkup(listing),
         });
 
         bindModalItemSearch("analytics");
-        bindTrendPicker();
-        loadAnalyticsTrends();
 
         if (listing) {
           await loadSelectedAnalytics(listing);
@@ -5327,17 +5457,12 @@
 
       function buildAnalyticsMarkup(listing, payload) {
         const local = buildLocalAnalytics(listing);
-        const sellToShops = buildSellToShopsAnalytics(listing);
         const summary = payload && payload.summary ? payload.summary : local.summary;
         const daily = payload && payload.daily && payload.daily.length ? payload.daily : local.daily;
         const stores = payload && payload.stores && payload.stores.length ? payload.stores : local.stores;
         const rows = payload && payload.rows && payload.rows.length ? payload.rows : local.rows;
-        const configured = payload && payload.configured !== false;
-        const mode = state.analyticsTradeMode === "sell" ? "sell" : "buy";
-        const activeData =
-          mode === "sell"
-            ? sellToShops
-            : { summary, daily, stores, rows };
+        const mode = "buy";
+        const activeData = { summary, daily, stores, rows };
         const insights = buildAnalyticsInsights(
           activeData.summary,
           activeData.daily,
@@ -5345,26 +5470,44 @@
           activeData.rows,
           mode,
         );
-        const notice = configured
+        const notice = insights.dataDays > 1
           ? ""
-          : '<div class="modal-status">Saved price history is offline. Showing the current loaded market as a preview.</div>';
+          : '<div class="modal-status">First local snapshot saved. Keep checking the market over time to build the 7d and 30d history.</div>';
 
         return [
           notice,
-          buildAnalyticsTabs(mode, local, sellToShops),
+          buildHistoryRangeTabs(),
           buildAnalyticsPriceGuide(),
           buildAnalyticsCallout(insights, mode),
           '<div class="analytics-grid">',
-          buildMetricTile(mode === "sell" ? "SELL FOR" : "BUY NOW", formatPrice(insights.currentPrice), formatPriceEquivalenceText(insights.currentPrice)),
-          buildMetricTile(mode === "sell" ? "BEST PAYOUT" : "BEST SAVED", formatPrice(insights.bestPrice), formatPriceEquivalenceText(insights.bestPrice)),
-          buildMetricTile(mode === "sell" ? "USUAL PAYOUT" : "USUAL LOW", formatPrice(insights.typicalLow), formatPriceEquivalenceText(insights.typicalLow)),
-          buildMetricTile(mode === "sell" ? "SHOP TO SELL TO" : "STORE TO CHECK", insights.cheapestStore || "--"),
-          buildMetricTile(mode === "sell" ? "BUYERS TODAY" : "SELLERS TODAY", formatNumber(insights.storesSelling || 0)),
-          buildMetricTile("HISTORY", formatNumber(insights.dataDays || 0) + " day" + (insights.dataDays === 1 ? "" : "s")),
+          buildMetricTile("CHEAPEST NOW", formatPrice(insights.currentPrice), formatPriceEquivalenceText(insights.currentPrice)),
+          buildMetricTile("AVG PRICE", formatPrice(insights.averagePrice), formatPriceEquivalenceText(insights.averagePrice)),
+          buildMetricTile("LOWEST SAVED", formatPrice(insights.bestPrice), formatPriceEquivalenceText(insights.bestPrice)),
+          buildMetricTile("STORE TO CHECK", insights.cheapestStore || "--"),
+          buildMetricTile("IN-STOCK STORES", formatNumber(insights.storesSelling || 0)),
+          buildMetricTile("TOTAL STOCK", formatNumber(insights.totalStock || 0)),
           "</div>",
           buildChartSection(insights.daily, insights, mode),
           buildStoreTable(insights.stores, mode),
           buildSnapshotTable(activeData.rows, mode),
+        ].join("");
+      }
+
+      function buildHistoryRangeTabs() {
+        return [
+          '<div class="history-range-tabs" role="tablist" aria-label="Market history range">',
+          [1, 7, 30].map((days) => {
+            return (
+              '<button class="history-range-tab' +
+              (state.marketHistoryRange === days ? " active" : "") +
+              '" type="button" data-history-range="' +
+              days +
+              '">' +
+              days +
+              "d</button>"
+            );
+          }).join(""),
+          "</div>",
         ].join("");
       }
 
@@ -5416,6 +5559,7 @@
             return leftCurrent - rightCurrent || left.low - right.low;
           });
         const dailyLows = safeDaily.map((day) => day.low).filter(Number.isFinite);
+        const dailyAverages = safeDaily.map((day) => day.average).filter(Number.isFinite);
         const latestDay = safeDaily[safeDaily.length - 1] || null;
         const currentPrice = Number.isFinite(Number(summary && summary.currentPrice))
           ? Number(summary.currentPrice)
@@ -5439,6 +5583,16 @@
           : latestDay
             ? Number(latestDay.availableStores || latestDay.stores || 0)
             : 0;
+        const averagePrice = dailyAverages.length
+          ? averageNumbers(dailyAverages)
+          : Number.isFinite(Number(summary && summary.average7d))
+            ? Number(summary.average7d)
+            : null;
+        const totalStock = Number.isFinite(Number(summary && summary.totalStock))
+          ? Number(summary.totalStock)
+          : latestDay
+            ? numberOrZero(latestDay.totalStock)
+            : 0;
         const cheapestStore =
           (summary && summary.cheapestStore) ||
           (safeStores[0] ? safeStores[0].storeName : "");
@@ -5450,6 +5604,8 @@
           currentPrice,
           bestPrice,
           typicalLow,
+          averagePrice,
+          totalStock,
           storesSelling,
           cheapestStore,
           dataDays,
@@ -5515,7 +5671,7 @@
             "</div>",
           mode === "sell"
             ? '<div class="analytics-callout-copy">Meaning: a shop pays this much value for 1 item from you.</div>'
-            : '<div class="analytics-callout-copy">Alert idea: below ' +
+            : '<div class="analytics-callout-copy">Lowest saved: ' +
               escapeHtml(formatPrice(Number.isFinite(best) ? best : typical)) +
               "</div>",
           "  </div>",
@@ -5562,32 +5718,56 @@
         const prices = offers.map((entry) => Number(entry.price));
         const cheapest = offers.slice().sort((left, right) => left.price - right.price)[0];
         const averagePrice = averageNumbers(prices);
+        const historyRows = getMarketHistoryRows(
+          listing.marketKey,
+          state.marketHistoryRange,
+        );
+        const currentHistoryRow = {
+          date: getMarketHistoryDate(),
+          itemName: listing.displayName,
+          low: cheapest ? cheapest.price : null,
+          average: averagePrice,
+          high: prices.length ? Math.max(...prices) : null,
+          stores: new Set(offers.map((entry) => entry.store_name)).size,
+          availableStores: new Set(available.map((entry) => entry.store_name)).size,
+          offers: offers.length,
+          totalStock: available.reduce((sum, entry) => sum + numberOrZero(entry.stock), 0),
+          cheapestStore: cheapest ? cheapest.store_name : "",
+        };
+        const daily = (historyRows.length ? historyRows : [currentHistoryRow])
+          .map((row) => ({
+            date: row.date || "current",
+            low: Number.isFinite(Number(row.low)) ? Number(row.low) : null,
+            average: Number.isFinite(Number(row.average)) ? Number(row.average) : null,
+            high: Number.isFinite(Number(row.high)) ? Number(row.high) : null,
+            stores: numberOrZero(row.stores),
+            availableStores: numberOrZero(row.availableStores),
+            offers: numberOrZero(row.offers),
+            totalStock: numberOrZero(row.totalStock),
+            cheapestStore: row.cheapestStore || "",
+          }));
+        const latestDaily = daily[daily.length - 1] || currentHistoryRow;
+        const lowValues = daily.map((row) => Number(row.low)).filter(Number.isFinite);
+        const averageValues = daily.map((row) => Number(row.average)).filter(Number.isFinite);
 
         return {
           summary: {
             currentPrice: cheapest ? cheapest.price : null,
-            historicalLow: prices.length ? Math.min(...prices) : null,
-            historicalHigh: prices.length ? Math.max(...prices) : null,
-            average7d: averagePrice,
-            average30d: averagePrice,
-            typicalLow: averagePrice,
-            storesSelling: new Set(available.map((entry) => entry.store_name)).size,
+            historicalLow: lowValues.length ? Math.min(...lowValues) : null,
+            historicalHigh: lowValues.length ? Math.max(...lowValues) : null,
+            average7d: averageNumbers(averageValues),
+            average30d: averageNumbers(averageValues),
+            typicalLow: averageNumbers(lowValues),
+            storesSelling: latestDaily.availableStores,
             totalStoresSeen: new Set(available.map((entry) => entry.store_name)).size,
             cheapestStore: cheapest ? cheapest.store_name : "",
             fastestGoneStore: "",
-            latestDate: "current",
-            dataDays: 1,
+            latestDate: latestDaily.date || "current",
+            dataDays: daily.length,
             samples: available.length,
+            totalStock: latestDaily.totalStock,
           },
-          daily: [
-            {
-              date: "current",
-              low: cheapest ? cheapest.price : null,
-              average: averagePrice,
-              stores: offers.length,
-              availableStores: available.length,
-            },
-          ],
+          daily,
           stores: offers
             .map((entry) => ({
               storeName: entry.store_name,
@@ -5707,7 +5887,7 @@
               escapeHtml(
                 mode === "sell"
                   ? "No shop is buying this item right now."
-                  : "No saved available-shop prices yet. Run the daily snapshot to build this history.",
+                  : "No saved available-shop prices yet. Open the market on different days to build this history.",
               ) +
               "</div>",
             "</div>",
@@ -5771,7 +5951,7 @@
             escapeHtml(
               mode === "sell"
                 ? "Each point is the best payout found. Higher is better."
-                : "Each point is the cheapest available store saved that day. Lower is better.",
+                : state.marketHistoryRange + "d view. Each point is the cheapest available store saved that day. Lower is better.",
             ) +
             "</div>",
           "    </div>",
@@ -6926,7 +7106,7 @@
           '    <div class="card-action-grid">',
           '      <button class="footer-button card-tool-button" type="button" data-open-analytics="' +
             escapeAttribute(listing.id) +
-            '">PRICE CHECK</button>',
+            '">MARKET HISTORY</button>',
           "    </div>",
           '    <button class="footer-coords" type="button" data-copy-coords="' +
             escapeAttribute(coordsCopyValue) +
