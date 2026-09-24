@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="loading-locked">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -61,7 +61,9 @@
         overflow-x: hidden;
       }
 
-      body.site-locked {
+      html.loading-locked,
+      body.site-locked,
+      body.loading-locked {
         overflow: hidden;
       }
 
@@ -791,33 +793,40 @@
         pointer-events: none;
       }
 
-      .loading-bouncer {
+      .loading-bouncer-track {
         position: absolute;
         top: 0;
         left: 0;
         width: clamp(72px, 12vw, 132px);
-        height: auto;
+        height: clamp(72px, 12vw, 132px);
+        animation: pvcBounceX 4.2s linear infinite alternate;
+        will-change: transform;
+      }
+
+      .loading-bouncer {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
         image-rendering: pixelated;
-        animation:
-          pvcBounceX 4.2s linear infinite alternate,
-          pvcBounceY 2.8s linear infinite alternate;
+        animation: pvcBounceY 2.8s linear infinite alternate;
+        will-change: transform;
       }
 
       @keyframes pvcBounceX {
         from {
-          left: 0;
+          transform: translate3d(0, 0, 0);
         }
         to {
-          left: calc(100vw - clamp(72px, 12vw, 132px));
+          transform: translate3d(calc(100vw - clamp(72px, 12vw, 132px)), 0, 0);
         }
       }
 
       @keyframes pvcBounceY {
         from {
-          top: 0;
+          transform: translate3d(0, 0, 0);
         }
         to {
-          top: calc(100vh - clamp(72px, 12vw, 132px));
+          transform: translate3d(0, calc(100vh - clamp(72px, 12vw, 132px)), 0);
         }
       }
 
@@ -3436,7 +3445,7 @@
       }
     </style>
   </head>
-  <body class="site-locked">
+  <body class="site-locked loading-locked">
     <div class="minecraft-backdrop" aria-hidden="true">
       <div class="galaxy-core"></div>
       <div class="galaxy-band"></div>
@@ -3472,12 +3481,14 @@
     </section>
 
     <div class="loading-screen" id="loadingScreen">
-      <img
-        class="loading-bouncer"
-        src="assets/pvc-logo.png"
-        alt="PVC Finder loading"
-        fetchpriority="high"
-      />
+      <div class="loading-bouncer-track">
+        <img
+          class="loading-bouncer"
+          src="assets/pvc-logo.png"
+          alt="PVC Finder loading"
+          fetchpriority="high"
+        />
+      </div>
     </div>
 
     <div class="app-shell" id="appShell">
@@ -4084,7 +4095,9 @@
       }
 
       function setLoadingVisible(visible) {
+        document.documentElement.classList.toggle("loading-locked", visible);
         document.body.classList.toggle("app-ready", !visible);
+        document.body.classList.toggle("loading-locked", visible);
 
         if (refs.loadingScreen) {
           refs.loadingScreen.style.display = visible ? "flex" : "none";
