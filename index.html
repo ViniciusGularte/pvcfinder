@@ -866,6 +866,15 @@
         color: #fff8e9;
       }
 
+      .loading-lore {
+        max-width: 640px;
+        border-left: 2px solid rgba(246, 211, 138, 0.48);
+        padding-left: 12px;
+        color: rgba(255, 248, 233, 0.76);
+        font-size: 12px;
+        line-height: 1.65;
+      }
+
       .loading-bar {
         width: 100%;
         height: 10px;
@@ -920,6 +929,10 @@
 
         .loading-phrase {
           font-size: clamp(1.55rem, 11vw, 2.7rem);
+        }
+
+        .loading-lore {
+          font-size: 11px;
         }
 
         .loading-credit {
@@ -3572,10 +3585,13 @@
         <div class="loading-phrase" id="loadingScenePhrase">
           Market rumors travel fast when emeralds are on the table.
         </div>
+        <div class="loading-lore" id="loadingSceneLore">
+          Checking shop ledgers, canal routes, and shulker crates.
+        </div>
         <div class="loading-bar" aria-hidden="true">
           <div class="loading-bar-fill" id="loadingBarFill"></div>
         </div>
-        <div class="loading-status pixel-font">LOADING MARKET DATA...</div>
+        <div class="loading-status pixel-font" id="loadingStatus">LOADING MARKET DATA...</div>
       </div>
       <a
         class="loading-credit"
@@ -3916,9 +3932,14 @@
     <script src="data/item-textures.js"></script>
     <script>
       const CONFIG = {
-        dataUrl: "/api/pvc/shops",
-        loadingDuration: 5000,
-        loadingPause: 0,
+        dataUrls: [
+          "/api/pvc/shops",
+          "/api/shops",
+          "data/shops-snapshot.json",
+          "/pvc/data/shops-snapshot.json",
+        ],
+        loadingDuration: 8500,
+        loadingPause: 300,
         searchDebounce: 150,
         fetchTimeout: 15000,
         pageSize: 100,
@@ -3928,13 +3949,156 @@
 
       const LOADING_SCENES = [
         {
-          image:
-            "https://images.unsplash.com/photo-1516688159204-9d197444383b?auto=format&fit=crop&w=2200&q=82",
-          credit: "Photo: Thom Milkovic / Unsplash",
-          creditUrl: "https://unsplash.com/photos/xPmdw_RliUA",
-          phrase: "Opening the market ledger before the next shop bell.",
+          image: buildLoadingSceneSvg({
+            sky: "#5c8db8",
+            horizon: "#d8a968",
+            ground: "#2d5a34",
+            water: "#2e6d8f",
+            accent: "#f6d38a",
+            label: "HIMEJI-JO",
+            blocks: "castle",
+          }),
+          credit: "PVC scene: Himeji-jo coast",
+          creditUrl: "https://wiki.peacefulvanilla.club/wiki/Himeji-jo_Castle",
+          phrase: "Crossing the southern canals before the market bell.",
+          lore: "Himeji-jo sits around (200, 64, 3145), with old farms, villagers, vaults, and a tower full of rooms.",
+          status: "CHECKING COASTAL SHOP ROUTES...",
+        },
+        {
+          image: buildLoadingSceneSvg({
+            sky: "#120817",
+            horizon: "#3a143f",
+            ground: "#1e2330",
+            water: "#6de0ff",
+            accent: "#c084fc",
+            label: "ICEWAYS",
+            blocks: "iceway",
+          }),
+          credit: "PVC scene: nether iceway run",
+          creditUrl: "https://wiki.peacefulvanilla.club/wiki/Llama_Iceways",
+          phrase: "Sliding through iceways with a pocket full of emeralds.",
+          lore: "PVC travel lore runs through player-made routes, nether links, and the kind of shortcuts only regulars remember.",
+          status: "TRACING SELLER COORDINATES...",
+        },
+        {
+          image: buildLoadingSceneSvg({
+            sky: "#07111e",
+            horizon: "#1b3450",
+            ground: "#21150d",
+            water: "#4ade80",
+            accent: "#e8760a",
+            label: "UNIONS",
+            blocks: "union",
+          }),
+          credit: "PVC scene: active union boards",
+          creditUrl: "https://wiki.peacefulvanilla.club/wiki/Category:Active_Union",
+          phrase: "Reading the union boards before trusting the price tag.",
+          lore: "Greenville, Red Eye, Moon To Sun, SSU, Toad Corporations and other active unions shape where players trade and build.",
+          status: "SORTING UNION MARKET SIGNALS...",
+        },
+        {
+          image: buildLoadingSceneSvg({
+            sky: "#080604",
+            horizon: "#241810",
+            ground: "#3f2514",
+            water: "#c084fc",
+            accent: "#67e8f9",
+            label: "SHULKERS",
+            blocks: "shulkers",
+          }),
+          credit: "PVC scene: shulker bazaar",
+          creditUrl: "https://web.peacefulvanilla.club/",
+          phrase: "Counting shulker crates so the deal math does not lie.",
+          lore: "PVC Finder checks trade units and shulker contents separately, because one box can hide a very different bargain.",
+          status: "UNPACKING SHULKER DEALS...",
+        },
+        {
+          image: buildLoadingSceneSvg({
+            sky: "#0c1720",
+            horizon: "#2b3d2f",
+            ground: "#4c341f",
+            water: "#22c55e",
+            accent: "#f0a14a",
+            label: "EMLANDS",
+            blocks: "market",
+          }),
+          credit: "PVC scene: community shop row",
+          creditUrl: "https://wiki.peacefulvanilla.club/wiki/User:LarryTLlama5",
+          phrase: "Checking whether the Emlands shelves beat the bazaar today.",
+          lore: "Community projects, free shops, mapper tools, and old event routes are part of why PVC prices have stories attached.",
+          status: "OPENING COMMUNITY SHOP LEDGERS...",
         },
       ];
+
+      function buildLoadingSceneSvg(scene) {
+        const blockSets = {
+          castle: [
+            '<rect x="470" y="208" width="260" height="170" fill="#d7d0bc"/>',
+            '<rect x="504" y="150" width="192" height="78" fill="#f1ead8"/>',
+            '<rect x="536" y="96" width="128" height="70" fill="#fff6df"/>',
+            '<path d="M452 208h296l-42-54H494z" fill="#27313f"/>',
+            '<path d="M512 150h176l-36-48H548z" fill="#1f2835"/>',
+            '<path d="M548 96h112l-28-36h-56z" fill="#182231"/>',
+            '<rect x="586" y="268" width="40" height="110" fill="#2d241d"/>',
+          ],
+          iceway: [
+            '<rect x="0" y="318" width="1200" height="70" fill="#251333"/>',
+            '<rect x="60" y="286" width="1080" height="54" fill="#8ee7ff" opacity=".84"/>',
+            '<rect x="120" y="302" width="220" height="16" fill="#e5fbff" opacity=".88"/>',
+            '<rect x="462" y="300" width="310" height="18" fill="#e5fbff" opacity=".74"/>',
+            '<rect x="830" y="304" width="180" height="14" fill="#e5fbff" opacity=".68"/>',
+            '<rect x="210" y="188" width="76" height="98" fill="#5b2a80"/>',
+            '<rect x="914" y="186" width="76" height="100" fill="#5b2a80"/>',
+          ],
+          union: [
+            '<rect x="130" y="178" width="168" height="156" fill="#7b4b25"/>',
+            '<rect x="144" y="192" width="140" height="92" fill="#2a1a10"/>',
+            '<rect x="456" y="142" width="288" height="216" fill="#59402b"/>',
+            '<rect x="486" y="170" width="228" height="130" fill="#120c08"/>',
+            '<rect x="902" y="178" width="168" height="156" fill="#7b4b25"/>',
+            '<rect x="916" y="192" width="140" height="92" fill="#2a1a10"/>',
+            '<rect x="170" y="212" width="80" height="14" fill="#4ade80"/>',
+            '<rect x="532" y="204" width="136" height="14" fill="#e8760a"/>',
+            '<rect x="942" y="212" width="80" height="14" fill="#67e8f9"/>',
+          ],
+          shulkers: [
+            '<rect x="234" y="228" width="122" height="122" fill="#8b5cf6"/>',
+            '<rect x="248" y="242" width="94" height="28" fill="#c084fc"/>',
+            '<rect x="514" y="196" width="152" height="152" fill="#a855f7"/>',
+            '<rect x="532" y="214" width="116" height="34" fill="#d8b4fe"/>',
+            '<rect x="820" y="236" width="116" height="116" fill="#7c3aed"/>',
+            '<rect x="834" y="250" width="88" height="26" fill="#c084fc"/>',
+            '<rect x="120" y="352" width="960" height="34" fill="#5a3418"/>',
+          ],
+          market: [
+            '<rect x="118" y="226" width="188" height="132" fill="#684222"/>',
+            '<rect x="146" y="180" width="132" height="64" fill="#f0a14a"/>',
+            '<rect x="430" y="206" width="220" height="152" fill="#50331d"/>',
+            '<rect x="462" y="154" width="156" height="70" fill="#4ade80"/>',
+            '<rect x="792" y="226" width="224" height="132" fill="#684222"/>',
+            '<rect x="826" y="180" width="156" height="64" fill="#67e8f9"/>',
+            '<rect x="188" y="272" width="44" height="86" fill="#160f09"/>',
+            '<rect x="520" y="260" width="44" height="98" fill="#160f09"/>',
+            '<rect x="888" y="272" width="44" height="86" fill="#160f09"/>',
+          ],
+        };
+        const blocks = blockSets[scene.blocks] || blockSets.market;
+        const svg = [
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" shape-rendering="crispEdges">',
+          '<rect width="1200" height="675" fill="' + scene.sky + '"/>',
+          '<rect y="210" width="1200" height="190" fill="' + scene.horizon + '"/>',
+          '<rect y="360" width="1200" height="315" fill="' + scene.ground + '"/>',
+          '<rect y="408" width="1200" height="92" fill="' + scene.water + '" opacity=".72"/>',
+          '<rect y="500" width="1200" height="175" fill="#080604" opacity=".55"/>',
+          '<g opacity=".38"><rect x="70" y="82" width="14" height="14" fill="#fff8e9"/><rect x="214" y="58" width="8" height="8" fill="#fff8e9"/><rect x="1014" y="74" width="12" height="12" fill="#fff8e9"/><rect x="870" y="128" width="8" height="8" fill="#fff8e9"/></g>',
+          '<rect x="0" y="382" width="1200" height="14" fill="' + scene.accent + '" opacity=".46"/>',
+          '<g>' + blocks.join("") + '</g>',
+          '<rect x="58" y="530" width="480" height="58" fill="#050403" opacity=".64"/>',
+          '<text x="82" y="568" fill="' + scene.accent + '" font-family="monospace" font-size="34" font-weight="700">' + scene.label + '</text>',
+          '</svg>',
+        ].join("");
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
 
       const MC_ASSET_VERSION = "1.21.8";
       const MC_ASSET_TEXTURE_BASE =
@@ -4034,6 +4198,8 @@
         loadingScreen: document.getElementById("loadingScreen"),
         loadingSceneImage: document.getElementById("loadingSceneImage"),
         loadingScenePhrase: document.getElementById("loadingScenePhrase"),
+        loadingSceneLore: document.getElementById("loadingSceneLore"),
+        loadingStatus: document.getElementById("loadingStatus"),
         loadingSceneCredit: document.getElementById("loadingSceneCredit"),
         appShell: document.getElementById("appShell"),
         searchWrap: document.getElementById("searchWrap"),
@@ -4202,6 +4368,14 @@
 
         if (refs.loadingScenePhrase) {
           refs.loadingScenePhrase.textContent = scene.phrase;
+        }
+
+        if (refs.loadingSceneLore) {
+          refs.loadingSceneLore.textContent = scene.lore;
+        }
+
+        if (refs.loadingStatus) {
+          refs.loadingStatus.textContent = scene.status || "LOADING MARKET DATA...";
         }
 
         if (refs.loadingSceneCredit) {
@@ -4581,15 +4755,40 @@
         resultsObserver.observe(refs.resultsTail);
       }
 
-      function buildMarketDataUrl(forceFresh) {
-        const url = new URL(CONFIG.dataUrl, window.location.origin);
+      function buildMarketDataUrl(dataUrl, forceFresh) {
+        const url = new URL(dataUrl, window.location.href);
 
         if (forceFresh) {
           url.searchParams.set("_ts", Date.now().toString(36));
           url.searchParams.set("_fresh", "1");
         }
 
-        return url.pathname + url.search;
+        return url.href;
+      }
+
+      async function fetchMarketData(forceFresh) {
+        const urls = Array.isArray(CONFIG.dataUrls) && CONFIG.dataUrls.length
+          ? CONFIG.dataUrls
+          : ["/api/pvc/shops"];
+        const errors = [];
+
+        for (const dataUrl of urls) {
+          const url = buildMarketDataUrl(dataUrl, forceFresh);
+          try {
+            const result = await fetchJsonUrl(url, { includeHeaders: true });
+            if (!result.payload || !Array.isArray(result.payload.data)) {
+              throw new Error("Market payload is missing a data array");
+            }
+            return {
+              ...result,
+              sourceUrl: dataUrl,
+            };
+          } catch (error) {
+            errors.push(dataUrl + ": " + (error.message || String(error)));
+          }
+        }
+
+        throw new Error(errors.join(" | "));
       }
 
       function setRefreshState(isRefreshing) {
@@ -4617,10 +4816,7 @@
         setRefreshState(true);
 
         try {
-          const { payload, response } = await fetchJsonUrl(
-            buildMarketDataUrl(forceFresh),
-            { includeHeaders: true },
-          );
+          const { payload, response, sourceUrl } = await fetchMarketData(forceFresh);
 
           if (requestId !== state.activeRequestId) {
             return;
@@ -4634,6 +4830,7 @@
           state.lastDataSource =
             (
               response.headers.get("x-pvc-data-source") ||
+              (sourceUrl.includes("snapshot") ? "snapshot" : "") ||
               "live"
             ).toLowerCase();
           const flattened = flattenListings(state.shops);
@@ -4664,7 +4861,7 @@
           state.lastDataSource = "error";
           state.loadingError = true;
           refs.errorCopy.textContent =
-            "The PVC hub could not load the market data. Try again in a moment.";
+            "The PVC hub and local snapshot could not load the market data. Try again in a moment.";
           refs.resultsGrid.innerHTML = "";
           refs.resultsTail.classList.remove("visible");
           refs.resultsTail.textContent = "";
