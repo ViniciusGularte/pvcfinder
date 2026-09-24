@@ -3816,6 +3816,10 @@
           "data/shops-snapshot.json",
           "/pvc/data/shops-snapshot.json",
         ],
+        historyUrls: [
+          "/api/pvc/history",
+          "/api/history",
+        ],
         loadingDuration: 8500,
         loadingPause: 300,
         searchDebounce: 150,
@@ -4743,6 +4747,36 @@
           .slice(-limit);
       }
 
+      async function fetchCentralMarketHistory(listing) {
+        if (!listing || !listing.marketKey) {
+          return null;
+        }
+
+        const urls = Array.isArray(CONFIG.historyUrls) && CONFIG.historyUrls.length
+          ? CONFIG.historyUrls
+          : ["/api/pvc/history"];
+        const query =
+          "?itemId=" +
+          encodeURIComponent(listing.marketKey) +
+          "&days=" +
+          encodeURIComponent(String(MARKET_HISTORY_MAX_DAYS));
+
+        for (const historyUrl of urls) {
+          try {
+            const payload = await fetchJsonUrl(
+              new URL(historyUrl + query, window.location.href).href,
+            );
+            if (payload && Array.isArray(payload.daily) && payload.daily.length) {
+              return payload;
+            }
+          } catch (error) {
+            // Static/local deployments can run without a central history endpoint.
+          }
+        }
+
+        return null;
+      }
+
       function getListingById(id) {
         return state.listings.find((listing) => listing.id === id) || null;
       }
@@ -5115,8 +5149,9 @@
           return;
         }
 
-        state.modalAnalyticsPayload = { configured: false };
-        target.innerHTML = buildAnalyticsMarkup(listing, { configured: false });
+        const centralHistory = await fetchCentralMarketHistory(listing);
+        state.modalAnalyticsPayload = centralHistory || { configured: false };
+        target.innerHTML = buildAnalyticsMarkup(listing, state.modalAnalyticsPayload);
       }
 
       function buildAnalyticsMarkup(listing, payload) {
