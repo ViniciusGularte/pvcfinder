@@ -1,0 +1,1606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GRV EYE</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-10 -10 20 20'><path d='M-9 0Q0-7 9 0Q0 7-9 0Z' fill='black' stroke='%233dff8c'/><circle r='3.6' fill='%233dff8c'/><circle r='1.4' fill='black'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --void:#000; --panel:#010703; --line:#0e3a22; --line-hi:#1b6a3e;
+  --phos:#3dff8c; --phos-dim:#1e9a55; --text:#c4ffdc; --muted:#5f9c78;
+  --alarm:#ff2e4d; --amber:#ffb627; --sel:#e8fff1;
+  --ui:"Chakra Petch","Rajdhani","Segoe UI",system-ui,sans-serif;
+  --mono:"Share Tech Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --side:400px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--void);color:var(--text);font-family:var(--ui);font-size:15px;line-height:1.45}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button,select{touch-action:manipulation}
+:focus-visible{outline:2px solid var(--phos);outline-offset:2px}
+::selection{background:var(--phos);color:#000}
+.hidden{display:none!important}
+.crt{pointer-events:none;position:fixed;inset:0;z-index:9000;
+  background:repeating-linear-gradient(to bottom,rgba(61,255,140,.03) 0 1px,transparent 1px 3px),
+             radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.5) 100%)}
+
+/* ─────────── THE EYE ─────────── */
+.eye{--iris:var(--phos);display:block;overflow:visible;width:100%;height:auto}
+.eye *{transform-box:fill-box;transform-origin:center}
+.eye .armor path{fill:var(--iris);fill-opacity:.12;stroke:var(--iris);stroke-width:.7;stroke-opacity:.65;
+  animation:segin .5s both;animation-delay:calc(var(--i)*38ms)}
+.eye .armor path:nth-child(6n){fill-opacity:.4}
+@keyframes segin{from{opacity:0;transform:scale(.9)}}
+.eye .ticks line{stroke:var(--iris);stroke-width:.6;opacity:.55}
+.eye .ticks line.major{stroke-width:1.1;opacity:.95}
+.eye .data text{fill:var(--iris);font-family:var(--mono);font-size:5.4px;letter-spacing:.6px;opacity:.7}
+.eye .hud path{fill:none;stroke:var(--iris);stroke-width:1.3;opacity:.8}
+.eye .hud line{stroke:var(--iris);stroke-width:.8;opacity:.5}
+.eye .spin{animation:spin 60s linear infinite}
+.eye .spin-rev{animation:spin 90s linear infinite reverse}
+.eye .data{animation:spin 140s linear infinite}
+.eye .sweep-g{animation:spin 4s linear infinite}
+.eye .sweep{fill:var(--iris);opacity:.10}
+.eye .sweep-edge{stroke:var(--iris);stroke-width:.8;opacity:.6}
+.eye .sclera{fill:#000}
+.eye .sclera-rings circle{fill:none;stroke:var(--iris);stroke-width:.35;opacity:.18}
+.eye .scan{fill:var(--iris);opacity:.22;animation:scan 3.2s linear infinite;transform-box:view-box}
+@keyframes scan{from{transform:translateY(-62px)}to{transform:translateY(62px)}}
+.eye .outline{fill:none;stroke:var(--iris);stroke-width:1.8}
+.eye .outline2{fill:none;stroke:var(--iris);stroke-width:.5;opacity:.5}
+.eye .fibers line{stroke:var(--iris)}
+.eye .collar{fill:none;stroke:var(--iris);stroke-width:.8;opacity:.85}
+.eye .iris-edge{fill:none;stroke:var(--iris);stroke-width:1.4}
+.eye .iris-outer{fill:none;stroke:var(--iris);stroke-width:.6;stroke-dasharray:2 3;opacity:.7}
+.eye .iris-spin{animation:spin 40s linear infinite}
+.eye .iris-wrap{transition:transform .28s cubic-bezier(.2,.9,.25,1)}
+.eye .pupil{animation:breathe 5s ease-in-out infinite;transition:transform .45s cubic-bezier(.2,.9,.25,1)}
+.eye .pupil polygon{fill:#000;stroke:var(--iris);stroke-width:.9}
+.eye .pupil line{stroke:var(--iris);stroke-width:.6;opacity:.8}
+.eye .core{fill:var(--iris);animation:core 2.4s ease-in-out infinite}
+.eye .glint{fill:#fff;opacity:.8}
+.eye .lid{animation:blink 8.3s infinite;transition:transform 1.3s cubic-bezier(.7,0,.2,1)}
+.eye.closed .lid{animation:none;transform:scaleY(.02)}
+.eye.closed .pupil{transform:scale(.3)}
+.eye.alarm{--iris:var(--alarm)}
+.eye.alarm .pupil{animation:none;transform:scale(.5) rotate(45deg)}
+.eye.alarm .sweep-g{animation-duration:.9s}
+.eye.alarm .spin{animation-duration:8s}
+.eye.alarm .spin-rev{animation-duration:12s}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.04)}}
+@keyframes breathe{50%{transform:scale(1.14)}}
+@keyframes core{50%{opacity:.35}}
+
+/* ─────────── BOOT ─────────── */
+#boot{position:fixed;inset:0;z-index:8000;background:#000;display:grid;place-items:center;padding:24px;transition:opacity .9s}
+#boot.gone{opacity:0;pointer-events:none}
+.boot-inner{width:min(520px,100%);display:flex;flex-direction:column;align-items:center;gap:20px}
+.boot-eye{width:min(340px,72vw)}
+.boot-title{margin:0;font-weight:700;font-size:clamp(34px,8vw,64px);letter-spacing:.3em;padding-left:.3em;white-space:nowrap;line-height:1;color:var(--phos);text-shadow:0 0 22px rgba(61,255,140,.5)}
+.boot-log{width:100%;min-height:104px;margin:0;padding:12px 14px;border:1px solid var(--line);background:var(--panel);font-family:var(--mono);font-size:13px;color:var(--phos-dim);white-space:pre-wrap}
+.boot-log .ok{color:var(--phos)} .boot-log .err{color:var(--alarm)}
+.cursor{display:inline-block;width:.6em;height:1em;background:var(--phos);vertical-align:-2px;animation:cur 1s steps(1) infinite}
+@keyframes cur{50%{opacity:0}}
+.boot-form{width:100%;display:flex;flex-direction:column;gap:10px}
+.boot-form label{font-size:13px;color:var(--muted)}
+.field{width:100%;padding:10px 12px;background:#000;border:1px solid var(--line-hi);color:var(--phos);font-family:var(--mono);font-size:15px}
+.field:focus{border-color:var(--phos);outline:none;box-shadow:0 0 0 1px var(--phos)}
+.btn-main{width:100%;padding:14px;border:1px solid var(--phos);background:var(--phos);color:#000;font-weight:700;font-size:16px;letter-spacing:.08em;transition:background .15s,color .15s}
+.btn-main:hover{background:#000;color:var(--phos)}
+.btn-main:disabled{opacity:.35;cursor:wait}
+.boot-err{margin:0;color:var(--alarm);font-size:14px;min-height:1.2em}
+
+/* ─────────── SHELL ─────────── */
+#app{height:100%;display:grid;grid-template-rows:auto 1fr}
+header.top{display:flex;align-items:center;gap:14px;padding:6px 14px;border-bottom:1px solid var(--line);min-height:58px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand .mini{width:48px}
+.brand b{font-size:19px;letter-spacing:.26em;color:var(--phos);white-space:nowrap}
+.chip{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);white-space:nowrap}
+.chip strong{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--phos);box-shadow:0 0 8px var(--phos)}
+.dot.bad{background:var(--alarm);box-shadow:0 0 8px var(--alarm)}
+.btn{border:1px solid var(--line-hi);background:#000;padding:6px 11px;font-size:13px;color:var(--text)}
+.btn:hover{border-color:var(--phos);color:var(--phos)}
+.btn[aria-pressed="true"]{border-color:var(--phos);color:#000;background:var(--phos)}
+.btn.primary{border-color:var(--phos);color:var(--phos)}
+.btn.primary:hover{background:var(--phos);color:#000}
+.btn.amber{border-color:var(--amber);color:var(--amber)}
+.btn.amber:hover{background:var(--amber);color:#000}
+.btn:disabled{opacity:.4;cursor:default}
+
+main.body{display:grid;grid-template-columns:1fr var(--side);min-height:0}
+.map-wrap{position:relative;min-height:0}
+#map{position:absolute;inset:0;background:#000}
+.leaflet-container{background:#000;font-family:var(--ui)}
+.mc-tiles{filter:grayscale(1) brightness(.62) sepia(1) hue-rotate(78deg) saturate(3) contrast(1.15)}
+.map-wrap.true-color .mc-tiles{filter:none}
+.map-wrap.drawing #map{cursor:crosshair}
+.toolbar{position:absolute;top:12px;left:12px;z-index:500;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 24px)}
+.toolbar select{background:#000;border:1px solid var(--line-hi);padding:6px 8px;font-size:13px}
+.coords{position:absolute;left:12px;bottom:12px;z-index:500;font-family:var(--mono);font-size:13px;color:var(--phos);background:rgba(0,0,0,.8);border:1px solid var(--line);padding:4px 8px}
+.draw-hint{position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:500;background:#000;border:1px solid var(--phos);padding:8px 14px;font-size:14px;max-width:calc(100% - 24px);text-align:center}
+.draw-hint kbd{font-family:var(--mono);border:1px solid var(--line-hi);padding:0 4px;font-size:12px}
+.leaflet-control-zoom a{background:#000!important;color:var(--phos)!important;border-color:var(--line-hi)!important}
+.leaflet-bar{border:1px solid var(--line-hi)!important;box-shadow:none!important}
+
+.pm{position:relative;width:0;height:0}
+.pm i{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border:2px solid var(--phos);background:#000;transform:rotate(45deg);box-shadow:0 0 8px rgba(61,255,140,.6)}
+.pm u{position:absolute;left:-1px;top:-16px;width:2px;height:10px;background:var(--phos);transform-origin:1px 16px}
+.pm span{position:absolute;left:10px;top:-9px;font-family:var(--mono);font-size:12px;color:var(--text);background:rgba(0,0,0,.75);padding:0 4px;white-space:nowrap}
+.pm.hot i{border-color:var(--alarm);box-shadow:0 0 12px var(--alarm);animation:hot 1s infinite}
+.pm.hot u{background:var(--alarm)}
+.pm.sel i{background:var(--phos)}
+@keyframes hot{50%{box-shadow:0 0 2px var(--alarm)}}
+.zlabel{background:transparent!important;border:0!important;box-shadow:none!important;font-weight:600;font-size:13px;color:var(--amber)!important;text-shadow:0 0 4px #000,0 0 4px #000}
+.zlabel::before{display:none}
+
+/* ─────────── SIDEBAR ─────────── */
+aside.side{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:12px 6px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--phos);border-bottom-color:var(--phos)}
+.tabs .n{font-family:var(--mono);font-weight:400;font-size:12px;margin-left:5px}
+.pane{flex:1;overflow-y:auto;min-height:0}
+.sec{padding:14px;border-bottom:1px solid var(--line)}
+.sec h2{margin:0 0 4px;font-size:18px;font-weight:700}
+.sec h3{margin:0 0 8px;font-size:14px;font-weight:600;color:var(--phos)}
+.meta{margin:0;color:var(--muted);font-size:13px}
+.empty{padding:26px 16px;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--text);font-weight:600;font-size:15px;margin-bottom:4px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.seg .btn{padding:4px 9px}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.names{display:flex;flex-wrap:wrap;gap:4px}
+.name-chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line-hi);padding:1px 6px;background:none;color:var(--text)}
+.name-chip:hover{border-color:var(--phos);color:var(--phos)}
+.hist{display:block;width:100%;height:56px;margin-top:6px}
+.hist rect{fill:var(--phos-dim)}
+.hist rect.on{fill:var(--phos)}
+.hist-axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+table.log{width:100%;border-collapse:collapse;font-size:13px}
+table.log th{text-align:left;font-weight:500;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+table.log td{padding:7px 4px;border-bottom:1px solid rgba(14,58,34,.5);font-variant-numeric:tabular-nums;vertical-align:top}
+table.log .mono{font-family:var(--mono);font-size:12px}
+table.log tr.pl{cursor:pointer}
+table.log tr.pl:hover td{color:var(--phos)}
+table.log tr.pl.open td{color:var(--phos)}
+table.log tr.visits td{padding:0 4px 8px 14px;border-bottom:1px solid var(--line)}
+.vlist{margin:0;padding:0;list-style:none;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.vlist li{padding:2px 0}
+.vlist b{color:var(--text);font-weight:400}
+.tag{font-family:var(--mono);font-size:11px;border:1px solid var(--phos);color:var(--phos);padding:0 4px}
+
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 14px;border:0;border-bottom:1px solid rgba(14,58,34,.6);background:none;width:100%;text-align:left}
+button.row:hover{background:rgba(61,255,140,.05)}
+.row .main{min-width:0;font-size:14px}
+.row .main b{font-weight:600}
+.row .main small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.row.fresh{animation:fresh 2.4s ease-out}
+.row.alarm.fresh{animation-name:fresh-red}
+@keyframes fresh{from{background:rgba(61,255,140,.18)}}
+@keyframes fresh-red{from{background:rgba(255,46,77,.25)}}
+.in{color:var(--alarm)} .out{color:var(--muted)}
+.on{width:7px;height:7px;border-radius:50%;background:var(--line-hi)}
+.on.yes{background:var(--phos);box-shadow:0 0 6px var(--phos)}
+.sw{width:12px;height:12px;border:1px solid var(--amber);background:rgba(255,182,39,.25)}
+.sw.off{border-color:var(--muted);background:none}
+.count{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.count.live{color:var(--alarm)}
+.x{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:0 4px}
+.x:hover{color:var(--alarm)}
+.notice{padding:10px 12px;border:1px solid var(--line-hi);font-size:13px;color:var(--muted)}
+.notice.good{border-color:var(--phos);color:var(--text)}
+.notice.bad{border-color:var(--alarm);color:var(--text)}
+.inline-form{display:flex;gap:6px;margin-top:10px}
+.inline-form .field{padding:6px 9px;font-size:14px}
+.search{margin:12px 14px;width:calc(100% - 28px)}
+
+/* ─────────── HOLOGRAM ─────────── */
+.holo{position:relative;height:340px;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line);
+  background:radial-gradient(ellipse 60% 40% at 50% 92%,rgba(61,255,140,.22),transparent 70%),
+             repeating-linear-gradient(90deg,rgba(61,255,140,.04) 0 1px,transparent 1px 24px),#000}
+.holo canvas{position:relative;z-index:2;margin-bottom:26px;opacity:.9;mix-blend-mode:screen;
+  filter:grayscale(1) sepia(1) hue-rotate(88deg) saturate(4.5) brightness(1.15) contrast(1.1) drop-shadow(0 0 7px rgba(61,255,140,.8));
+  animation:flicker 5.3s infinite,glitch 8s infinite}
+.holo.loading canvas{opacity:.12}
+.holo.ready canvas{animation:materialize 1.2s cubic-bezier(.2,.8,.2,1),flicker 5.3s 1.2s infinite,glitch 8s 1.2s infinite}
+@keyframes materialize{0%{clip-path:inset(100% 0 0 0);opacity:1}60%{opacity:1}100%{clip-path:inset(0 0 0 0)}}
+@keyframes flicker{0%,100%{opacity:.9}2%{opacity:.55}4%{opacity:.9}47%{opacity:.86}49%{opacity:.45}51%{opacity:.9}78%{opacity:.8}}
+@keyframes glitch{0%,90%,100%{transform:none}91%{transform:translateX(4px) skewX(-6deg)}92%{transform:translateX(-5px) skewX(3deg)}93%{transform:none}96%{transform:translateY(-2px)}97%{transform:none}}
+.holo-beam{position:absolute;left:50%;bottom:30px;width:260px;height:320px;transform:translateX(-50%);z-index:1;
+  clip-path:polygon(36% 100%,64% 100%,100% 0,0 0);background:linear-gradient(to top,rgba(61,255,140,.32),rgba(61,255,140,.06) 60%,transparent 90%);
+  animation:beam 3.2s ease-in-out infinite}
+@keyframes beam{50%{opacity:.65}}
+.holo-base{position:absolute;left:50%;bottom:14px;width:190px;height:44px;transform:translateX(-50%);z-index:1}
+.holo-base i{position:absolute;inset:0;border:1px solid var(--phos);border-radius:50%;transform:rotateX(74deg);
+  box-shadow:0 0 14px rgba(61,255,140,.6),inset 0 0 14px rgba(61,255,140,.4)}
+.holo-base i:nth-child(2){inset:6px 26px;border-style:dashed;animation:ring 7s linear infinite}
+.holo-base i:nth-child(3){inset:12px 60px;border:0;background:radial-gradient(closest-side,rgba(61,255,140,.9),transparent);animation:beam 1.6s ease-in-out infinite}
+@keyframes ring{from{transform:rotateX(74deg) rotateZ(0)}to{transform:rotateX(74deg) rotateZ(360deg)}}
+.holo-scan{position:absolute;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen;
+  background:repeating-linear-gradient(to bottom,rgba(61,255,140,.11) 0 1px,transparent 1px 4px);animation:scanmove 7s linear infinite}
+@keyframes scanmove{to{background-position:0 280px}}
+.holo-sweep{position:absolute;left:0;right:0;height:46px;top:-50px;z-index:3;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,rgba(61,255,140,.18),transparent);animation:sweepdown 3.8s linear infinite}
+@keyframes sweepdown{to{top:100%}}
+.holo::before,.holo::after{content:"";position:absolute;width:22px;height:22px;border:1.5px solid var(--phos);z-index:4;opacity:.8}
+.holo::before{right:10px;top:10px;border-left:0;border-bottom:0}
+.holo::after{right:10px;bottom:10px;border-left:0;border-top:0}
+.holo-back{position:absolute;left:10px;top:10px;z-index:5}
+.holo-tag{position:absolute;right:40px;top:14px;z-index:5;font-family:var(--mono);font-size:12px;color:var(--phos);letter-spacing:.08em}
+.pname{display:flex;gap:8px;align-items:center;word-break:break-all}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.stats div{background:var(--panel);padding:8px 6px;display:flex;flex-direction:column;gap:2px}
+.stats b{font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+.scrub{display:flex;gap:8px;align-items:center;margin-top:12px}
+.scrub input{flex:1;accent-color:var(--phos)}
+.mono{font-family:var(--mono)}
+.custom-range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:10px;align-items:end}
+.custom-range label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.custom-range .field{padding:6px 6px;font-size:12px;color-scheme:dark;min-width:0;width:100%}
+.custom-range button{grid-column:1/-1}
+.name-chip.cur{border-color:var(--phos);color:var(--phos)}
+.sw.stop{border-radius:50%;border-color:var(--sel);background:rgba(61,255,140,.3)}
+@media (max-width:880px){.holo{height:240px}}
+
+.toasts{position:fixed;right:16px;bottom:16px;z-index:7000;display:flex;flex-direction:column;gap:8px;max-width:min(360px,calc(100% - 32px))}
+.toast{background:#000;border:1px solid var(--phos);padding:10px 14px;font-size:14px;animation:tin .25s ease-out}
+.toast.alarm{border-color:var(--alarm);box-shadow:0 0 18px rgba(255,46,77,.35)}
+.toast.warn{border-color:var(--amber)}
+@keyframes tin{from{transform:translateY(8px);opacity:0}}
+#yt{position:fixed;left:-9999px;top:0;width:200px;height:200px}
+
+@media (max-width:880px){
+  main.body{grid-template-columns:1fr;grid-template-rows:1fr 48vh}
+  aside.side{border-left:0;border-top:1px solid var(--line)}
+  .hide-sm{display:none!important}
+  .btn,.toolbar select{min-height:44px}
+}
+@media (max-width:480px){
+  header.top{gap:8px;padding-inline:10px}
+  .brand{gap:7px}
+  .brand .mini{width:42px}
+  .brand b{font-size:17px;letter-spacing:.18em}
+  #srcText{display:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="crt" aria-hidden="true"></div>
+<div id="yt"></div>
+
+<section id="boot" aria-label="Sign in">
+  <div class="boot-inner">
+    <div class="boot-eye" id="bootEye"></div>
+    <h1 class="boot-title" id="bootTitle">GRV EYE</h1>
+    <pre class="boot-log" id="bootLog" aria-live="polite"></pre>
+    <form class="boot-form" id="bootForm" autocomplete="off">
+      <div id="apiWrap" class="hidden">
+        <label for="apiInput">Server address</label>
+        <input class="field" id="apiInput" type="url" placeholder="https://eye.yourdomain.com" spellcheck="false">
+      </div>
+      <div id="tokenWrap" class="hidden">
+        <label for="tokenInput">Access code</label>
+        <input class="field" id="tokenInput" type="password" autocomplete="current-password" spellcheck="false">
+      </div>
+      <button class="btn-main" id="bootBtn" type="submit" disabled>Open the eye</button>
+      <p class="boot-err" id="bootErr" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="brand"><div class="mini" id="miniEye"></div><b id="brandName">GRV EYE</b></div>
+    <span class="chip" id="srcChip"><span class="dot" id="srcDot"></span><span id="srcText">connecting</span></span>
+    <span class="chip"><strong id="hOnline">0</strong> online</span>
+    <span class="chip hide-sm"><strong id="hWatch">0</strong> watching</span>
+    <button class="btn" id="soundBtn" aria-pressed="true">Sound</button>
+    <button class="btn" id="musicBtn" aria-pressed="false">Music</button>
+  </header>
+
+  <main class="body">
+    <div class="map-wrap" id="mapWrap">
+      <div id="map"></div>
+      <div class="toolbar">
+        <select id="worldSel" aria-label="World"></select>
+        <button class="btn" id="drawRect">Select box</button>
+        <button class="btn" id="drawPoly">Select polygon</button>
+        <button class="btn hidden" id="colorBtn" aria-pressed="false">True color</button>
+      </div>
+      <div class="draw-hint hidden" id="drawHint"></div>
+      <div class="coords" id="coords">x 0 · z 0</div>
+    </div>
+
+    <aside class="side">
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="area">Area</button>
+        <button role="tab" aria-selected="false" data-tab="watch">Watch<span class="n" id="nWatch"></span></button>
+        <button role="tab" aria-selected="false" data-tab="players">Players<span class="n" id="nPlayers"></span></button>
+      </div>
+      <div class="pane" id="pane-area"></div>
+      <div class="pane hidden" id="pane-watch"></div>
+      <div class="pane hidden" id="pane-players"></div>
+    </aside>
+  </main>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skinview3d@3.4.2/bundles/skinview3d.bundle.js"></script>
+<script src="config.js"></script>
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d = null) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// API server address. Set it in config.js (window.EYE_API) or type it on the sign-in screen.
+let API = String(window.EYE_API || store.get("eye_api", "") || "").trim().replace(/\/+$/, "");
+
+const S = {
+  cfg: null,
+  token: store.get("eye_token", ""),
+  world: null,
+  players: [],
+  sel: null,             // { world, points }
+  range: store.get("eye_range", "24h"),
+  area: null,            // last area result
+  areaLoading: false,
+  openRow: null,
+  watches: store.get("eye_watches", []),
+  watchInside: new Map(),
+  watchReady: false,
+  feed: [],
+  sound: store.get("eye_sound", true),
+  follow: store.get("eye_follow", true),
+  tab: "area",
+  selPlayer: null,
+  unread: 0,
+};
+const RANGES = { "1h": 3600e3, "6h": 6 * 3600e3, "24h": 86400e3, "7d": 7 * 86400e3, "30d": 30 * 86400e3, "All": null };
+
+/* ═════════════ THE EYE ═════════════ */
+let eyeSeq = 0;
+const eyes = [];
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function eyeSVG(big) {
+  const id = "e" + eyeSeq++;
+  const R = rng(1337);
+  const P = (r, a) => [(Math.cos(a) * r).toFixed(2), (Math.sin(a) * r).toFixed(2)];
+  const rad = (d) => (d * Math.PI) / 180;
+
+  let armor = "";
+  for (let i = 0; i < 24; i++) {
+    const a0 = rad(i * 15 + 2), a1 = rad(i * 15 + 13);
+    const [x0, y0] = P(117, a0), [x1, y1] = P(117, a1), [x2, y2] = P(109, a1), [x3, y3] = P(109, a0);
+    armor += `<path style="--i:${i}" d="M${x0} ${y0}A117 117 0 0 1 ${x1} ${y1}L${x2} ${y2}A109 109 0 0 0 ${x3} ${y3}Z"/>`;
+  }
+  let ticks = "";
+  for (let i = 0; i < 120; i++) {
+    const a = rad(i * 3), major = i % 10 === 0;
+    const [x0, y0] = P(major ? 95 : 99, a), [x1, y1] = P(104, a);
+    ticks += `<line${major ? ' class="major"' : ""} x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`;
+  }
+  const hex = Array.from({ length: 22 }, () => Math.floor(R() * 256).toString(16).toUpperCase().padStart(2, "0")).join(" ");
+  let fibers = "";
+  for (let i = 0; i < 150; i++) {
+    const a = (i / 150) * Math.PI * 2 + R() * 0.04;
+    const [x0, y0] = P(14 + R() * 5, a), [x1, y1] = P(24 + R() * 18, a);
+    fibers += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke-width="${(0.3 + R() * 0.8).toFixed(2)}" opacity="${(0.2 + R() * 0.7).toFixed(2)}"/>`;
+  }
+  let collar = "";
+  for (let i = 0; i < 44; i++) { const [x, y] = P(i % 2 ? 20 : 24.5, (i / 44) * Math.PI * 2); collar += `${x},${y} `; }
+  let oct = "", blades = "";
+  for (let i = 0; i < 8; i++) {
+    const a = rad(i * 45 + 22.5);
+    const [x, y] = P(12, a); oct += `${x},${y} `;
+    const [bx, by] = P(17.5, a + rad(28));
+    blades += `<line x1="${x}" y1="${y}" x2="${bx}" y2="${by}"/>`;
+  }
+  const almond = "M-86 0C-52 -54 52 -54 86 0C52 54 -52 54 -86 0Z";
+  const almond2 = "M-92 0C-55 -60 55 -60 92 0C55 60 -55 60 -92 0Z";
+  const br = (sx, sy) => `<path d="M${sx * 122} ${sy * 104}V${sy * 122}H${sx * 104}"/>`;
+  const glow = big ? `filter="url(#gl-${id})"` : "";
+
+  return `<svg class="eye" viewBox="-128 -128 256 256" aria-hidden="true">
+  <defs>
+    <radialGradient id="ig-${id}" cx="0" cy="0" r="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" style="stop-color:#000"/>
+      <stop offset=".28" style="stop-color:#000"/>
+      <stop offset=".42" style="stop-color:var(--iris);stop-opacity:.35"/>
+      <stop offset=".75" style="stop-color:var(--iris);stop-opacity:.8"/>
+      <stop offset="1" style="stop-color:var(--iris);stop-opacity:.15"/>
+    </radialGradient>
+    <clipPath id="cp-${id}"><path d="${almond}"/></clipPath>
+    <path id="dp-${id}" d="M0 -89A89 89 0 1 1 -.01 -89"/>
+    ${big ? `<filter id="gl-${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : ""}
+  </defs>
+  <g ${glow}>
+    <g class="hud">${br(-1, -1)}${br(1, -1)}${br(-1, 1)}${br(1, 1)}
+      <line x1="0" y1="-128" x2="0" y2="-119"/><line x1="0" y1="119" x2="0" y2="128"/>
+      <line x1="-128" y1="0" x2="-119" y2="0"/><line x1="119" y1="0" x2="128" y2="0"/></g>
+    <g class="armor spin">${armor}</g>
+    <g class="ticks spin-rev">${ticks}</g>
+    ${big ? `<g class="data"><circle r="89" fill="none"/><text><textPath href="#dp-${id}">${hex}  ·  ${hex}</textPath></text></g>` : ""}
+    <g class="sweep-g"><circle r="104" fill="none"/><path class="sweep" d="M0 0L0 -104A104 104 0 0 1 44 -94.2Z"/><line class="sweep-edge" x1="0" y1="0" x2="44" y2="-94.2"/></g>
+    <g class="lid">
+      <g clip-path="url(#cp-${id})">
+        <rect class="sclera" x="-90" y="-60" width="180" height="120"/>
+        <g class="sclera-rings"><circle r="52"/><circle r="64"/><circle r="78"/></g>
+        <rect class="scan" x="-90" y="-0.6" width="180" height="1.2"/>
+        <g class="iris-wrap">
+          <g class="iris-spin">
+            <circle r="42" fill="url(#ig-${id})"/>
+            <g class="fibers">${fibers}</g>
+            <polygon class="collar" points="${collar}"/>
+            <circle class="iris-edge" r="42"/>
+            <circle class="iris-outer" r="45.5"/>
+          </g>
+          <g class="pupil"><polygon points="${oct}"/>${blades}</g>
+          <circle class="core" r="2.1"/>
+          <circle class="glint" cx="-12" cy="-13" r="3.4"/>
+          <circle class="glint" cx="-6" cy="-17" r="1.3"/>
+        </g>
+      </g>
+      <path class="outline" d="${almond}"/>
+      <path class="outline2" d="${almond2}"/>
+    </g>
+  </g>
+</svg>`;
+}
+function mountEye(el, big, closed) {
+  el.innerHTML = eyeSVG(big);
+  const svg = el.firstElementChild;
+  if (closed) svg.classList.add("closed");
+  eyes.push(svg);
+  return svg;
+}
+let lastPointer = 0;
+function aim(svg, nx, ny) { const w = svg.querySelector(".iris-wrap"); if (w) w.style.transform = `translate(${nx * 24}px, ${ny * 11}px)`; }
+function lookAt(cx, cy) {
+  for (const svg of eyes) {
+    const r = svg.getBoundingClientRect(); if (!r.width) continue;
+    const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
+    const d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 380);
+    aim(svg, (dx / d) * k, (dy / d) * k);
+  }
+}
+document.addEventListener("pointermove", (e) => { lastPointer = Date.now(); lookAt(e.clientX, e.clientY); }, { passive: true });
+(function saccade() {
+  if (Date.now() - lastPointer > 2500) for (const svg of eyes) aim(svg, (Math.random() * 2 - 1) * 0.8, (Math.random() * 2 - 1) * 0.7);
+  setTimeout(saccade, 1200 + Math.random() * 2200);
+})();
+let alarmT;
+function eyeAlarm() {
+  eyes.forEach((s) => s.classList.add("alarm"));
+  clearTimeout(alarmT);
+  alarmT = setTimeout(() => eyes.forEach((s) => s.classList.remove("alarm")), 4000);
+}
+
+/* ═════════════ HELPERS ═════════════ */
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    method: opts.method || "GET",
+    headers: { "Content-Type": "application/json", ...(S.token ? { Authorization: "Bearer " + S.token } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || res.statusText); e.code = res.status; throw e; }
+  return data;
+}
+const fmtTime = (ts) => new Date(ts).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const fmtDate = (ts) => new Date(ts).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+function fmtAgo(ts) {
+  const s = Math.round((Date.now() - ts) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  return `${Math.floor(s / 86400)} d ago`;
+}
+function fmtDur(ms) {
+  if (!ms || ms < 1000) return "a moment";
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min`;
+  return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
+}
+function toast(html, kind = "", ms = 5000) {
+  const el = document.createElement("div");
+  el.className = "toast " + kind; el.innerHTML = html;
+  $("#toasts").prepend(el);
+  while ($("#toasts").children.length > 5) $("#toasts").lastElementChild.remove();
+  setTimeout(() => el.remove(), ms);
+}
+let actx;
+function beep(alarm) {
+  if (!S.sound) return;
+  try {
+    actx ||= new AudioContext();
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type = "square";
+    o.frequency.setValueAtTime(alarm ? 988 : 520, t);
+    if (alarm) { o.frequency.setValueAtTime(740, t + 0.12); o.frequency.setValueAtTime(988, t + 0.24); }
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.06, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + (alarm ? 0.4 : 0.12));
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.42);
+  } catch {}
+}
+function pointsBBox(pts) {
+  const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
+  return { minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs) };
+}
+function inPoly(x, z, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, zi] = pts[i], [xj, zj] = pts[j];
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const worldName = (id) => (S.cfg.worlds.find((w) => w.id === id) || {}).name || id;
+
+/* ═════════════ MUSIC ═════════════ */
+let yt = null, ytReady = false, musicOn = false;
+function loadMusic(videoId) {
+  if (window.__ytLoading) return; window.__ytLoading = true;
+  if (!videoId) { $("#musicBtn").classList.add("hidden"); return; }
+  window.onYouTubeIframeAPIReady = () => {
+    yt = new YT.Player("yt", {
+      videoId,
+      playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: videoId, playsinline: 1, rel: 0 },
+      events: {
+        onReady: () => { ytReady = true; yt.setVolume(45); },
+        onError: () => { musicOn = false; syncMusic(); toast("The music couldn't play. The video may block embedding; change MUSIC_VIDEO_ID in .env.", "warn", 8000); },
+      },
+    });
+  };
+  const s = document.createElement("script");
+  s.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(s);
+}
+function playMusic() { if (ytReady) { yt.unMute(); yt.playVideo(); musicOn = true; syncMusic(); } }
+function stopMusic() { if (ytReady) { yt.pauseVideo(); musicOn = false; syncMusic(); } }
+function syncMusic() { $("#musicBtn").setAttribute("aria-pressed", String(musicOn)); }
+
+/* ═════════════ BOOT ═════════════ */
+const bootEye = mountEye($("#bootEye"), true, true);
+const logEl = $("#bootLog");
+async function logLine(text, cls = "") {
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  logEl.appendChild(line);
+  for (let i = 0; i <= text.length; i += 2) { line.textContent = text.slice(0, i); await sleep(14); }
+  line.textContent = text;
+}
+async function loadConfig() {
+  try {
+    S.cfg = await fetch(API + "/api/config").then((r) => { if (!r.ok) throw 0; return r.json(); });
+    return true;
+  } catch { S.cfg = null; return false; }
+}
+async function boot() {
+  await logLine("> waking surveillance core");
+  if (!(await loadConfig())) {
+    await logLine(API ? `> no answer from ${API}` : "> no server address set", "err");
+    askServer();
+    return;
+  }
+  await bootReady();
+}
+function askServer() {
+  $("#apiWrap").classList.remove("hidden");
+  $("#apiInput").value = API;
+  $("#apiInput").focus();
+  $("#bootBtn").textContent = "Connect";
+  $("#bootBtn").disabled = false;
+}
+async function bootReady() {
+  $("#apiWrap").classList.add("hidden");
+  $("#bootBtn").textContent = "Open the eye";
+  document.title = S.cfg.appName;
+  $("#bootTitle").textContent = S.cfg.appName;
+  $("#brandName").textContent = S.cfg.appName;
+  await logLine(`> link: ${API || location.origin}`);
+  await logLine(`> source: ${S.cfg.source}  ·  ${S.cfg.worlds.length} map${S.cfg.worlds.length === 1 ? "" : "s"}  ·  every ${Math.round(S.cfg.pollMs / 1000)}s`);
+  await logLine(S.cfg.historySince ? `> memory reaches back to ${fmtDate(S.cfg.historySince)}` : "> memory empty, recording starts now");
+  await logLine("> eye ready", "ok");
+  if (!$(".boot-log .cursor")) { const c = document.createElement("span"); c.className = "cursor"; logEl.appendChild(c); }
+  loadMusic(S.cfg.musicId);
+  if (S.cfg.authRequired) { $("#tokenWrap").classList.remove("hidden"); $("#tokenInput").value = S.token; $("#tokenInput").focus(); }
+  $("#bootBtn").disabled = false;
+}
+$("#bootForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("#bootErr").textContent = "";
+  if (!S.cfg) {
+    const v = $("#apiInput").value.trim().replace(/\/+$/, "");
+    if (!/^https?:\/\//.test(v)) { $("#bootErr").textContent = "Enter the full address, starting with https://"; return; }
+    if (location.protocol === "https:" && v.startsWith("http:")) { $("#bootErr").textContent = "This page is on HTTPS, so the server must be HTTPS too."; return; }
+    API = v; store.set("eye_api", API);
+    $("#bootBtn").disabled = true;
+    if (await loadConfig()) await bootReady();
+    else { $("#bootErr").textContent = `Couldn't reach ${API}. Check the address, that it's HTTPS, and that CORS_ORIGINS on the server includes ${location.origin}.`; $("#bootBtn").disabled = false; }
+    return;
+  }
+  if (S.cfg.authRequired) S.token = $("#tokenInput").value.trim();
+  playMusic();
+  try { actx ||= new AudioContext(); } catch {}
+  $("#bootBtn").disabled = true;
+  try { await api("/api/status"); }
+  catch (err) {
+    $("#bootBtn").disabled = false; stopMusic();
+    $("#bootErr").textContent = err.code === 401 ? "Wrong access code." : `Couldn't connect: ${err.message}`;
+    return;
+  }
+  store.set("eye_token", S.token);
+  bootEye.classList.remove("closed");
+  await sleep(1600);
+  $("#app").classList.remove("hidden");
+  initApp();
+  $("#boot").classList.add("gone");
+  setTimeout(() => { $("#boot").remove(); eyes.splice(eyes.indexOf(bootEye), 1); }, 1000);
+});
+
+/* ═════════════ MAP ═════════════ */
+let map, tileLayer, selLayer, draftLayer, watchLayer, trailLayer, playerLayer;
+const markers = new Map();
+const toLL = (x, z) => L.latLng(-z, x);          // 1 block = 1 unit, zoom 0 = 1 px/block
+const fromLL = (ll) => ({ x: Math.round(ll.lng), z: Math.round(-ll.lat) });
+
+const Grid = L.GridLayer.extend({
+  createTile(c) {
+    const cv = document.createElement("canvas"), sz = this.getTileSize();
+    cv.width = sz.x; cv.height = sz.y;
+    const g = cv.getContext("2d"), bpp = Math.pow(2, -c.z);
+    let step = 16;
+    for (const s of [16, 64, 256, 512, 2048, 8192, 32768]) { step = s; if (s / bpp >= 56) break; }
+    const x0 = c.x * sz.x * bpp, z0 = c.y * sz.y * bpp, x1 = x0 + sz.x * bpp, z1 = z0 + sz.y * bpp;
+    const line = (v, vert) => {
+      const strong = v === 0;
+      g.strokeStyle = strong ? "rgba(61,255,140,.5)" : "rgba(61,255,140,.13)";
+      g.lineWidth = strong ? 1.2 : 1;
+      g.beginPath();
+      if (vert) { const p = (v - x0) / bpp + 0.5; g.moveTo(p, 0); g.lineTo(p, sz.y); }
+      else { const p = (v - z0) / bpp + 0.5; g.moveTo(0, p); g.lineTo(sz.x, p); }
+      g.stroke();
+    };
+    for (let v = Math.ceil(x0 / step) * step; v < x1; v += step) line(v, true);
+    for (let v = Math.ceil(z0 / step) * step; v < z1; v += step) line(v, false);
+    return cv;
+  },
+});
+
+// BlueMap lowres tiles: top half of each PNG is the color map.
+function bmPath(x, z) {
+  const split = (n) => { let p = ""; if (n < 0) { p = "-"; n = -n; } for (const ch of String(n)) p += ch + "/"; return p; };
+  return ("x" + split(x) + "z" + split(z)).slice(0, -1);
+}
+const imgCache = new Map();
+function loadImg(url) {
+  if (imgCache.has(url)) { const p = imgCache.get(url); imgCache.delete(url); imgCache.set(url, p); return p; }
+  const p = new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = url; });
+  imgCache.set(url, p);
+  if (imgCache.size > 500) imgCache.delete(imgCache.keys().next().value);
+  return p;
+}
+const BlueMapLayer = L.GridLayer.extend({
+  createTile(c, done) {
+    const cv = document.createElement("canvas"), sz = this.getTileSize();
+    cv.width = sz.x; cv.height = sz.y;
+    const conf = S.cfg.tiles.maps[S.world];
+    if (!conf) { setTimeout(() => done(null, cv)); return cv; }
+    const g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+    const bpp = Math.pow(2, -c.z);
+    let lod = 1;
+    for (let n = 1; n <= conf.lodCount; n++) if (Math.pow(conf.lodFactor, n - 1) <= Math.max(1, bpp)) lod = n;
+    const bpl = Math.pow(conf.lodFactor, lod - 1);
+    const TX = conf.tileSize[0] * bpl, TZ = conf.tileSize[1] * bpl;
+    const x0 = c.x * sz.x * bpp, z0 = c.y * sz.y * bpp, x1 = x0 + sz.x * bpp, z1 = z0 + sz.y * bpp;
+    const jobs = [];
+    for (let tx = Math.floor(x0 / TX); tx * TX < x1; tx++) {
+      for (let tz = Math.floor(z0 / TZ); tz * TZ < z1; tz++) {
+        if (jobs.length > 16) break;
+        const world = S.world;
+        jobs.push(loadImg(`${API}/tiles/${encodeURIComponent(world)}/${lod}/${bmPath(tx, tz)}.png`).then((im) => {
+          if (!im || world !== S.world) return;
+          const ix0 = Math.max(x0, tx * TX), ix1 = Math.min(x1, (tx + 1) * TX);
+          const iz0 = Math.max(z0, tz * TZ), iz1 = Math.min(z1, (tz + 1) * TZ);
+          g.drawImage(im, (ix0 - tx * TX) / bpl, (iz0 - tz * TZ) / bpl, (ix1 - ix0) / bpl, (iz1 - iz0) / bpl,
+            (ix0 - x0) / bpp, (iz0 - z0) / bpp, (ix1 - ix0) / bpp, (iz1 - iz0) / bpp);
+        }));
+      }
+    }
+    Promise.all(jobs).then(() => done(null, cv));
+    return cv;
+  },
+});
+
+// Squaremap tiles use zoom 0 for 1 block/pixel and increase the covered area by 2x per level.
+const SquareMapLayer = L.GridLayer.extend({
+  createTile(c, done) {
+    const cv = document.createElement("canvas"), sz = this.getTileSize();
+    cv.width = sz.x; cv.height = sz.y;
+    const conf = S.cfg.tiles.maps[S.world];
+    if (!conf) { setTimeout(() => done(null, cv)); return cv; }
+    const g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+    const bpp = Math.pow(2, -c.z);
+    const lod = Math.min(conf.maxZoom, Math.max(0, Math.floor(Math.log2(Math.max(1, bpp)))));
+    const sourceBpp = Math.pow(2, lod), sourceSpan = conf.tileSize * sourceBpp;
+    const x0 = c.x * sz.x * bpp, z0 = c.y * sz.y * bpp;
+    const x1 = x0 + sz.x * bpp, z1 = z0 + sz.y * bpp;
+    const jobs = [];
+    for (let tx = Math.floor(x0 / sourceSpan); tx * sourceSpan < x1; tx++) {
+      for (let tz = Math.floor(z0 / sourceSpan); tz * sourceSpan < z1; tz++) {
+        const world = S.world;
+        const url = `${API}/tiles/${encodeURIComponent(world)}/${lod}/${tx}_${tz}.png`;
+        jobs.push(loadImg(url).then((im) => {
+          if (!im || world !== S.world) return;
+          const ix0 = Math.max(x0, tx * sourceSpan), ix1 = Math.min(x1, (tx + 1) * sourceSpan);
+          const iz0 = Math.max(z0, tz * sourceSpan), iz1 = Math.min(z1, (tz + 1) * sourceSpan);
+          g.drawImage(im,
+            (ix0 - tx * sourceSpan) / sourceBpp, (iz0 - tz * sourceSpan) / sourceBpp,
+            (ix1 - ix0) / sourceBpp, (iz1 - iz0) / sourceBpp,
+            (ix0 - x0) / bpp, (iz0 - z0) / bpp, (ix1 - ix0) / bpp, (iz1 - iz0) / bpp);
+        }));
+      }
+    }
+    Promise.all(jobs).then(() => done(null, cv));
+    return cv;
+  },
+});
+
+function initMap() {
+  map = L.map("map", { crs: L.CRS.Simple, minZoom: -7, maxZoom: 4, zoomSnap: 0.5, zoomControl: false, attributionControl: false });
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+  const t = S.cfg.tiles;
+  if (t.mode === "bluemap") {
+    tileLayer = new BlueMapLayer({ tileSize: 256, minZoom: -7, maxZoom: 4, className: "mc-tiles", zIndex: 1, updateWhenZooming: false, keepBuffer: 1 }).addTo(map);
+  } else if (t.mode === "squaremap") {
+    tileLayer = new SquareMapLayer({ tileSize: 256, minZoom: -7, maxZoom: 4, className: "mc-tiles", zIndex: 1, updateWhenZooming: false, keepBuffer: 1 }).addTo(map);
+  } else if (t.mode === "template") {
+    tileLayer = L.tileLayer("", {
+      tileSize: t.size, zoomOffset: t.maxZoom, minNativeZoom: -t.maxZoom, maxNativeZoom: 0,
+      minZoom: -7, maxZoom: 4, noWrap: true, className: "mc-tiles", zIndex: 1,
+    }).addTo(map);
+  }
+  if (tileLayer) $("#colorBtn").classList.remove("hidden");
+  new Grid({ tileSize: 256, minZoom: -7, maxZoom: 4, zIndex: 2 }).addTo(map);
+  watchLayer = L.layerGroup().addTo(map);
+  selLayer = L.layerGroup().addTo(map);
+  trailLayer = L.layerGroup().addTo(map);
+  draftLayer = L.layerGroup().addTo(map);
+  playerLayer = L.layerGroup().addTo(map);
+  map.on("mousemove", (e) => { const p = fromLL(e.latlng); $("#coords").textContent = `x ${p.x} · z ${p.z}`; drawMove(p); });
+  map.on("click", (e) => drawClick(fromLL(e.latlng)));
+  map.on("dblclick", () => drawFinishPoly());
+  const w = S.cfg.worlds;
+  $("#worldSel").innerHTML = w.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+  setWorld(w[0]?.id || "world", true);
+}
+function ensureWorldOption(id) {
+  if (!S.cfg.worlds.find((w) => w.id === id)) {
+    S.cfg.worlds.push({ id, name: id });
+    $("#worldSel").insertAdjacentHTML("beforeend", `<option value="${esc(id)}">${esc(id)}</option>`);
+  }
+}
+function setWorld(id, center) {
+  ensureWorldOption(id);
+  const changed = S.world !== id;
+  S.world = id;
+  $("#worldSel").value = id;
+  if (tileLayer && changed) {
+    if (S.cfg.tiles.mode === "template") tileLayer.setUrl(S.cfg.tiles.url.replace("{world}", encodeURIComponent(id)));
+    else tileLayer.redraw();
+  }
+  if (center) {
+    const st = (S.cfg.worlds.find((w) => w.id === id) || {}).start;
+    map.setView(st ? toLL(st[0], st[1]) : toLL(0, 0), -2);
+  }
+  drawWatches(); drawSelection(); drawPlayers(); trailLayer.clearLayers();
+  if (P.name && pathLayer) { P.cur = P.trail.filter((p) => p.world === S.world); P.idx = Math.max(0, P.cur.length - 1); drawPath(false); tailLayer.clearLayers(); if (S.tab === "players") renderPath(); }
+}
+function flyTo(x, z, world) {
+  if (world && world !== S.world) setWorld(world);
+  map.flyTo(toLL(x, z), Math.max(map.getZoom(), 0), { duration: 0.8 });
+}
+
+function hotSet() {
+  const hot = new Set();
+  for (const w of S.watches) if (w.on) for (const n of S.watchInside.get(w.id) || []) hot.add(n);
+  return hot;
+}
+function drawPlayers() {
+  const hot = hotSet(), seen = new Set();
+  for (const p of S.players) {
+    if (p.world !== S.world) continue;
+    seen.add(p.name);
+    const cls = "pm" + (hot.has(p.name) ? " hot" : "") + (S.selPlayer === p.name ? " sel" : "");
+    const rot = p.yaw == null ? "" : `<u style="transform:rotate(${(p.yaw + 180) % 360}deg)"></u>`;
+    const html = `<div class="${cls}">${rot}<i></i><span>${esc(p.name)}</span></div>`;
+    let m = markers.get(p.name);
+    if (!m) {
+      m = L.marker(toLL(p.x, p.z), { icon: L.divIcon({ html, className: "", iconSize: [0, 0] }), keyboard: false });
+      m.on("click", () => openPlayer(p.name));
+      m._h = html; m.addTo(playerLayer); markers.set(p.name, m);
+    } else {
+      m.setLatLng(toLL(p.x, p.z));
+      if (m._h !== html) { m.setIcon(L.divIcon({ html, className: "", iconSize: [0, 0] })); m._h = html; }
+    }
+  }
+  for (const [n, m] of markers) if (!seen.has(n)) { playerLayer.removeLayer(m); markers.delete(n); }
+}
+function drawSelection() {
+  selLayer.clearLayers();
+  if (!S.sel || S.sel.world !== S.world) return;
+  L.polygon(S.sel.points.map(([x, z]) => toLL(x, z)), { color: "#e8fff1", weight: 1.6, dashArray: "6 5", fillColor: "#3dff8c", fillOpacity: 0.07 }).addTo(selLayer);
+}
+function drawWatches() {
+  watchLayer.clearLayers();
+  for (const w of S.watches) {
+    if (w.world !== S.world) continue;
+    const n = (S.watchInside.get(w.id) || new Set()).size;
+    const poly = L.polygon(w.points.map(([x, z]) => toLL(x, z)), {
+      color: w.on ? (n ? "#ff2e4d" : "#ffb627") : "#5f9c78", weight: 1.5, fillOpacity: w.on && n ? 0.16 : 0.05, dashArray: w.on ? null : "4 4",
+    });
+    poly.bindTooltip(`${esc(w.name)}${n ? ` (${n})` : ""}`, { permanent: true, direction: "center", className: "zlabel" });
+    poly.addTo(watchLayer);
+  }
+}
+
+/* ─── drawing ─── */
+const draw = { mode: null, pts: [], cursor: null };
+function startDraw(mode) {
+  cancelDraw();
+  draw.mode = mode;
+  map.doubleClickZoom.disable();
+  $("#mapWrap").classList.add("drawing");
+  $(mode === "rect" ? "#drawRect" : "#drawPoly").setAttribute("aria-pressed", "true");
+  $("#drawHint").innerHTML = mode === "rect"
+    ? "Click one corner, then the opposite corner. <kbd>Esc</kbd> cancels."
+    : "Click to place points. Double-click or <kbd>Enter</kbd> to close. <kbd>Backspace</kbd> undoes, <kbd>Esc</kbd> cancels.";
+  $("#drawHint").classList.remove("hidden");
+}
+function cancelDraw() {
+  draw.mode = null; draw.pts = []; draw.cursor = null;
+  draftLayer.clearLayers();
+  map.doubleClickZoom.enable();
+  $("#mapWrap").classList.remove("drawing");
+  $("#drawHint").classList.add("hidden");
+  $("#drawRect").setAttribute("aria-pressed", "false");
+  $("#drawPoly").setAttribute("aria-pressed", "false");
+}
+const rectPts = (a, b) => [[a.x, a.z], [b.x, a.z], [b.x, b.z], [a.x, b.z]];
+function renderDraft() {
+  draftLayer.clearLayers();
+  const style = { color: "#3dff8c", weight: 1.5, dashArray: "4 4", fillOpacity: 0.08 };
+  if (draw.mode === "rect" && draw.pts.length && draw.cursor) {
+    L.polygon(rectPts(draw.pts[0], draw.cursor).map(([x, z]) => toLL(x, z)), style).addTo(draftLayer);
+  } else if (draw.mode === "poly" && draw.pts.length) {
+    const pts = [...draw.pts, ...(draw.cursor ? [draw.cursor] : [])].map((p) => toLL(p.x, p.z));
+    (pts.length >= 3 ? L.polygon(pts, style) : L.polyline(pts, style)).addTo(draftLayer);
+    for (const p of draw.pts) L.circleMarker(toLL(p.x, p.z), { radius: 3, color: "#3dff8c", fillOpacity: 1 }).addTo(draftLayer);
+  }
+}
+function drawMove(p) { if (draw.mode && draw.pts.length) { draw.cursor = p; renderDraft(); } }
+function drawClick(p) {
+  if (!draw.mode) return;
+  if (draw.mode === "rect") {
+    if (!draw.pts.length) { draw.pts = [p]; return; }
+    const a = draw.pts[0];
+    if (a.x === p.x || a.z === p.z) return toast("The box needs a width and a height.", "warn");
+    finishDraw(rectPts(a, p));
+  } else {
+    const last = draw.pts[draw.pts.length - 1];
+    if (!last || last.x !== p.x || last.z !== p.z) draw.pts.push(p);
+    renderDraft();
+  }
+}
+function drawFinishPoly() {
+  if (draw.mode !== "poly") return;
+  const pts = draw.pts.filter((p, i, a) => i === 0 || p.x !== a[i - 1].x || p.z !== a[i - 1].z);
+  if (pts.length < 3) return toast("Place at least 3 points.", "warn");
+  finishDraw(pts.map((p) => [p.x, p.z]));
+}
+document.addEventListener("keydown", (e) => {
+  if (!draw.mode || e.target.closest("input")) return;
+  if (e.key === "Escape") cancelDraw();
+  if (e.key === "Enter") drawFinishPoly();
+  if (e.key === "Backspace" && draw.mode === "poly") { draw.pts.pop(); renderDraft(); }
+});
+function finishDraw(points) {
+  cancelDraw();
+  S.sel = { world: S.world, points };
+  S.area = null; S.openRow = null;
+  trailLayer.clearLayers();
+  drawSelection();
+  setTab("area");
+  searchArea();
+}
+
+/* ═════════════ TABS ═════════════ */
+function setTab(t) {
+  S.tab = t;
+  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === t));
+  for (const id of ["area", "watch", "players"]) $("#pane-" + id).classList.toggle("hidden", id !== t);
+  if (t === "area") renderArea();
+  if (t === "watch") renderWatch();
+  if (t === "players") renderPlayers();
+  else if (holo) holo.renderPaused = true;
+}
+document.querySelector(".tabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setTab(b.dataset.tab); });
+
+/* ═════════════ AREA ═════════════ */
+let areaReq = 0;
+async function searchArea() {
+  if (!S.sel) return;
+  const id = ++areaReq;
+  S.areaLoading = true; renderArea();
+  const span = RANGES[S.range];
+  try {
+    const r = await api("/api/area", { method: "POST", body: { world: S.sel.world, points: S.sel.points, from: span ? Date.now() - span : 0, to: Date.now() } });
+    if (id !== areaReq) return;
+    S.area = r;
+  } catch (err) {
+    if (id !== areaReq) return;
+    S.area = { error: err.message };
+  }
+  S.areaLoading = false; renderArea();
+}
+function insideNow(pts, world) { return S.players.filter((p) => p.world === world && inPoly(p.x, p.z, pts)).map((p) => p.name); }
+function histSVG(h) {
+  const max = Math.max(1, ...h.counts), n = h.counts.length, w = 100 / n;
+  const bars = h.counts.map((c, i) => {
+    const hh = c ? Math.max(2, (c / max) * 50) : 0;
+    const t0 = h.from + ((h.to - h.from) * i) / n;
+    return `<rect class="${c ? "on" : ""}" x="${(i * w + w * 0.12).toFixed(3)}" y="${56 - hh}" width="${(w * 0.76).toFixed(3)}" height="${hh}"><title>${fmtDate(t0)}: ${c} player${c === 1 ? "" : "s"}</title></rect>`;
+  }).join("");
+  return `<svg class="hist" viewBox="0 0 100 56" preserveAspectRatio="none">${bars}<rect x="0" y="55.5" width="100" height=".5" style="fill:var(--line-hi)"/></svg>
+    <div class="hist-axis"><span>${fmtDate(h.from)}</span><span>now</span></div>`;
+}
+function renderArea() {
+  const el = $("#pane-area");
+  if (!S.sel) {
+    el.innerHTML = `<div class="empty"><b>Draw an area to see who's been there.</b>
+      Use <em>Select box</em> or <em>Select polygon</em> on the map. You'll get every player recorded inside it and when they were there.
+      From the results you can also watch the area and get a desktop alert when someone walks in.</div>`;
+    return;
+  }
+  const b = pointsBBox(S.sel.points);
+  const now = insideNow(S.sel.points, S.sel.world);
+  let body;
+  if (S.areaLoading && !S.area) body = `<div class="empty">Searching history…</div>`;
+  else if (S.area?.error) body = `<div class="empty"><b>Search failed.</b>${esc(S.area.error)}</div>`;
+  else if (S.area) {
+    const a = S.area, visits = a.players.reduce((s, p) => s + p.visits.length, 0);
+    body = `<div class="sec"><h3>Activity</h3>${histSVG(a.histogram)}</div>
+      <div class="sec" style="padding-bottom:4px"><h3>${a.players.length} player${a.players.length === 1 ? "" : "s"} · ${visits} visit${visits === 1 ? "" : "s"}</h3>
+      ${a.truncated ? `<p class="meta" style="color:var(--amber)">Too much data for this area and range; results are partial. Try a shorter range or smaller area.</p>` : ""}
+      ${S.cfg.historySince ? `<p class="meta">Recording since ${fmtDate(S.cfg.historySince)}. Nothing before that is known.</p>` : ""}</div>
+      ${a.players.length ? `<table class="log"><thead><tr><th>Player</th><th>Visits</th><th>Inside for</th><th>Last seen</th></tr></thead><tbody>
+      ${a.players.map((p) => `<tr class="pl${S.openRow === p.name ? " open" : ""}" data-name="${esc(p.name)}">
+          <td>${esc(p.name)}${now.includes(p.name) ? ' <span class="tag">here</span>' : ""}</td>
+          <td class="mono">${p.visits.length}</td><td class="mono">${fmtDur(p.total)}</td><td class="mono">${fmtAgo(p.last)}</td></tr>
+          ${S.openRow === p.name ? `<tr class="visits"><td colspan="4"><ul class="vlist">${p.visits.slice(0, 60).map((v) =>
+            `<li><b>${fmtDate(v.start)}</b> → ${fmtTime(v.end)} · ${fmtDur(v.end - v.start)}</li>`).join("")}
+            ${p.visits.length > 60 ? `<li>…and ${p.visits.length - 60} more</li>` : ""}</ul></td></tr>` : ""}`).join("")}
+      </tbody></table>` : `<div class="empty">Nobody recorded here in this time range.</div>`}`;
+  } else body = "";
+
+  el.innerHTML = `<div class="sec">
+      <h2>Selected area</h2>
+      <p class="meta">${esc(worldName(S.sel.world))} · x ${b.minX} to ${b.maxX} · z ${b.minZ} to ${b.maxZ} · ${b.maxX - b.minX}×${b.maxZ - b.minZ} blocks</p>
+      <div class="seg" role="group" aria-label="Time range">${Object.keys(RANGES).map((k) => `<button class="btn" data-range="${k}" aria-pressed="${S.range === k}">${k === "All" ? "All time" : "Last " + k}</button>`).join("")}</div>
+      <div class="btns">
+        <button class="btn amber" data-act="watch">Watch this area</button>
+        <button class="btn" data-act="zoom">Zoom to area</button>
+        <button class="btn" data-act="clear">Clear</button>
+      </div>
+      <form class="inline-form hidden" id="watchForm"><input class="field" id="watchName" maxlength="40" placeholder="Name this watch" required><button class="btn amber" type="submit">Start watching</button></form>
+    </div>
+    <div class="sec"><h3>Inside right now (${now.length})</h3>
+      ${now.length ? `<div class="names">${now.map((n) => `<button class="name-chip" data-player="${esc(n)}">${esc(n)}</button>`).join("")}</div>` : `<p class="meta">Nobody.</p>`}</div>
+    ${body}`;
+}
+$("#pane-area").addEventListener("click", (e) => {
+  const r = e.target.closest("[data-range]");
+  if (r) { S.range = r.dataset.range; store.set("eye_range", S.range); searchArea(); return; }
+  const chip = e.target.closest("[data-player]");
+  if (chip) { openPlayer(chip.dataset.player); return; }
+  const row = e.target.closest("tr.pl");
+  if (row) {
+    const name = row.dataset.name;
+    S.openRow = S.openRow === name ? null : name;
+    renderArea();
+    if (S.openRow) showAreaTrail(name); else trailLayer.clearLayers();
+    return;
+  }
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (act === "clear") { S.sel = null; S.area = null; S.openRow = null; drawSelection(); trailLayer.clearLayers(); renderArea(); }
+  if (act === "zoom") map.flyToBounds(L.latLngBounds(S.sel.points.map(([x, z]) => toLL(x, z))).pad(0.3), { duration: 0.7 });
+  if (act === "watch") { $("#watchForm").classList.remove("hidden"); $("#watchName").focus(); }
+});
+$("#pane-area").addEventListener("submit", (e) => {
+  if (e.target.id !== "watchForm") return;
+  e.preventDefault();
+  const name = $("#watchName").value.trim();
+  if (!name || !S.sel) return;
+  addWatch(name, S.sel);
+});
+async function showAreaTrail(name) {
+  trailLayer.clearLayers();
+  const p = S.area?.players.find((x) => x.name === name);
+  if (!p) return;
+  const from = Math.max(p.first - 10 * 60e3, p.last - 24 * 3600e3), to = p.last + 10 * 60e3;
+  try {
+    const { trail } = await api(`/api/players/${encodeURIComponent(name)}/trail?from=${from}&to=${to}`);
+    if (S.openRow !== name) return;
+    const pts = trail.filter((t) => t.world === S.world).map((t) => toLL(t.x, t.z));
+    if (pts.length > 1) L.polyline(pts, { color: "#3dff8c", weight: 1.6, opacity: 0.8, dashArray: "3 5" }).addTo(trailLayer);
+    for (const v of p.visits.slice(0, 40)) L.circleMarker(toLL(v.x, v.z), { radius: 4, color: "#e8fff1", weight: 1, fillColor: "#3dff8c", fillOpacity: 0.9 }).bindTooltip(`${esc(name)} entered ${fmtDate(v.start)}`).addTo(trailLayer);
+  } catch {}
+}
+
+/* ═════════════ WATCH ═════════════ */
+function saveWatches() { store.set("eye_watches", S.watches); }
+function addWatch(name, sel) {
+  const w = { id: Date.now().toString(36), name, world: sel.world, points: sel.points, on: true, created: Date.now() };
+  S.watches.push(w);
+  S.watchInside.set(w.id, new Set(insideNow(w.points, w.world)));
+  saveWatches();
+  askNotify();
+  drawWatches(); updateCounts();
+  toast(`Watching <b>${esc(name)}</b>. You'll be alerted while this tab stays open.`);
+  setTab("watch");
+}
+function askNotify() {
+  try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().then(() => S.tab === "watch" && renderWatch()); } catch {}
+}
+function notifyState() {
+  if (!("Notification" in window)) return ["bad", "This browser doesn't support desktop notifications. You'll still get sound and on-screen alerts."];
+  if (!window.isSecureContext) return ["bad", "Desktop notifications need HTTPS (or localhost). Put the site behind HTTPS to enable them."];
+  if (Notification.permission === "granted") return ["good", "Desktop alerts are on."];
+  if (Notification.permission === "denied") return ["bad", "Notifications are blocked for this site. Allow them in your browser's site settings."];
+  return ["", "Desktop alerts are off."];
+}
+function renderWatch() {
+  const [cls, msg] = notifyState();
+  const canAsk = "Notification" in window && window.isSecureContext && Notification.permission === "default";
+  const el = $("#pane-watch");
+  el.innerHTML = `<div class="sec">
+      <div class="notice ${cls}">${msg}${canAsk ? ` <button class="btn primary" data-act="notify" style="margin-left:6px">Enable desktop alerts</button>` : ""}</div>
+      <p class="meta" style="margin-top:10px">Watches are saved in this browser and only run while this tab is open.</p>
+      <div class="btns"><button class="btn" data-act="follow" aria-pressed="${S.follow}">Fly to alerts</button></div>
+    </div>
+    ${S.watches.length ? S.watches.map((w) => {
+      const n = (S.watchInside.get(w.id) || new Set()).size;
+      return `<div class="row" data-watch="${w.id}" style="cursor:pointer">
+        <span class="sw${w.on ? "" : " off"}"></span>
+        <span class="main"><b>${esc(w.name)}</b><small>${esc(worldName(w.world))} · ${w.on ? (n ? `${n} inside now` : "empty") : "paused"}</small></span>
+        <span style="display:flex;gap:4px;align-items:center"><button class="btn" data-toggle="${w.id}" aria-pressed="${w.on}">${w.on ? "On" : "Off"}</button><button class="x" data-del="${w.id}" aria-label="Delete watch">×</button></span>
+      </div>`;
+    }).join("") : `<div class="empty"><b>No watches yet.</b>Select an area on the map, then press <em>Watch this area</em>.</div>`}
+    <div class="sec" style="border-bottom:0"><h3>Activity</h3>${S.feed.length ? "" : `<p class="meta">Entries and exits from your watches will show up here.</p>`}</div>
+    <div id="feed">${S.feed.map((f) => feedRow(f)).join("")}</div>`;
+  S.unread = 0; syncTitle();
+}
+function feedRow(f, fresh) {
+  return `<button class="row${f.type === "in" ? " alarm" : ""}${fresh ? " fresh" : ""}" data-fx="${f.x}" data-fz="${f.z}" data-fw="${esc(f.world)}">
+    <span class="${f.type}">${f.type === "in" ? "▶" : "◀"}</span>
+    <span class="main"><b>${esc(f.player)}</b> ${f.type === "in" ? "entered" : "left"} <b>${esc(f.watch)}</b><small>x ${Math.round(f.x)} · z ${Math.round(f.z)}</small></span>
+    <span class="t">${fmtTime(f.ts)}</span></button>`;
+}
+$("#pane-watch").addEventListener("click", (e) => {
+  const t = e.target;
+  if (t.closest("[data-act=notify]")) { askNotify(); return; }
+  if (t.closest("[data-act=follow]")) { S.follow = !S.follow; store.set("eye_follow", S.follow); renderWatch(); return; }
+  const tg = t.closest("[data-toggle]");
+  if (tg) { const w = S.watches.find((x) => x.id === tg.dataset.toggle); w.on = !w.on; S.watchInside.set(w.id, new Set(insideNow(w.points, w.world))); saveWatches(); drawWatches(); drawPlayers(); renderWatch(); updateCounts(); return; }
+  const del = t.closest("[data-del]");
+  if (del) {
+    const w = S.watches.find((x) => x.id === del.dataset.del);
+    if (w && confirm(`Stop watching "${w.name}"?`)) { S.watches = S.watches.filter((x) => x !== w); S.watchInside.delete(w.id); saveWatches(); drawWatches(); drawPlayers(); renderWatch(); updateCounts(); }
+    return;
+  }
+  const f = t.closest("[data-fx]");
+  if (f) { flyTo(+f.dataset.fx, +f.dataset.fz, f.dataset.fw); return; }
+  const row = t.closest("[data-watch]");
+  if (row) {
+    const w = S.watches.find((x) => x.id === row.dataset.watch);
+    if (w.world !== S.world) setWorld(w.world);
+    map.flyToBounds(L.latLngBounds(w.points.map(([x, z]) => toLL(x, z))).pad(0.3), { duration: 0.7 });
+  }
+});
+function syncTitle() { document.title = (S.unread ? `(${S.unread}) ` : "") + (S.cfg?.appName || "GRV EYE"); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && S.tab === "watch") { S.unread = 0; syncTitle(); } });
+
+function checkWatches() {
+  for (const w of S.watches) {
+    if (!w.on) continue;
+    const prev = S.watchInside.get(w.id) || new Set();
+    const cur = new Set();
+    for (const p of S.players) if (p.world === w.world && inPoly(p.x, p.z, w.points)) cur.add(p.name);
+    if (S.watchReady) {
+      for (const n of cur) if (!prev.has(n)) watchEvent("in", w, S.players.find((p) => p.name === n));
+      for (const n of prev) if (!cur.has(n)) {
+        const p = S.players.find((x) => x.name === n) || { name: n, x: 0, z: 0, world: w.world };
+        watchEvent("out", w, p);
+      }
+    }
+    S.watchInside.set(w.id, cur);
+  }
+  S.watchReady = true;
+}
+function watchEvent(type, w, p) {
+  const f = { ts: Date.now(), type, player: p.name, watch: w.name, world: p.world, x: p.x, z: p.z };
+  S.feed.unshift(f);
+  if (S.feed.length > 200) S.feed.length = 200;
+  const feed = $("#feed");
+  if (feed && S.tab === "watch") feed.insertAdjacentHTML("afterbegin", feedRow(f, true));
+  if (type === "in") {
+    eyeAlarm(); beep(true);
+    toast(`<b>${esc(p.name)}</b> entered <b>${esc(w.name)}</b>`, "alarm", 8000);
+    if (document.hidden || S.tab !== "watch") { S.unread++; syncTitle(); }
+    try {
+      if ("Notification" in window && Notification.permission === "granted") {
+        const n = new Notification(`${p.name} entered ${w.name}`, { body: `${worldName(p.world)} · x ${Math.round(p.x)} · z ${Math.round(p.z)}`, tag: `w-${w.id}-${p.name}` });
+        n.onclick = () => { window.focus(); flyTo(p.x, p.z, p.world); n.close(); };
+      }
+    } catch {}
+    if (S.follow && !draw.mode) flyTo(p.x, p.z, p.world);
+  } else beep(false);
+}
+
+/* ═════════════ PLAYERS (tracker mode) ═════════════ */
+const P = { name: null, info: null, trail: [], segs: [], stops: [], cur: [], preset: "6h", from: null, to: null, range: null,
+  idx: 0, playing: null, follow: false, tail: [], loading: false, total: 0 };
+const TRAIL_PRESETS = { "1h": 3600e3, "6h": 6 * 3600e3, "24h": 86400e3, "3d": 3 * 86400e3, "7d": 7 * 86400e3 };
+let known = [], searchT, holo = null, skinUrl = null, pathLayer, tailLayer, cursorMk = null, pathRenderer;
+
+function buildPlayersPane() {
+  $("#pane-players").innerHTML = `
+    <div id="pListView">
+      <input class="field search" id="pSearch" type="search" placeholder="Search players (Java or Bedrock)" aria-label="Search players">
+      <div id="pList"></div>
+    </div>
+    <div id="pDetailView" class="hidden">
+      <div class="holo" id="holoBox">
+        <div class="holo-beam"></div>
+        <div class="holo-base"><i></i><i></i><i></i></div>
+        <canvas id="holoCanvas"></canvas>
+        <div class="holo-scan"></div><div class="holo-sweep"></div>
+        <button class="btn holo-back" id="pBack">‹ All players</button>
+        <span class="holo-tag" id="holoTag"></span>
+      </div>
+      <div id="pInfo"></div>
+      <div id="pPath"></div>
+    </div>`;
+  $("#pSearch").addEventListener("input", (e) => { clearTimeout(searchT); searchT = setTimeout(() => loadKnown(e.target.value.trim()), 250); });
+  $("#pList").addEventListener("click", (e) => { const r = e.target.closest("[data-player]"); if (r) openPlayer(r.dataset.player); });
+  $("#pBack").addEventListener("click", closePlayer);
+  $("#pInfo").addEventListener("click", onInfoClick);
+  $("#pPath").addEventListener("click", onPathClick);
+  $("#pPath").addEventListener("input", onPathInput);
+  pathRenderer = L.canvas({ padding: 0.5 });
+  pathLayer = L.layerGroup().addTo(map);
+  tailLayer = L.layerGroup().addTo(map);
+  window.addEventListener("resize", sizeHolo);
+}
+async function loadKnown(q = "") {
+  try { known = (await api(`/api/players?limit=300${q ? "&q=" + encodeURIComponent(q) : ""}`)).players; } catch {}
+  if (S.tab === "players" && !P.name) renderPlayerList();
+}
+function renderPlayers() {
+  const detail = !!P.name;
+  $("#pListView").classList.toggle("hidden", detail);
+  $("#pDetailView").classList.toggle("hidden", !detail);
+  if (holo) holo.renderPaused = !detail || S.tab !== "players";
+  if (!detail) { renderPlayerList(); loadKnown($("#pSearch").value.trim()); }
+  else { sizeHolo(); renderInfo(); renderPath(); }
+}
+const isBedrockName = (n) => n.startsWith(".") || n.startsWith("*");
+function renderPlayerList() {
+  const box = $("#pList"); if (!box) return;
+  const q = ($("#pSearch")?.value || "").trim().toLowerCase();
+  const byName = new Map(known.map((p) => [p.name, p]));
+  for (const p of S.players) if (!byName.has(p.name) && (!q || p.name.toLowerCase().includes(q))) byName.set(p.name, { name: p.name, last_seen: Date.now() });
+  const live = new Map(S.players.map((p) => [p.name, p]));
+  const list = [...byName.values()].sort((a, b) => (live.has(b.name) - live.has(a.name)) || b.last_seen - a.last_seen);
+  box.innerHTML = list.length ? list.map((p) => {
+    const l = live.get(p.name);
+    return `<button class="row" data-player="${esc(p.name)}"><span class="on${l ? " yes" : ""}"></span>
+      <span class="main"><b>${esc(p.name)}</b><small>${l ? `${esc(worldName(l.world))} · x ${Math.round(l.x)} · z ${Math.round(l.z)}` : `seen ${fmtAgo(p.last_seen)}`}</small></span>
+      <span class="count">${isBedrockName(p.name) || /^00000000-0000-0000-/.test(p.uuid || "") ? "BEDROCK" : ""}</span></button>`;
+  }).join("") : `<div class="empty"><b>No players found.</b>${q ? "Try another name." : "Players show up here as soon as they appear on the map."}</div>`;
+}
+
+/* hologram */
+function sizeHolo() {
+  if (!holo) return;
+  const box = $("#holoBox");
+  const w = Math.min(280, box.clientWidth), h = Math.max(160, box.clientHeight - 24);
+  if (w > 0 && (holo.width !== w || holo.height !== h)) holo.setSize(w, h);
+}
+function ensureHolo() {
+  if (holo) return holo;
+  if (!window.skinview3d) return null;
+  holo = new skinview3d.SkinViewer({ canvas: $("#holoCanvas"), width: 260, height: 300, pixelRatio: "match-device" });
+  holo.background = null;
+  holo.fov = 38;
+  holo.zoom = 0.66;
+  holo.autoRotate = true;
+  holo.autoRotateSpeed = 0.9;
+  holo.controls.enableZoom = false;
+  holo.controls.enablePan = false;
+  sizeHolo();
+  return holo;
+}
+function setHoloMotion(online) {
+  if (!holo || !window.skinview3d) return;
+  const want = online ? "walk" : "idle";
+  if (holo._mode === want) return;
+  holo._mode = want;
+  holo.animation = online ? new skinview3d.WalkingAnimation() : new skinview3d.IdleAnimation();
+  holo.animation.speed = online ? 0.55 : 0.8;
+}
+async function loadSkin(name) {
+  const box = $("#holoBox"), tag = $("#holoTag");
+  box.classList.remove("ready"); box.classList.add("loading");
+  tag.textContent = "resolving skin…";
+  const v = ensureHolo();
+  if (!v) { tag.textContent = "3D viewer failed to load"; box.classList.remove("loading"); return; }
+  v.renderPaused = false;
+  try {
+    const r = await fetch(`${API}/skin/${encodeURIComponent(name)}`);
+    if (!r.ok) throw new Error(r.status);
+    const model = r.headers.get("X-Skin-Model") || "auto-detect";
+    const edition = r.headers.get("X-Skin-Edition") || (isBedrockName(name) ? "bedrock" : "java");
+    const source = r.headers.get("X-Skin-Source");
+    const blob = await r.blob();
+    if (P.name !== name) return;
+    if (skinUrl) URL.revokeObjectURL(skinUrl);
+    skinUrl = URL.createObjectURL(blob);
+    await v.loadSkin(skinUrl, { model });
+    tag.textContent = `${edition.toUpperCase()}${source === "default" ? " · no skin found" : ""}`;
+    box.classList.remove("loading"); void box.offsetWidth; box.classList.add("ready");
+  } catch {
+    tag.textContent = "skin unavailable";
+    box.classList.remove("loading");
+  }
+}
+
+/* open / close */
+async function openPlayer(name) {
+  stopPlay();
+  P.name = name; S.selPlayer = name; P.info = null; P.trail = []; P.segs = []; P.stops = []; P.cur = []; P.tail = [];
+  P.follow = false;
+  tailLayer.clearLayers(); pathLayer.clearLayers(); cursorMk = null;
+  setTab("players");
+  renderPlayers();
+  const live = S.players.find((p) => p.name === name);
+  if (live) flyTo(live.x, live.z, live.world);
+  setHoloMotion(!!live);
+  drawPlayers();
+  loadSkin(name);
+  try { P.info = (await api(`/api/players/${encodeURIComponent(name)}`)).player; } catch { P.info = null; }
+  if (P.name !== name) return;
+  renderInfo();
+  loadPath(true);
+}
+function closePlayer() {
+  stopPlay();
+  P.name = null; S.selPlayer = null;
+  pathLayer.clearLayers(); tailLayer.clearLayers(); cursorMk = null;
+  drawPlayers(); renderPlayers();
+}
+
+function renderInfo() {
+  if (!P.name) return;
+  const live = S.players.find((p) => p.name === P.name), i = P.info;
+  $("#pInfo").innerHTML = `<div class="sec">
+    <h2 class="pname"><span class="on${live ? " yes" : ""}"></span>${esc(P.name)}</h2>
+    <p class="meta" id="pLive">${live ? `Online · ${esc(worldName(live.world))} · x ${Math.round(live.x)} · z ${Math.round(live.z)}` : i ? `Offline · last seen ${fmtAgo(i.last_seen)} at x ${Math.round(i.x)}, z ${Math.round(i.z)} (${esc(worldName(i.world))})` : "Never recorded by this server yet."}</p>
+    ${i ? `<p class="meta">First seen ${fmtDate(i.first_seen)} · ${i.sessions} session${i.sessions === 1 ? "" : "s"}</p>` : ""}
+    <div class="btns">
+      ${live ? `<button class="btn primary" data-act="locate">Find on map</button><button class="btn" data-act="follow" aria-pressed="${P.follow}">Follow live</button>` : ""}
+    </div></div>`;
+}
+function onInfoClick(e) {
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  const live = S.players.find((p) => p.name === P.name);
+  if (act === "locate" && live) flyTo(live.x, live.z, live.world);
+  if (act === "follow") { P.follow = !P.follow; renderInfo(); if (P.follow && live) flyTo(live.x, live.z, live.world); }
+}
+
+/* path */
+function pathRange() {
+  if (P.preset === "custom" && P.from && P.to) return [P.from, P.to];
+  const to = Date.now();
+  return [to - TRAIL_PRESETS[P.preset], to];
+}
+async function loadPath(fit) {
+  const name = P.name; if (!name) return;
+  stopPlay();
+  const [from, to] = pathRange();
+  P.loading = true; renderPath();
+  try {
+    const r = await api(`/api/players/${encodeURIComponent(name)}/trail?from=${Math.round(from)}&to=${Math.round(to)}`);
+    if (P.name !== name) return;
+    P.trail = r.trail; P.total = r.total; P.range = [r.from, r.to]; P.tail = [];
+  } catch (err) {
+    if (P.name !== name) return;
+    P.trail = []; P.range = [from, to]; toast(`Couldn't load the path: ${esc(err.message)}`, "warn");
+  }
+  P.loading = false;
+  analyzePath();
+  if (fit && P.trail.length) {
+    const counts = P.worlds, here = counts[S.world] || 0;
+    const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    if (!here && best) setWorld(best[0]);
+  }
+  P.idx = Math.max(0, P.cur.length - 1);
+  drawPath(fit);
+  renderPath();
+}
+function analyzePath() {
+  const t = P.trail, segs = [], worlds = {};
+  let seg = null, dist = 0;
+  for (let i = 0; i < t.length; i++) {
+    const p = t[i], q = t[i - 1];
+    worlds[p.world] = (worlds[p.world] || 0) + 1;
+    const d = q ? Math.hypot(p.x - q.x, p.z - q.z) : 0;
+    const brk = !q || q.world !== p.world || p.ts - q.ts > 5 * 60e3 || d > 300;
+    if (brk) { seg = { world: p.world, pts: [] }; segs.push(seg); } else dist += d;
+    seg.pts.push(p);
+  }
+  P.segs = segs; P.worlds = worlds; P.dist = dist;
+  P.active = segs.reduce((s, g) => s + (g.pts[g.pts.length - 1].ts - g.pts[0].ts), 0);
+  P.stops = findStops(t);
+  P.cur = t.filter((p) => p.world === S.world);
+}
+function findStops(t) {
+  const out = [];
+  let i = 0;
+  while (i < t.length) {
+    const a = t[i];
+    let j = i, sx = a.x, sz = a.z, n = 1;
+    while (j + 1 < t.length && t[j + 1].world === a.world && t[j + 1].ts - t[j].ts < 5 * 60e3 && Math.hypot(t[j + 1].x - a.x, t[j + 1].z - a.z) <= 24) { j++; sx += t[j].x; sz += t[j].z; n++; }
+    if (t[j].ts - a.ts >= 3 * 60e3) { out.push({ world: a.world, x: sx / n, z: sz / n, start: a.ts, end: t[j].ts }); i = j + 1; }
+    else i++;
+  }
+  return out;
+}
+function drawPath(fit) {
+  pathLayer.clearLayers(); cursorMk = null;
+  if (!P.name || !P.trail.length) return;
+  const [t0, t1] = P.range, span = Math.max(1, t1 - t0);
+  const bounds = [];
+  for (const g of P.segs) {
+    if (g.world !== S.world) continue;
+    const ll = g.pts.map((p) => toLL(p.x, p.z));
+    bounds.push(...ll);
+    if (ll.length > 1) {
+      L.polyline(ll, { renderer: pathRenderer, color: "#3dff8c", weight: 8, opacity: 0.1, interactive: false }).addTo(pathLayer);
+      for (let i = 0; i < ll.length - 1; i += 40) {
+        const age = (g.pts[i].ts - t0) / span;
+        L.polyline(ll.slice(i, i + 41), { renderer: pathRenderer, color: "#3dff8c", weight: 2, opacity: 0.28 + 0.72 * age, interactive: false }).addTo(pathLayer);
+      }
+    } else {
+      L.circleMarker(ll[0], { renderer: pathRenderer, radius: 2, color: "#3dff8c", weight: 1, fillOpacity: 0.8, interactive: false }).addTo(pathLayer);
+    }
+  }
+  for (const s of P.stops) {
+    if (s.world !== S.world) continue;
+    L.circleMarker(toLL(s.x, s.z), {
+      radius: 4 + Math.min(12, Math.sqrt((s.end - s.start) / 60e3) * 1.6),
+      color: "#e8fff1", weight: 1, fillColor: "#3dff8c", fillOpacity: 0.3,
+    }).bindTooltip(`Stayed ${fmtDur(s.end - s.start)}<br>${fmtDate(s.start)}`).addTo(pathLayer);
+  }
+  if (P.cur.length) {
+    const a = P.cur[0], b = P.cur[P.cur.length - 1];
+    L.circleMarker(toLL(a.x, a.z), { radius: 6, color: "#e8fff1", weight: 2, fill: false }).bindTooltip(`Start · ${fmtDate(a.ts)}`).addTo(pathLayer);
+    L.circleMarker(toLL(b.x, b.z), { radius: 6, color: "#3dff8c", weight: 2, fillColor: "#3dff8c", fillOpacity: 1 }).bindTooltip(`Last point · ${fmtDate(b.ts)}`).addTo(pathLayer);
+    cursorMk = L.circleMarker(toLL(b.x, b.z), { radius: 9, color: "#e8fff1", weight: 2, fillColor: "#e8fff1", fillOpacity: 0.25, interactive: false }).addTo(pathLayer);
+  }
+  if (fit && bounds.length) map.flyToBounds(L.latLngBounds(bounds).pad(0.2), { duration: 0.8, maxZoom: 1 });
+}
+function fmtDist(b) { return b >= 1000 ? `${(b / 1000).toFixed(1)}k blocks` : `${Math.round(b)} blocks`; }
+const toLocalInput = (ts) => { const d = new Date(ts - new Date(ts).getTimezoneOffset() * 60e3); return d.toISOString().slice(0, 16); };
+function renderPath() {
+  const el = $("#pPath"); if (!el || !P.name) return;
+  const [f, t] = P.range || pathRange();
+  const presets = Object.keys(TRAIL_PRESETS).map((k) => `<button class="btn" data-preset="${k}" aria-pressed="${P.preset === k}">${k}</button>`).join("")
+    + `<button class="btn" data-preset="custom" aria-pressed="${P.preset === "custom"}">Custom</button>`;
+  let body;
+  if (P.loading) body = `<p class="meta">Tracing path…</p>`;
+  else if (!P.trail.length) body = `<p class="meta">No recorded movement in this window.</p>`;
+  else {
+    const worldsHtml = Object.entries(P.worlds).map(([w, n]) => `<button class="name-chip${w === S.world ? " cur" : ""}" data-world="${esc(w)}">${esc(worldName(w))} · ${n}</button>`).join("");
+    const cp = P.cur[P.idx];
+    body = `
+      <div class="stats">
+        <div><b>${fmtDist(P.dist)}</b><span>walked</span></div>
+        <div><b>${fmtDur(P.active)}</b><span>active</span></div>
+        <div><b>${P.stops.length}</b><span>stops</span></div>
+        <div><b>${P.total > P.trail.length ? P.trail.length + "/" + P.total : P.trail.length}</b><span>points</span></div>
+      </div>
+      <div class="names" style="margin-top:10px">${worldsHtml}</div>
+      ${P.cur.length > 1 ? `
+      <div class="scrub">
+        <button class="btn" data-act="play" aria-pressed="${!!P.playing}">${P.playing ? "Pause" : "Replay"}</button>
+        <input type="range" id="scrub" min="0" max="${P.cur.length - 1}" value="${P.idx}" aria-label="Scrub through the path">
+      </div>
+      <p class="meta mono" id="scrubLabel">${cp ? `${fmtDate(cp.ts)} · x ${Math.round(cp.x)} · z ${Math.round(cp.z)}` : ""}</p>` : `<p class="meta" style="margin-top:10px">Nothing in ${esc(worldName(S.world))} for this window.</p>`}
+      <div class="btns"><button class="btn" data-act="fit">Fit path</button></div>`;
+  }
+  const stops = P.stops.filter((s) => s.world === S.world).slice(-40).reverse();
+  el.innerHTML = `<div class="sec">
+      <h3>Path</h3>
+      <div class="seg">${presets}</div>
+      <form class="custom-range${P.preset === "custom" ? "" : " hidden"}" id="rangeForm">
+        <label>From <input class="field" type="datetime-local" id="rFrom" value="${toLocalInput(f)}"></label>
+        <label>To <input class="field" type="datetime-local" id="rTo" value="${toLocalInput(t)}"></label>
+        <button class="btn primary" type="submit">Trace</button>
+      </form>
+      <div style="margin-top:12px">${body}</div>
+    </div>
+    ${stops.length ? `<div class="sec" style="border-bottom:0"><h3>Where they stopped</h3></div>
+      ${stops.map((s) => `<button class="row" data-stop="${s.start}"><span class="sw stop"></span>
+        <span class="main"><b>${fmtDur(s.end - s.start)}</b> at x ${Math.round(s.x)}, z ${Math.round(s.z)}<small>${fmtDate(s.start)} → ${fmtTime(s.end)}</small></span><span></span></button>`).join("")}` : ""}`;
+}
+function onPathClick(e) {
+  const pr = e.target.closest("[data-preset]");
+  if (pr) {
+    P.preset = pr.dataset.preset;
+    if (P.preset === "custom") { const [f, t] = P.range || pathRange(); P.from = f; P.to = t; renderPath(); }
+    else loadPath(true);
+    return;
+  }
+  const w = e.target.closest("[data-world]");
+  if (w) { setWorld(w.dataset.world); P.cur = P.trail.filter((p) => p.world === S.world); P.idx = Math.max(0, P.cur.length - 1); drawPath(true); renderPath(); return; }
+  const st = e.target.closest("[data-stop]");
+  if (st) {
+    const s = P.stops.find((x) => String(x.start) === st.dataset.stop);
+    if (s) { flyTo(s.x, s.z, s.world); const i = P.cur.findIndex((p) => p.ts >= s.start); if (i >= 0) setScrub(i); }
+    return;
+  }
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (act === "fit") drawPath(true);
+  if (act === "play") P.playing ? stopPlay() : startPlay();
+}
+function onPathInput(e) { if (e.target.id === "scrub") { stopPlay(); setScrub(+e.target.value); } }
+document.addEventListener("submit", (e) => {
+  if (e.target.id !== "rangeForm") return;
+  e.preventDefault();
+  const f = new Date($("#rFrom").value).getTime(), t = new Date($("#rTo").value).getTime();
+  if (!Number.isFinite(f) || !Number.isFinite(t) || t <= f) return toast("Pick a start time before the end time.", "warn");
+  P.from = f; P.to = t; P.preset = "custom";
+  loadPath(true);
+});
+function setScrub(i) {
+  P.idx = Math.max(0, Math.min(P.cur.length - 1, i));
+  const p = P.cur[P.idx]; if (!p) return;
+  if (cursorMk) cursorMk.setLatLng(toLL(p.x, p.z));
+  const s = $("#scrub"); if (s && +s.value !== P.idx) s.value = P.idx;
+  const lb = $("#scrubLabel"); if (lb) lb.textContent = `${fmtDate(p.ts)} · x ${Math.round(p.x)} · z ${Math.round(p.z)}`;
+  if (P.playing && !map.getBounds().pad(-0.15).contains(toLL(p.x, p.z))) map.panTo(toLL(p.x, p.z), { animate: true, duration: 0.3 });
+}
+function startPlay() {
+  if (P.cur.length < 2) return;
+  if (P.idx >= P.cur.length - 1) setScrub(0);
+  const step = Math.max(1, Math.floor(P.cur.length / 500));
+  P.playing = setInterval(() => { if (P.idx >= P.cur.length - 1) return stopPlay(); setScrub(P.idx + step); }, 40);
+  const b = $("[data-act=play]"); if (b) { b.textContent = "Pause"; b.setAttribute("aria-pressed", "true"); }
+}
+function stopPlay() {
+  if (!P.playing) return;
+  clearInterval(P.playing); P.playing = null;
+  const b = $("[data-act=play]"); if (b) { b.textContent = "Replay"; b.setAttribute("aria-pressed", "false"); }
+}
+
+/* live updates for the selected player */
+let infoT = 0;
+function onLivePlayers() {
+  if (S.tab === "players" && !P.name) renderPlayerList();
+  if (!P.name) return;
+  const live = S.players.find((p) => p.name === P.name);
+  setHoloMotion(!!live);
+  if (live) {
+    if (P.preset !== "custom") {
+      const last = P.tail[P.tail.length - 1];
+      if (!last || last.world !== live.world || Math.hypot(last.x - live.x, last.z - live.z) >= 2) P.tail.push({ x: live.x, z: live.z, world: live.world, ts: Date.now() });
+      tailLayer.clearLayers();
+      const pts = P.tail.filter((p) => p.world === S.world).map((p) => toLL(p.x, p.z));
+      if (pts.length > 1) L.polyline(pts, { color: "#3dff8c", weight: 2.5, opacity: 1 }).addTo(tailLayer);
+    }
+    if (P.follow && live.world === S.world) map.panTo(toLL(live.x, live.z), { animate: true, duration: 0.5 });
+  }
+  const pl = $("#pLive");
+  if (pl && live) pl.textContent = `Online · ${worldName(live.world)} · x ${Math.round(live.x)} · z ${Math.round(live.z)}`;
+  if (Date.now() - infoT > 15000 && S.tab === "players") { infoT = Date.now(); renderInfo(); }
+}
+
+/* ═════════════ LIVE ═════════════ */
+function setStatus(st) {
+  if (!st) return;
+  $("#srcDot").className = "dot " + (st.ok ? "ok" : "bad");
+  $("#srcText").textContent = st.ok ? "live" : "source error";
+  $("#srcChip").title = st.ok ? `Last read ${fmtTime(st.lastOk)}` : st.error;
+}
+function updateCounts() {
+  $("#hOnline").textContent = S.players.length;
+  $("#nPlayers").textContent = S.players.length || "";
+  const on = S.watches.filter((w) => w.on).length;
+  $("#hWatch").textContent = on; $("#nWatch").textContent = on || "";
+}
+let areaRefresh = 0;
+function applyPlayers(players) {
+  S.players = players;
+  for (const p of players) ensureWorldOption(p.world);
+  checkWatches();
+  drawPlayers(); drawWatches(); updateCounts();
+  onLivePlayers();
+  if (S.tab === "area" && S.sel && !S.areaLoading && Date.now() - areaRefresh > 4000 && !$("#watchForm:not(.hidden)")) { areaRefresh = Date.now(); renderArea(); }
+  if (S.tab === "watch" && !document.activeElement?.closest("#pane-watch")) {
+    for (const row of document.querySelectorAll("[data-watch]")) {
+      const w = S.watches.find((x) => x.id === row.dataset.watch), n = (S.watchInside.get(w.id) || new Set()).size;
+      row.querySelector("small").textContent = `${worldName(w.world)} · ${w.on ? (n ? `${n} inside now` : "empty") : "paused"}`;
+    }
+  }
+}
+let wsDelay = 1000;
+function connectWS() {
+  const wsUrl = new URL(`${API || ""}/ws`, location.origin);
+  wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
+  if (S.token) wsUrl.searchParams.set("token", S.token);
+  const ws = new WebSocket(wsUrl);
+  ws.onopen = () => { wsDelay = 1000; };
+  ws.onmessage = (m) => {
+    let msg; try { msg = JSON.parse(m.data); } catch { return; }
+    if (msg.type === "snapshot" || msg.type === "tick") { setStatus(msg.status); applyPlayers(msg.players); }
+    else if (msg.type === "status") setStatus(msg.status);
+  };
+  ws.onclose = () => {
+    $("#srcDot").className = "dot bad"; $("#srcText").textContent = "reconnecting";
+    setTimeout(connectWS, wsDelay); wsDelay = Math.min(15000, wsDelay * 2);
+  };
+}
+
+function initApp() {
+  mountEye($("#miniEye"), false);
+  initMap();
+  $("#worldSel").addEventListener("change", (e) => setWorld(e.target.value, true));
+  $("#drawRect").addEventListener("click", () => (draw.mode === "rect" ? cancelDraw() : startDraw("rect")));
+  $("#drawPoly").addEventListener("click", () => (draw.mode === "poly" ? cancelDraw() : startDraw("poly")));
+  $("#colorBtn").addEventListener("click", (e) => { const on = $("#mapWrap").classList.toggle("true-color"); e.currentTarget.setAttribute("aria-pressed", String(on)); });
+  $("#soundBtn").setAttribute("aria-pressed", String(S.sound));
+  $("#soundBtn").addEventListener("click", (e) => { S.sound = !S.sound; store.set("eye_sound", S.sound); e.currentTarget.setAttribute("aria-pressed", String(S.sound)); });
+  $("#musicBtn").addEventListener("click", () => (musicOn ? stopMusic() : playMusic()));
+  buildPlayersPane();
+  syncMusic(); updateCounts(); renderArea();
+  connectWS();
+}
+boot();
+</script>
+</body>
+</html>

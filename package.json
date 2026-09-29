@@ -6,6 +6,9 @@
     "build": "node -e \"console.log('No build step required for PVC Finder')\"",
     "dev": "node scripts/local-dev-server.js",
     "start": "node scripts/local-dev-server.js",
+    "grveye:install": "npm ci --prefix grv-eye",
+    "grveye:dev": "npm run demo --prefix grv-eye",
+    "grveye:start": "npm start --prefix grv-eye",
     "textures:generate": "node scripts/generate-item-textures.mjs"
   }
 }

@@ -1,0 +1,20 @@
+{
+  "name": "grv-eye",
+  "version": "1.0.0",
+  "description": "Area history and live watch for Minecraft web maps (BlueMap, squaremap, dynmap)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "demo": "SOURCE_TYPE=demo node server.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}

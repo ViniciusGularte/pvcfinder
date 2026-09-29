@@ -1,0 +1,18 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": true,
+  "rewrites": [
+    {
+      "source": "/grveye",
+      "destination": "/grv-eye/public/index.html"
+    },
+    {
+      "source": "/grveye/",
+      "destination": "/grv-eye/public/index.html"
+    },
+    {
+      "source": "/grveye/:path*",
+      "destination": "/grv-eye/public/:path*"
+    }
+  ]
+}
