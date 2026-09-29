@@ -375,6 +375,7 @@ const S = {
   unread: 0,
 };
 const RANGES = { "1h": 3600e3, "6h": 6 * 3600e3, "24h": 86400e3, "7d": 7 * 86400e3, "30d": 30 * 86400e3, "All": null };
+const RANGE_LABELS = { "1h": "Last hour", "6h": "Last 6 hours", "24h": "Last day", "7d": "Last 7 days", "30d": "Last 30 days", "All": "All time" };
 
 /* ═════════════ THE EYE ═════════════ */
 let eyeSeq = 0;
@@ -872,7 +873,8 @@ function drawWatches() {
     const poly = L.polygon(w.points.map(([x, z]) => toLL(x, z)), {
       color: w.on ? (n ? "#ff2e4d" : "#ffb627") : "#5f9c78", weight: 1.5, fillOpacity: w.on && n ? 0.16 : 0.05, dashArray: w.on ? null : "4 4",
     });
-    poly.bindTooltip(`${esc(w.name)}${n ? ` (${n})` : ""}`, { permanent: true, direction: "center", className: "zlabel" });
+    poly.bindTooltip(`${esc(w.name)}${n ? ` (${n})` : ""} · click for history`, { permanent: true, direction: "center", className: "zlabel" });
+    poly.on("click", (e) => { L.DomEvent.stop(e.originalEvent); openWatchHistory(w); });
     poly.addTo(watchLayer);
   }
 }
@@ -1019,7 +1021,7 @@ function renderArea() {
   el.innerHTML = `<div class="sec">
       <h2>Selected area</h2>
       <p class="meta">${esc(worldName(S.sel.world))} · x ${b.minX} to ${b.maxX} · z ${b.minZ} to ${b.maxZ} · ${b.maxX - b.minX}×${b.maxZ - b.minZ} blocks</p>
-      <div class="seg" role="group" aria-label="Time range">${Object.keys(RANGES).map((k) => `<button class="btn" data-range="${k}" aria-pressed="${S.range === k}">${k === "All" ? "All time" : "Last " + k}</button>`).join("")}</div>
+      <div class="seg" role="group" aria-label="Time range">${Object.keys(RANGES).map((k) => `<button class="btn" data-range="${k}" aria-pressed="${S.range === k}">${RANGE_LABELS[k]}</button>`).join("")}</div>
       <div class="btns">
         <button class="btn amber" data-act="watch">Watch this area</button>
         <button class="btn" data-act="zoom">Zoom to area</button>
@@ -1098,7 +1100,7 @@ function renderWatch() {
   const el = $("#pane-watch");
   el.innerHTML = `<div class="sec">
       <div class="notice ${cls}">${msg}${canAsk ? ` <button class="btn primary" data-act="notify" style="margin-left:6px">Enable desktop alerts</button>` : ""}</div>
-      <p class="meta" style="margin-top:10px">Watches are saved in this browser and only run while this tab is open.</p>
+      <p class="meta" style="margin-top:10px">Watches are saved in this browser and only run while this tab is open. Click an area to open its recorded history.</p>
       <div class="btns"><button class="btn" data-act="follow" aria-pressed="${S.follow}">Fly to alerts</button></div>
     </div>
     ${S.watches.length ? S.watches.map((w) => {
@@ -1119,6 +1121,17 @@ function feedRow(f, fresh) {
     <span class="main"><b>${esc(f.player)}</b> ${f.type === "in" ? "entered" : "left"} <b>${esc(f.watch)}</b><small>x ${Math.round(f.x)} · z ${Math.round(f.z)}</small></span>
     <span class="t">${fmtTime(f.ts)}</span></button>`;
 }
+function openWatchHistory(w) {
+  if (!w) return;
+  S.sel = { world: w.world, points: w.points.map((p) => [...p]) };
+  S.area = null; S.openRow = null;
+  trailLayer.clearLayers();
+  if (w.world !== S.world) setWorld(w.world);
+  drawSelection();
+  map.flyToBounds(L.latLngBounds(w.points.map(([x, z]) => toLL(x, z))).pad(0.3), { duration: 0.7 });
+  setTab("area");
+  searchArea();
+}
 $("#pane-watch").addEventListener("click", (e) => {
   const t = e.target;
   if (t.closest("[data-act=notify]")) { askNotify(); return; }
@@ -1136,8 +1149,7 @@ $("#pane-watch").addEventListener("click", (e) => {
   const row = t.closest("[data-watch]");
   if (row) {
     const w = S.watches.find((x) => x.id === row.dataset.watch);
-    if (w.world !== S.world) setWorld(w.world);
-    map.flyToBounds(L.latLngBounds(w.points.map(([x, z]) => toLL(x, z))).pad(0.3), { duration: 0.7 });
+    openWatchHistory(w);
   }
 });
 function syncTitle() { document.title = (S.unread ? `(${S.unread}) ` : "") + (S.cfg?.appName || "GRV EYE"); }
