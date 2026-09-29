@@ -116,6 +116,8 @@ header.top{display:flex;align-items:center;gap:14px;padding:6px 14px;border-bott
 .btn.primary:hover{background:var(--phos);color:#000}
 .btn.amber{border-color:var(--amber);color:var(--amber)}
 .btn.amber:hover{background:var(--amber);color:#000}
+.btn.danger{border-color:var(--alarm);color:var(--alarm)}
+.btn.danger:hover{background:var(--alarm);color:#000}
 .btn:disabled{opacity:.4;cursor:default}
 
 main.body{display:grid;grid-template-columns:1fr var(--side);min-height:0}
@@ -999,6 +1001,7 @@ function renderArea() {
     return;
   }
   const b = pointsBBox(S.sel.points);
+  const savedWatch = S.sel.watchId ? S.watches.find((w) => w.id === S.sel.watchId) : null;
   const now = insideNow(S.sel.points, S.sel.world);
   let body;
   if (S.areaLoading && !S.area) body = `<div class="empty">Searching history…</div>`;
@@ -1020,11 +1023,11 @@ function renderArea() {
   } else body = "";
 
   el.innerHTML = `<div class="sec">
-      <h2>Selected area</h2>
+      <h2>${savedWatch ? esc(savedWatch.name) : "Selected area"}</h2>
       <p class="meta">${esc(worldName(S.sel.world))} · x ${b.minX} to ${b.maxX} · z ${b.minZ} to ${b.maxZ} · ${b.maxX - b.minX}×${b.maxZ - b.minZ} blocks</p>
       <div class="seg" role="group" aria-label="Time range">${Object.keys(RANGES).map((k) => `<button class="btn" data-range="${k}" aria-pressed="${S.range === k}">${RANGE_LABELS[k]}</button>`).join("")}</div>
       <div class="btns">
-        <button class="btn amber" data-act="watch">Watch this area</button>
+        ${savedWatch ? `<button class="btn danger" data-act="delete-watch">Delete saved area</button>` : `<button class="btn amber" data-act="watch">Watch this area</button>`}
         <button class="btn" data-act="zoom">Zoom to area</button>
         <button class="btn" data-act="clear">Clear</button>
       </div>
@@ -1051,6 +1054,12 @@ $("#pane-area").addEventListener("click", (e) => {
   if (act === "clear") { S.sel = null; S.area = null; S.openRow = null; drawSelection(); trailLayer.clearLayers(); renderArea(); }
   if (act === "zoom") map.flyToBounds(L.latLngBounds(S.sel.points.map(([x, z]) => toLL(x, z))).pad(0.3), { duration: 0.7 });
   if (act === "watch") { $("#watchForm").classList.remove("hidden"); $("#watchName").focus(); }
+  if (act === "delete-watch") {
+    const w = S.watches.find((x) => x.id === S.sel?.watchId);
+    if (w && confirm(`Delete saved area "${w.name}"?\n\nThis removes the area and its alerts from this browser. Recorded player history will not be deleted.`)) {
+      removeWatch(w); toast(`Deleted saved area <b>${esc(w.name)}</b>.`); setTab("watch");
+    }
+  }
 });
 $("#pane-area").addEventListener("submit", (e) => {
   if (e.target.id !== "watchForm") return;
@@ -1075,6 +1084,13 @@ async function showAreaTrail(name) {
 
 /* ═════════════ WATCH ═════════════ */
 function saveWatches() { store.set("eye_watches", S.watches); }
+function removeWatch(w) {
+  if (!w) return;
+  S.watches = S.watches.filter((x) => x.id !== w.id);
+  S.watchInside.delete(w.id);
+  if (S.sel?.watchId === w.id) { S.sel = null; S.area = null; S.openRow = null; trailLayer.clearLayers(); }
+  saveWatches(); drawWatches(); drawSelection(); drawPlayers(); updateCounts();
+}
 function addWatch(name, sel) {
   const w = { id: Date.now().toString(36), name, world: sel.world, points: sel.points, on: true, created: Date.now() };
   S.watches.push(w);
@@ -1124,7 +1140,7 @@ function feedRow(f, fresh) {
 }
 function openWatchHistory(w) {
   if (!w) return;
-  S.sel = { world: w.world, points: w.points.map((p) => [...p]) };
+  S.sel = { world: w.world, points: w.points.map((p) => [...p]), watchId: w.id };
   S.area = null; S.openRow = null;
   trailLayer.clearLayers();
   if (w.world !== S.world) setWorld(w.world);
@@ -1142,7 +1158,7 @@ $("#pane-watch").addEventListener("click", (e) => {
   const del = t.closest("[data-del]");
   if (del) {
     const w = S.watches.find((x) => x.id === del.dataset.del);
-    if (w && confirm(`Stop watching "${w.name}"?`)) { S.watches = S.watches.filter((x) => x !== w); S.watchInside.delete(w.id); saveWatches(); drawWatches(); drawPlayers(); renderWatch(); updateCounts(); }
+    if (w && confirm(`Delete saved area "${w.name}"?\n\nThis removes the area and its alerts from this browser. Recorded player history will not be deleted.`)) { removeWatch(w); renderWatch(); }
     return;
   }
   const f = t.closest("[data-fx]");
