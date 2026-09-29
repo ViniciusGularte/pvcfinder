@@ -1805,6 +1805,16 @@
         color: var(--text-muted);
       }
 
+      .shop-location-badge {
+        padding: 2px 5px;
+        border: 1px solid rgba(245, 158, 11, 0.42);
+        color: #f6ad55;
+        font-size: 8px;
+        line-height: 1.2;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
       .shop-line-sep {
         color: var(--border);
       }
@@ -6861,6 +6871,13 @@
           '          <span class="shop-line-name">' +
             highlightText(listing.shopName, terms) +
             "</span>",
+          listing.offerLocationCount > 1
+            ? '          <span class="shop-location-badge">location ' +
+              escapeHtml(String(listing.offerLocationIndex)) +
+              " of " +
+              escapeHtml(String(listing.offerLocationCount)) +
+              "</span>"
+            : "",
           "        </div>",
           "      </div>",
           "    </div>",
@@ -6938,8 +6955,8 @@
             : "";
 
         return [
-          '<div class="stock-summary" title="Trade units remaining for this seller. Raw item totals are still used behind the scenes for per-item calculations.">',
-          '  <span class="stock-summary-piece">stock left</span>',
+          '<div class="stock-summary" title="Trade units remaining at this shop location.">',
+          '  <span class="stock-summary-piece">stock at this location</span>',
           '  <div class="stock-summary-main">' +
             '<span class="stock-summary-strong">' +
             escapeHtml(formatNumber(listing.sellerDisplayStock)) +
@@ -7477,7 +7494,7 @@
       }
 
       function flattenListings(shops) {
-        const listings = [];
+        let listings = [];
 
         shops.forEach((shop, shopIndex) => {
           const recipes = Array.isArray(shop.recipes) ? shop.recipes : [];
@@ -7609,7 +7626,29 @@
             });
             const avatarName = getSellerLookupUsername(shopOwner);
             const sellerLookupKey = getSellerLookupKey(shopOwner);
-            const stockGroupKey = [shopOwner, marketKey].join("::");
+            const locationKey = [
+              shopOwner,
+              shop.world || "World",
+              coords.x,
+              coords.y,
+              coords.z,
+            ].join("::");
+            const paymentSignature = payments
+              .map((part) => [part.marketKey, part.itemAmount].join("@"))
+              .join("+");
+            const stockGroupKey = [
+              locationKey,
+              marketKey,
+              outputUnits,
+              paymentSignature,
+            ].join("::");
+            const offerGroupKey = [
+              shopOwner,
+              normalizeForSearch(shopName),
+              marketKey,
+              outputUnits,
+              paymentSignature,
+            ].join("::");
 
             listings.push({
               id: "card-" + shopIndex + "-" + recipeIndex,
@@ -7632,6 +7671,10 @@
               stock: grossStockUnits,
               displayStock: displayStockUnits,
               stockGroupKey,
+              offerGroupKey,
+              locationKey,
+              offerLocationCount: 1,
+              offerLocationIndex: 1,
               sellerItemTotalStock: 0,
               sellerDisplayStock: 0,
               enchants,
@@ -7723,6 +7766,35 @@
               },
             });
           });
+        });
+
+        // Multiple identical recipe rows can represent the same physical offer.
+        // Merge only when seller, coordinates, product and price all match.
+        const uniqueOffers = new Map();
+        listings.forEach((listing) => {
+          const existing = uniqueOffers.get(listing.stockGroupKey);
+          if (!existing) {
+            uniqueOffers.set(listing.stockGroupKey, listing);
+            return;
+          }
+          existing.offerStock += listing.offerStock;
+          existing.stock += listing.stock;
+          existing.displayStock += listing.displayStock;
+        });
+        listings = [...uniqueOffers.values()];
+
+        // The same seller may run the same offer at several real coordinates.
+        // Keep every location, but label the cards so they are not mistaken for duplicates.
+        const offerLocations = new Map();
+        listings.forEach((listing) => {
+          if (!offerLocations.has(listing.offerGroupKey)) offerLocations.set(listing.offerGroupKey, []);
+          const locations = offerLocations.get(listing.offerGroupKey);
+          if (!locations.includes(listing.locationKey)) locations.push(listing.locationKey);
+        });
+        listings.forEach((listing) => {
+          const locations = offerLocations.get(listing.offerGroupKey) || [listing.locationKey];
+          listing.offerLocationCount = locations.length;
+          listing.offerLocationIndex = Math.max(1, locations.indexOf(listing.locationKey) + 1);
         });
 
         const sellerItemStockTotals = {};
