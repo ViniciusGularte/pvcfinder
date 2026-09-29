@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#090705" />
+    <title>PVC Lobby</title>
+    <meta
+      name="description"
+      content="A shared 3D lounge for the Peaceful Vanilla Club community."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="scene"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <section class="join-screen" id="joinScreen">
+      <div class="join-mark">PVC // SOCIAL NODE</div>
+      <div class="join-panel">
+        <div class="join-kicker">MULTIPLAYER LOUNGE</div>
+        <h1>ENTER THE<br /><span>COMMON ROOM</span></h1>
+        <p>
+          Use your Minecraft name to load your skin. Meet, talk, sit down and
+          explore the live PVC systems together.
+        </p>
+        <form id="joinForm">
+          <label for="playerName">DISPLAY NAME</label>
+          <input
+            id="playerName"
+            maxlength="24"
+            autocomplete="nickname"
+            placeholder="Your name"
+            required
+          />
+          <label for="skinName">MINECRAFT SKIN</label>
+          <input
+            id="skinName"
+            maxlength="32"
+            autocomplete="off"
+            placeholder="Java or Bedrock username"
+            required
+          />
+          <button type="submit">CONNECT TO LOUNGE <span>→</span></button>
+        </form>
+        <div class="join-status">
+          <i></i><span id="joinStatus">CONTACTING LOUNGE SERVER</span>
+        </div>
+      </div>
+    </section>
+
+    <header class="topbar hidden" id="topbar">
+      <a class="brand" href="https://pvcstorefinder.vercel.app/"
+        >PVC <span>// LOBBY</span></a
+      >
+      <div class="room-status">
+        <i></i><strong id="onlineCount">1</strong> ONLINE
+      </div>
+      <button id="helpButton" type="button">CONTROLS</button>
+    </header>
+
+    <aside class="players-panel hidden" id="playersPanel">
+      <div class="panel-label">IN THE ROOM</div>
+      <div id="playersList"></div>
+    </aside>
+
+    <section class="chat hidden" id="chatPanel">
+      <div class="chat-log" id="chatLog" aria-live="polite"></div>
+      <form id="chatForm">
+        <span>&gt;</span
+        ><input
+          id="chatInput"
+          maxlength="220"
+          autocomplete="off"
+          placeholder="Press Enter to talk"
+        />
+      </form>
+    </section>
+
+    <div class="crosshair hidden" id="crosshair"><i></i></div>
+    <div class="interaction hidden" id="interaction">
+      <kbd>E</kbd><span id="interactionText">INTERACT</span>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <section class="map-overlay" id="mapOverlay" aria-hidden="true">
+      <header>
+        <div>
+          <small>SHARED OBSERVATION SCREEN</small
+          ><strong id="mapTitle">OVERWORLD // LIVE MAP</strong>
+        </div>
+        <div class="map-actions">
+          <button type="button" data-world="overworld">OVERWORLD</button>
+          <button type="button" data-world="nether">NETHER</button>
+          <button type="button" id="closeMap">CLOSE ×</button>
+        </div>
+      </header>
+      <iframe
+        id="mapFrame"
+        title="PVC live server map"
+        src="about:blank"
+        allowfullscreen
+      ></iframe>
+    </section>
+
+    <section class="help-overlay" id="helpOverlay" aria-hidden="true">
+      <div class="help-card">
+        <button id="closeHelp" type="button">×</button>
+        <small>LOUNGE PROTOCOL</small>
+        <h2>CONTROLS</h2>
+        <dl>
+          <dt>W A S D</dt>
+          <dd>Move</dd>
+          <dt>MOUSE</dt>
+          <dd>Look around</dd>
+          <dt>E</dt>
+          <dd>Interact / stand</dd>
+          <dt>ENTER</dt>
+          <dd>Open chat</dd>
+          <dt>ESC</dt>
+          <dd>Release mouse</dd>
+        </dl>
+      </div>
+    </section>
+
+    <audio
+      id="jukeboxAudio"
+      preload="none"
+      loop
+      src="media/jukebox.mp3"
+    ></audio>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+[Unit]
+Description=PVC Multiplayer Lobby
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=theyasked
+Group=theyasked
+WorkingDirectory=/opt/pvcfinder/lobby
+EnvironmentFile=-/opt/pvcfinder/lobby/.env
+ExecStart=/usr/bin/node /opt/pvcfinder/lobby/server.js
+Restart=always
+RestartSec=5
+Nice=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
