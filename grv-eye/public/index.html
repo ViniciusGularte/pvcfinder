@@ -206,6 +206,7 @@ button.row:hover{background:rgba(61,255,140,.05)}
 .inline-form{display:flex;gap:6px;margin-top:10px}
 .inline-form .field{padding:6px 9px;font-size:14px}
 .search{margin:12px 14px;width:calc(100% - 28px)}
+.search-meta{margin:-5px 14px 10px;color:var(--muted);font-family:var(--mono);font-size:12px}
 
 /* ─────────── HOLOGRAM ─────────── */
 .holo{position:relative;height:340px;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line);
@@ -1196,12 +1197,13 @@ function watchEvent(type, w, p) {
 const P = { name: null, info: null, trail: [], segs: [], stops: [], cur: [], preset: "6h", from: null, to: null, range: null,
   idx: 0, playing: null, follow: false, tail: [], loading: false, total: 0 };
 const TRAIL_PRESETS = { "1h": 3600e3, "6h": 6 * 3600e3, "24h": 86400e3, "3d": 3 * 86400e3, "7d": 7 * 86400e3 };
-let known = [], searchT, holo = null, skinUrl = null, pathLayer, tailLayer, cursorMk = null, pathRenderer;
+let known = [], knownReq = 0, searchT, holo = null, skinUrl = null, pathLayer, tailLayer, cursorMk = null, pathRenderer;
 
 function buildPlayersPane() {
   $("#pane-players").innerHTML = `
     <div id="pListView">
-      <input class="field search" id="pSearch" type="search" placeholder="Search players (Java or Bedrock)" aria-label="Search players">
+      <input class="field search" id="pSearch" type="search" placeholder="Search all recorded players" aria-label="Search online and historical players">
+      <p class="search-meta" id="pSummary">Loading recorded players…</p>
       <div id="pList"></div>
     </div>
     <div id="pDetailView" class="hidden">
@@ -1228,7 +1230,12 @@ function buildPlayersPane() {
   window.addEventListener("resize", sizeHolo);
 }
 async function loadKnown(q = "") {
-  try { known = (await api(`/api/players?limit=300${q ? "&q=" + encodeURIComponent(q) : ""}`)).players; } catch {}
+  const id = ++knownReq;
+  try {
+    const players = (await api(`/api/players?limit=500${q ? "&q=" + encodeURIComponent(q) : ""}`)).players;
+    if (id !== knownReq) return;
+    known = players;
+  } catch {}
   if (S.tab === "players" && !P.name) renderPlayerList();
 }
 function renderPlayers() {
@@ -1247,12 +1254,17 @@ function renderPlayerList() {
   for (const p of S.players) if (!byName.has(p.name) && (!q || p.name.toLowerCase().includes(q))) byName.set(p.name, { name: p.name, last_seen: Date.now() });
   const live = new Map(S.players.map((p) => [p.name, p]));
   const list = [...byName.values()].sort((a, b) => (live.has(b.name) - live.has(a.name)) || b.last_seen - a.last_seen);
+  const liveMatches = list.filter((p) => live.has(p.name)).length;
+  $("#pSummary").textContent = q
+    ? `${list.length} recorded match${list.length === 1 ? "" : "es"} · ${liveMatches} online now`
+    : `${list.length} recorded players · ${liveMatches} online now`;
   box.innerHTML = list.length ? list.map((p) => {
     const l = live.get(p.name);
+    const bedrock = isBedrockName(p.name) || /^00000000-0000-0000-/.test(p.uuid || "");
     return `<button class="row" data-player="${esc(p.name)}"><span class="on${l ? " yes" : ""}"></span>
-      <span class="main"><b>${esc(p.name)}</b><small>${l ? `${esc(worldName(l.world))} · x ${Math.round(l.x)} · z ${Math.round(l.z)}` : `seen ${fmtAgo(p.last_seen)}`}</small></span>
-      <span class="count">${isBedrockName(p.name) || /^00000000-0000-0000-/.test(p.uuid || "") ? "BEDROCK" : ""}</span></button>`;
-  }).join("") : `<div class="empty"><b>No players found.</b>${q ? "Try another name." : "Players show up here as soon as they appear on the map."}</div>`;
+      <span class="main"><b>${esc(p.name)}${bedrock ? ' <span class="tag">BEDROCK</span>' : ""}</b><small>${l ? `${esc(worldName(l.world))} · x ${Math.round(l.x)} · z ${Math.round(l.z)}` : `offline · last seen ${fmtAgo(p.last_seen)}`}</small></span>
+      <span class="count">${l ? "ONLINE" : "HISTORY"}</span></button>`;
+  }).join("") : `<div class="empty"><b>No recorded players found.</b>${q ? "Try another name." : "Players appear here after their first recorded map position."}</div>`;
 }
 
 /* hologram */
