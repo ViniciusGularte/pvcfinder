@@ -10,6 +10,7 @@
     />
     <link rel="icon" type="image/png" href="assets/pvc-logo.png" />
     <link rel="apple-touch-icon" href="assets/pvc-logo.png" />
+    <link rel="preload" as="image" href="assets/pvc-logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -625,151 +626,131 @@
         justify-content: center;
         padding: 24px;
         background:
-          radial-gradient(circle at 50% 36%, rgba(240, 161, 74, 0.14), transparent 28%),
-          linear-gradient(180deg, #030302 0%, #0b0805 58%, #050403 100%);
+          radial-gradient(
+            circle at 50% 46%,
+            rgba(232, 118, 10, 0.18),
+            transparent 21%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            #171007 0%,
+            #080604 38%,
+            #020202 76%
+          );
         overflow: hidden;
-        transition: opacity 480ms ease;
+        transition:
+          opacity 320ms ease,
+          visibility 320ms ease;
       }
 
       .loading-panel {
-        width: 100%;
-        max-width: 620px;
-        padding: clamp(22px, 5vw, 38px);
-        border: 1px solid rgba(246, 211, 138, 0.34);
-        border-radius: 8px;
-        background:
-          linear-gradient(180deg, rgba(34, 23, 14, 0.92), rgba(11, 8, 5, 0.96)),
-          repeating-linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.035) 0 8px,
-            transparent 8px 16px
-          );
-        box-shadow:
-          0 28px 80px rgba(0, 0, 0, 0.6),
-          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        width: min(82vw, 300px);
+        text-align: center;
       }
 
       .loading-title {
-        margin-bottom: 20px;
+        margin-top: 24px;
         color: #f6d38a;
-        font-size: clamp(11px, 2vw, 15px);
-        text-align: center;
-        text-shadow: 0 0 18px rgba(232, 118, 10, 0.45);
+        font-size: clamp(10px, 2.4vw, 13px);
+        line-height: 1.7;
+        text-shadow: 0 0 22px rgba(232, 118, 10, 0.65);
       }
 
-      .loading-rail {
-        --loader-size: clamp(58px, 11vw, 90px);
+      .loading-subtitle {
+        margin-top: 8px;
+        color: var(--text-ghost);
+        font-size: 9px;
+        letter-spacing: 0.2em;
+      }
+
+      .loading-sigil {
         position: relative;
-        height: calc(var(--loader-size) + 30px);
-        border: 1px solid rgba(240, 161, 74, 0.28);
-        border-radius: 8px;
-        overflow: hidden;
-        background:
-          linear-gradient(90deg, rgba(232, 118, 10, 0.16), transparent 18%, transparent 82%, rgba(232, 118, 10, 0.16)),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.01)),
-          rgba(5, 4, 3, 0.72);
-        box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.52);
+        width: 126px;
+        height: 126px;
+        margin: 0 auto;
+        display: grid;
+        place-items: center;
       }
 
-      .loading-rail::before,
-      .loading-rail::after {
+      .loading-sigil::before,
+      .loading-sigil::after {
         content: "";
         position: absolute;
-        top: 14px;
-        bottom: 14px;
-        width: 2px;
-        background: rgba(246, 211, 138, 0.54);
-        box-shadow: 0 0 18px rgba(240, 161, 74, 0.48);
+        inset: 0;
+        border: 1px solid rgba(232, 118, 10, 0.72);
+        transform: rotate(45deg);
+        box-shadow: 0 0 28px rgba(232, 118, 10, 0.16);
+        animation: loaderOrbit 1.8s linear infinite;
       }
 
-      .loading-rail::before {
-        left: 14px;
-      }
-
-      .loading-rail::after {
-        right: 14px;
+      .loading-sigil::after {
+        inset: 13px;
+        border-color: rgba(246, 211, 138, 0.36);
+        animation-direction: reverse;
+        animation-duration: 2.6s;
       }
 
       body.app-ready .loading-screen {
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
       }
 
-      .loading-bouncer-track {
-        position: absolute;
-        left: 18px;
-        top: 14px;
-        width: var(--loader-size);
-        height: var(--loader-size);
-        animation: pvcBounceX 2.8s cubic-bezier(0.43, 0, 0.57, 1) infinite alternate;
-        will-change: left;
-      }
-
-      .loading-bouncer {
-        width: 100%;
-        height: 100%;
+      .loading-mark {
+        width: 74px;
+        height: 74px;
         object-fit: contain;
         image-rendering: pixelated;
-        filter: drop-shadow(0 0 16px rgba(240, 161, 74, 0.46));
-        -webkit-box-reflect: below -14px linear-gradient(transparent 58%, rgba(255, 255, 255, 0.16));
-        animation:
-          pvcBob 700ms ease-in-out infinite alternate,
-          pvcFaceDirection 5.6s steps(1, end) infinite;
-        will-change: transform;
+        filter: drop-shadow(0 0 20px rgba(240, 161, 74, 0.7));
+        animation: loaderPulse 900ms ease-in-out infinite alternate;
       }
 
-      .loading-bouncer-shadow {
-        position: absolute;
-        left: 8px;
-        right: 8px;
-        bottom: -8px;
-        height: 16px;
-        border-radius: 999px;
-        background: radial-gradient(ellipse at center, rgba(240, 161, 74, 0.32), transparent 68%);
-        filter: blur(4px);
-        animation: pvcShadow 700ms ease-in-out infinite alternate;
+      .loading-progress {
+        height: 2px;
+        margin-top: 20px;
+        overflow: hidden;
+        background: rgba(232, 118, 10, 0.13);
       }
 
-      @keyframes pvcBounceX {
+      .loading-progress::after {
+        content: "";
+        display: block;
+        width: 45%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          #f6d38a,
+          var(--accent),
+          transparent
+        );
+        filter: drop-shadow(0 0 5px var(--accent));
+        animation: loaderScan 900ms ease-in-out infinite;
+      }
+
+      @keyframes loaderOrbit {
+        to {
+          transform: rotate(405deg);
+        }
+      }
+
+      @keyframes loaderPulse {
         from {
-          left: 18px;
+          transform: scale(0.92);
+          opacity: 0.72;
         }
         to {
-          left: calc(100% - 18px - var(--loader-size));
+          transform: scale(1.04);
+          opacity: 1;
         }
       }
 
-      @keyframes pvcBob {
+      @keyframes loaderScan {
         from {
-          transform: translateY(0) scaleX(var(--loader-face, 1));
+          transform: translateX(-110%);
         }
         to {
-          transform: translateY(8px) scaleX(var(--loader-face, 1));
-        }
-      }
-
-      @keyframes pvcFaceDirection {
-        0%,
-        49.99% {
-          --loader-face: 1;
-        }
-        50%,
-        99.99% {
-          --loader-face: -1;
-        }
-        100% {
-          --loader-face: 1;
-        }
-      }
-
-      @keyframes pvcShadow {
-        from {
-          opacity: 0.52;
-          transform: scaleX(0.78);
-        }
-        to {
-          opacity: 0.26;
-          transform: scaleX(1.05);
+          transform: translateX(225%);
         }
       }
 
@@ -993,10 +974,6 @@
         justify-content: center;
         gap: 10px;
         flex-wrap: wrap;
-      }
-
-      .hero-action-button {
-        min-height: 32px;
       }
 
       .search-wrap {
@@ -2245,27 +2222,6 @@
         gap: 12px;
       }
 
-      .card-action-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .card-tool-button {
-        border-color: rgba(232, 118, 10, 0.34);
-        background: linear-gradient(
-          180deg,
-          rgba(34, 24, 16, 0.98),
-          rgba(15, 11, 8, 0.98)
-        );
-        color: var(--text-bright);
-      }
-
-      .card-tool-button:hover {
-        border-color: var(--accent);
-        color: #fff4da;
-      }
-
       .footer-coords {
         width: 100%;
         border: 1px solid rgba(94, 112, 151, 0.28);
@@ -3236,6 +3192,10 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
+        .loading-sigil::before,
+        .loading-sigil::after,
+        .loading-mark,
+        .loading-progress::after,
         .seller-pose,
         .seller-showcase.loading::after {
           animation: none !important;
@@ -3429,18 +3389,17 @@
 
     <div class="loading-screen" id="loadingScreen">
       <div class="loading-panel" role="status" aria-live="polite">
-        <div class="loading-title pixel-font">LOADING PVC FINDER</div>
-        <div class="loading-rail" aria-hidden="true">
-          <div class="loading-bouncer-track">
-            <img
-              class="loading-bouncer"
-              src="assets/pvc-logo.png"
-              alt=""
-              fetchpriority="high"
-            />
-            <div class="loading-bouncer-shadow"></div>
-          </div>
+        <div class="loading-sigil" aria-hidden="true">
+          <img
+            class="loading-mark"
+            src="assets/pvc-logo.png"
+            alt=""
+            fetchpriority="high"
+          />
         </div>
+        <div class="loading-title pixel-font">OPENING THE MARKET</div>
+        <div class="loading-subtitle pixel-font">SYNCING LIVE SHOPS</div>
+        <div class="loading-progress" aria-hidden="true"></div>
       </div>
     </div>
 
@@ -3492,13 +3451,6 @@
               >INSTALL MODS</a
             >
             <a class="mini-action pixel-font" href="/grveye/">GRV EYE</a>
-            <button
-              class="mini-action hero-action-button pixel-font"
-              id="heroAnalyticsButton"
-              type="button"
-            >
-              MARKET HISTORY
-            </button>
           </div>
 
           <div class="search-wrap" id="searchWrap">
@@ -3779,18 +3731,18 @@
     <script>
       const CONFIG = {
         dataUrls: [
-          "/api/pvc/shops",
           "/api/shops",
+          "/api/pvc/shops",
           "data/shops-snapshot.json",
           "/pvc/data/shops-snapshot.json",
         ],
         historyUrls: ["/api/pvc/history", "/api/history"],
-        loadingDuration: 8500,
-        loadingPause: 300,
+        loadingDuration: 420,
+        loadingPause: 60,
         searchDebounce: 150,
         fetchTimeout: 15000,
-        pageSize: 100,
-        mobilePageSize: 36,
+        pageSize: 48,
+        mobilePageSize: 24,
       };
       const MARKET_HISTORY_STORAGE_KEY = "pvc-market-history-v1";
       const MARKET_HISTORY_MAX_DAYS = 30;
@@ -3901,7 +3853,6 @@
         updatedText: document.getElementById("updatedText"),
         refreshButton: document.getElementById("refreshButton"),
         refreshLabel: document.getElementById("refreshLabel"),
-        heroAnalyticsButton: document.getElementById("heroAnalyticsButton"),
         filterBar: document.querySelector(".filter-bar"),
         sortChips: document.getElementById("sortChips"),
         searchScopeChips: document.getElementById("searchScopeChips"),
@@ -4003,18 +3954,19 @@
         document.body.classList.toggle("loading-locked", visible);
 
         if (refs.loadingScreen) {
-          refs.loadingScreen.style.display = visible ? "flex" : "none";
+          if (visible) {
+            refs.loadingScreen.style.display = "flex";
+          } else {
+            window.setTimeout(() => {
+              if (document.body.classList.contains("app-ready")) {
+                refs.loadingScreen.style.display = "none";
+              }
+            }, 340);
+          }
           refs.loadingScreen.setAttribute(
             "aria-hidden",
             visible ? "false" : "true",
           );
-        }
-
-        if (refs.appShell) {
-          refs.appShell.style.opacity = visible ? "0" : "1";
-          refs.appShell.style.transform = visible
-            ? "translateY(10px)"
-            : "translateY(0)";
         }
       }
 
@@ -4088,10 +4040,6 @@
           }
 
           loadData({ showLoadingScreen: false, forceFresh: true });
-        });
-
-        refs.heroAnalyticsButton.addEventListener("click", () => {
-          openMarketHistoryHoldModal();
         });
 
         refs.mobileFilterToggle.addEventListener("click", () => {
@@ -4211,15 +4159,6 @@
         });
 
         refs.resultsGrid.addEventListener("click", (event) => {
-          const analyticsButton = event.target.closest("[data-open-analytics]");
-          if (analyticsButton) {
-            const listing = getListingById(
-              analyticsButton.getAttribute("data-open-analytics"),
-            );
-            openAnalyticsModal(listing);
-            return;
-          }
-
           const coordsCopy = event.target.closest("[data-copy-coords]");
           if (coordsCopy) {
             const value = coordsCopy.getAttribute("data-copy-coords") || "";
@@ -4409,7 +4348,10 @@
         for (const dataUrl of urls) {
           const url = buildMarketDataUrl(dataUrl, forceFresh);
           try {
-            const result = await fetchJsonUrl(url, { includeHeaders: true });
+            const result = await fetchJsonUrl(url, {
+              includeHeaders: true,
+              cache: forceFresh ? "no-store" : "default",
+            });
             if (!result.payload || !Array.isArray(result.payload.data)) {
               throw new Error("Market payload is missing a data array");
             }
@@ -4442,7 +4384,7 @@
 
       async function loadData(options = {}) {
         const showLoadingScreen = options.showLoadingScreen !== false;
-        const forceFresh = options.forceFresh !== false;
+        const forceFresh = options.forceFresh === true;
         const requestId = ++state.requestSerial;
         let requestSucceeded = false;
 
@@ -4471,7 +4413,6 @@
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
-          persistMarketHistorySnapshot();
           state.loadingError = false;
           refs.errorState.classList.add("hidden");
           updateStats();
@@ -4537,7 +4478,7 @@
               method: options.method || "GET",
               headers: options.headers || undefined,
               body: options.body,
-              cache: "no-store",
+              cache: options.cache || "default",
               signal: controller ? controller.signal : undefined,
             }),
             delay(CONFIG.fetchTimeout).then(() => {
@@ -6555,12 +6496,12 @@
         const tags = buildActiveFilterTags();
         const shouldShow = Boolean(
           state.query ||
-          state.searchScope !== "item" ||
-          state.tradeIntent !== "both" ||
-          state.inStockOnly ||
-          !state.includeShulker ||
-          state.onlyShulker ||
-          state.sort !== "relevance",
+            state.searchScope !== "item" ||
+            state.tradeIntent !== "both" ||
+            state.inStockOnly ||
+            !state.includeShulker ||
+            state.onlyShulker ||
+            state.sort !== "relevance",
         );
 
         if (!shouldShow) {
@@ -6920,11 +6861,6 @@
           '    <a class="footer-button map-button" href="' +
             escapeAttribute(listing.mapUrl) +
             '" target="_blank" rel="noreferrer">VIEW SHOP →</a>',
-          "    </div>",
-          '    <div class="card-action-grid">',
-          '      <button class="footer-button card-tool-button" type="button" data-open-analytics="' +
-            escapeAttribute(listing.id) +
-            '">MARKET HISTORY</button>',
           "    </div>",
           '    <button class="footer-coords" type="button" data-copy-coords="' +
             escapeAttribute(coordsCopyValue) +
@@ -7801,14 +7737,21 @@
         // Keep every location, but label the cards so they are not mistaken for duplicates.
         const offerLocations = new Map();
         listings.forEach((listing) => {
-          if (!offerLocations.has(listing.offerGroupKey)) offerLocations.set(listing.offerGroupKey, []);
+          if (!offerLocations.has(listing.offerGroupKey))
+            offerLocations.set(listing.offerGroupKey, []);
           const locations = offerLocations.get(listing.offerGroupKey);
-          if (!locations.includes(listing.locationKey)) locations.push(listing.locationKey);
+          if (!locations.includes(listing.locationKey))
+            locations.push(listing.locationKey);
         });
         listings.forEach((listing) => {
-          const locations = offerLocations.get(listing.offerGroupKey) || [listing.locationKey];
+          const locations = offerLocations.get(listing.offerGroupKey) || [
+            listing.locationKey,
+          ];
           listing.offerLocationCount = locations.length;
-          listing.offerLocationIndex = Math.max(1, locations.indexOf(listing.locationKey) + 1);
+          listing.offerLocationIndex = Math.max(
+            1,
+            locations.indexOf(listing.locationKey) + 1,
+          );
         });
 
         const sellerItemStockTotals = {};
@@ -8783,7 +8726,9 @@
 
       function isShulkerBoxType(type) {
         const normalized = String(type || "").toUpperCase();
-        return normalized === "SHULKER_BOX" || normalized.endsWith("_SHULKER_BOX");
+        return (
+          normalized === "SHULKER_BOX" || normalized.endsWith("_SHULKER_BOX")
+        );
       }
 
       function buildListingDisplayName(item, enchants, shulkerContents) {

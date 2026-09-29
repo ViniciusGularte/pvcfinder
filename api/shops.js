@@ -30,7 +30,8 @@ const fetchAttempts = [
       pragma: "no-cache",
       referer: "https://web.peacefulvanilla.club/",
       origin: "https://web.peacefulvanilla.club",
-      "user-agent": "Mozilla/5.0 (compatible; PVCShopBrowser/1.0; +https://web.peacefulvanilla.club/)",
+      "user-agent":
+        "Mozilla/5.0 (compatible; PVCShopBrowser/1.0; +https://web.peacefulvanilla.club/)",
     },
   },
 ];
@@ -63,7 +64,9 @@ async function fetchLiveMarketData(signal) {
       };
     } catch (error) {
       errors.push(
-        attempt.name + ":" + (error instanceof Error ? error.message : String(error))
+        attempt.name +
+          ":" +
+          (error instanceof Error ? error.message : String(error)),
       );
     }
   }
@@ -76,10 +79,14 @@ module.exports = async function handler(req, res) {
 
   function setBaseHeaders(source) {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-    res.setHeader("CDN-Cache-Control", "no-store");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=0, s-maxage=20, stale-while-revalidate=60",
+    );
+    res.setHeader(
+      "CDN-Cache-Control",
+      "public, s-maxage=20, stale-while-revalidate=60",
+    );
     res.setHeader("X-PVC-Data-Source", source);
   }
 
@@ -100,7 +107,7 @@ module.exports = async function handler(req, res) {
       setBaseHeaders("snapshot");
       res.setHeader(
         "X-PVC-Live-Error",
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
       res.status(200).json(data);
     } catch (fallbackError) {
@@ -109,7 +116,9 @@ module.exports = async function handler(req, res) {
         error: "Failed to fetch PVC shop data",
         details: error instanceof Error ? error.message : String(error),
         fallbackDetails:
-          fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : String(fallbackError),
       });
     }
   } finally {
