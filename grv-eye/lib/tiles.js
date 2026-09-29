@@ -71,7 +71,7 @@ export function squaremapTileProxy({ base, maps, maxBytes = 300 * 1024 * 1024 })
 
   async function load(key, url) {
     const response = await fetch(url, {
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(20000),
       headers: { 'User-Agent': 'GRV-EYE tile cache' },
     });
     if (response.status === 404) { remember(key, { missing: true, at: Date.now() }); return null; }

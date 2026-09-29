@@ -127,6 +127,8 @@ main.body{display:grid;grid-template-columns:1fr var(--side);min-height:0}
 .map-wrap.drawing #map{cursor:crosshair}
 .toolbar{position:absolute;top:12px;left:12px;z-index:500;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 24px)}
 .toolbar select{background:#000;border:1px solid var(--line-hi);padding:6px 8px;font-size:13px}
+.toolbar .players-fit{border-color:var(--phos-dim)}
+.toolbar .players-fit strong{font-family:var(--mono);font-weight:400;color:var(--phos)}
 .coords{position:absolute;left:12px;bottom:12px;z-index:500;font-family:var(--mono);font-size:13px;color:var(--phos);background:rgba(0,0,0,.8);border:1px solid var(--line);padding:4px 8px}
 .draw-hint{position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:500;background:#000;border:1px solid var(--phos);padding:8px 14px;font-size:14px;max-width:calc(100% - 24px);text-align:center}
 .draw-hint kbd{font-family:var(--mono);border:1px solid var(--line-hi);padding:0 4px;font-size:12px}
@@ -261,7 +263,6 @@ button.row:hover{background:rgba(61,255,140,.05)}
 .toast.alarm{border-color:var(--alarm);box-shadow:0 0 18px rgba(255,46,77,.35)}
 .toast.warn{border-color:var(--amber)}
 @keyframes tin{from{transform:translateY(8px);opacity:0}}
-#yt{position:fixed;left:-9999px;top:0;width:200px;height:200px}
 
 @media (max-width:880px){
   main.body{grid-template-columns:1fr;grid-template-rows:1fr 48vh}
@@ -281,7 +282,6 @@ button.row:hover{background:rgba(61,255,140,.05)}
 </head>
 <body>
 <div class="crt" aria-hidden="true"></div>
-<div id="yt"></div>
 
 <section id="boot" aria-label="Sign in">
   <div class="boot-inner">
@@ -318,6 +318,7 @@ button.row:hover{background:rgba(61,255,140,.05)}
       <div id="map"></div>
       <div class="toolbar">
         <select id="worldSel" aria-label="World"></select>
+        <button class="btn players-fit" id="fitPlayers"><strong id="worldOnline">0</strong> players · frame all</button>
         <button class="btn" id="drawRect">Select box</button>
         <button class="btn" id="drawPoly">Select polygon</button>
         <button class="btn hidden" id="colorBtn" aria-pressed="false">True color</button>
@@ -561,26 +562,19 @@ function inPoly(x, z, pts) {
 const worldName = (id) => (S.cfg.worlds.find((w) => w.id === id) || {}).name || id;
 
 /* ═════════════ MUSIC ═════════════ */
-let yt = null, ytReady = false, musicOn = false;
-function loadMusic(videoId) {
-  if (window.__ytLoading) return; window.__ytLoading = true;
-  if (!videoId) { $("#musicBtn").classList.add("hidden"); return; }
-  window.onYouTubeIframeAPIReady = () => {
-    yt = new YT.Player("yt", {
-      videoId,
-      playerVars: { autoplay: 0, controls: 0, loop: 1, playlist: videoId, playsinline: 1, rel: 0 },
-      events: {
-        onReady: () => { ytReady = true; yt.setVolume(45); },
-        onError: () => { musicOn = false; syncMusic(); toast("The music couldn't play. The video may block embedding; change MUSIC_VIDEO_ID in .env.", "warn", 8000); },
-      },
-    });
-  };
-  const s = document.createElement("script");
-  s.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(s);
+let music = null, musicOn = false;
+function loadMusic(file) {
+  if (!file) { $("#musicBtn").classList.add("hidden"); return; }
+  music = new Audio(new URL(encodeURI(file), location.href));
+  music.loop = true; music.volume = 0.45; music.preload = "auto";
+  music.addEventListener("error", () => { musicOn = false; syncMusic(); toast("The local music file couldn't be loaded.", "warn", 8000); });
 }
-function playMusic() { if (ytReady) { yt.unMute(); yt.playVideo(); musicOn = true; syncMusic(); } }
-function stopMusic() { if (ytReady) { yt.pauseVideo(); musicOn = false; syncMusic(); } }
+function playMusic() {
+  if (!music) return;
+  const started = music.play();
+  if (started) started.then(() => { musicOn = true; syncMusic(); }).catch(() => { musicOn = false; syncMusic(); });
+}
+function stopMusic() { if (music) music.pause(); musicOn = false; syncMusic(); }
 function syncMusic() { $("#musicBtn").setAttribute("aria-pressed", String(musicOn)); }
 
 /* ═════════════ BOOT ═════════════ */
@@ -626,7 +620,7 @@ async function bootReady() {
   await logLine(S.cfg.historySince ? `> memory reaches back to ${fmtDate(S.cfg.historySince)}` : "> memory empty, recording starts now");
   await logLine("> eye ready", "ok");
   if (!$(".boot-log .cursor")) { const c = document.createElement("span"); c.className = "cursor"; logEl.appendChild(c); }
-  loadMusic(S.cfg.musicId);
+  loadMusic(S.cfg.musicFile);
   if (S.cfg.authRequired) { $("#tokenWrap").classList.remove("hidden"); $("#tokenInput").value = S.token; $("#tokenInput").focus(); }
   $("#bootBtn").disabled = false;
 }
@@ -699,7 +693,15 @@ function bmPath(x, z) {
 const imgCache = new Map();
 function loadImg(url) {
   if (imgCache.has(url)) { const p = imgCache.get(url); imgCache.delete(url); imgCache.set(url, p); return p; }
-  const p = new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = url; });
+  const p = new Promise((res) => {
+    const im = new Image(); let retries = 1;
+    im.onload = () => res(im);
+    im.onerror = () => {
+      if (retries--) return setTimeout(() => { im.src = `${url}?retry=${Date.now()}`; }, 600);
+      imgCache.delete(url); res(null);
+    };
+    im.src = url;
+  });
   imgCache.set(url, p);
   if (imgCache.size > 500) imgCache.delete(imgCache.keys().next().value);
   return p;
@@ -736,7 +738,8 @@ const BlueMapLayer = L.GridLayer.extend({
   },
 });
 
-// Squaremap tiles use zoom 0 for 1 block/pixel and increase the covered area by 2x per level.
+// Squaremap's highest native zoom is 1 block/pixel. Lower source zooms cover
+// twice as many blocks per pixel; Leaflet's local zoom 0 is our 1 block/pixel.
 const SquareMapLayer = L.GridLayer.extend({
   createTile(c, done) {
     const cv = document.createElement("canvas"), sz = this.getTileSize();
@@ -745,8 +748,8 @@ const SquareMapLayer = L.GridLayer.extend({
     if (!conf) { setTimeout(() => done(null, cv)); return cv; }
     const g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
     const bpp = Math.pow(2, -c.z);
-    const lod = Math.min(conf.maxZoom, Math.max(0, Math.floor(Math.log2(Math.max(1, bpp)))));
-    const sourceBpp = Math.pow(2, lod), sourceSpan = conf.tileSize * sourceBpp;
+    const lod = Math.min(conf.maxZoom, Math.max(0, conf.maxZoom + c.z));
+    const sourceBpp = Math.pow(2, conf.maxZoom - lod), sourceSpan = conf.tileSize * sourceBpp;
     const x0 = c.x * sz.x * bpp, z0 = c.y * sz.y * bpp;
     const x1 = x0 + sz.x * bpp, z1 = z0 + sz.y * bpp;
     const jobs = [];
@@ -771,21 +774,23 @@ const SquareMapLayer = L.GridLayer.extend({
 });
 
 function initMap() {
-  map = L.map("map", { crs: L.CRS.Simple, minZoom: -7, maxZoom: 4, zoomSnap: 0.5, zoomControl: false, attributionControl: false });
+  const extra = Math.max(2, ...Object.values(S.cfg.tiles.maps || {}).map((m) => m.extraZoom || 0));
+  const maxMapZoom = Math.max(6, extra + 2);
+  map = L.map("map", { crs: L.CRS.Simple, minZoom: -8, maxZoom: maxMapZoom, zoomSnap: 0.5, zoomControl: false, attributionControl: false });
   L.control.zoom({ position: "bottomright" }).addTo(map);
   const t = S.cfg.tiles;
   if (t.mode === "bluemap") {
-    tileLayer = new BlueMapLayer({ tileSize: 256, minZoom: -7, maxZoom: 4, className: "mc-tiles", zIndex: 1, updateWhenZooming: false, keepBuffer: 1 }).addTo(map);
+    tileLayer = new BlueMapLayer({ tileSize: 256, minZoom: -8, maxZoom: maxMapZoom, className: "mc-tiles", zIndex: 1, updateWhenZooming: true, keepBuffer: 2 }).addTo(map);
   } else if (t.mode === "squaremap") {
-    tileLayer = new SquareMapLayer({ tileSize: 256, minZoom: -7, maxZoom: 4, className: "mc-tiles", zIndex: 1, updateWhenZooming: false, keepBuffer: 1 }).addTo(map);
+    tileLayer = new SquareMapLayer({ tileSize: 256, minZoom: -8, maxZoom: maxMapZoom, className: "mc-tiles", zIndex: 1, updateWhenZooming: true, updateWhenIdle: true, keepBuffer: 2 }).addTo(map);
   } else if (t.mode === "template") {
     tileLayer = L.tileLayer("", {
       tileSize: t.size, zoomOffset: t.maxZoom, minNativeZoom: -t.maxZoom, maxNativeZoom: 0,
-      minZoom: -7, maxZoom: 4, noWrap: true, className: "mc-tiles", zIndex: 1,
+      minZoom: -8, maxZoom: maxMapZoom, noWrap: true, className: "mc-tiles", zIndex: 1,
     }).addTo(map);
   }
   if (tileLayer) $("#colorBtn").classList.remove("hidden");
-  new Grid({ tileSize: 256, minZoom: -7, maxZoom: 4, zIndex: 2 }).addTo(map);
+  new Grid({ tileSize: 256, minZoom: -8, maxZoom: maxMapZoom, zIndex: 2 }).addTo(map);
   watchLayer = L.layerGroup().addTo(map);
   selLayer = L.layerGroup().addTo(map);
   trailLayer = L.layerGroup().addTo(map);
@@ -818,11 +823,20 @@ function setWorld(id, center) {
     map.setView(st ? toLL(st[0], st[1]) : toLL(0, 0), -2);
   }
   drawWatches(); drawSelection(); drawPlayers(); trailLayer.clearLayers();
+  updateCounts();
   if (P.name && pathLayer) { P.cur = P.trail.filter((p) => p.world === S.world); P.idx = Math.max(0, P.cur.length - 1); drawPath(false); tailLayer.clearLayers(); if (S.tab === "players") renderPath(); }
 }
 function flyTo(x, z, world) {
   if (world && world !== S.world) setWorld(world);
   map.flyTo(toLL(x, z), Math.max(map.getZoom(), 0), { duration: 0.8 });
+}
+
+function playersInWorld() { return S.players.filter((p) => p.world === S.world); }
+function framePlayers() {
+  const players = playersInWorld();
+  if (!players.length) return toast(`No visible players in ${esc(worldName(S.world))}.`, "warn");
+  if (players.length === 1) return map.flyTo(toLL(players[0].x, players[0].z), Math.max(map.getZoom(), 1), { duration: 0.8 });
+  map.flyToBounds(L.latLngBounds(players.map((p) => toLL(p.x, p.z))).pad(0.12), { duration: 0.8, maxZoom: 1 });
 }
 
 function hotSet() {
@@ -1550,6 +1564,15 @@ function setStatus(st) {
 function updateCounts() {
   $("#hOnline").textContent = S.players.length;
   $("#nPlayers").textContent = S.players.length || "";
+  const worldCount = playersInWorld().length;
+  $("#worldOnline").textContent = worldCount;
+  $("#fitPlayers").disabled = !worldCount;
+  $("#fitPlayers").title = `${worldCount} of ${S.players.length} visible online players are in ${worldName(S.world)}`;
+  for (const option of $("#worldSel").options) {
+    const world = S.cfg.worlds.find((w) => w.id === option.value);
+    const count = S.players.filter((p) => p.world === option.value).length;
+    option.textContent = `${world?.name || option.value} (${count})`;
+  }
   const on = S.watches.filter((w) => w.on).length;
   $("#hWatch").textContent = on; $("#nWatch").textContent = on || "";
 }
@@ -1590,6 +1613,7 @@ function initApp() {
   mountEye($("#miniEye"), false);
   initMap();
   $("#worldSel").addEventListener("change", (e) => setWorld(e.target.value, true));
+  $("#fitPlayers").addEventListener("click", framePlayers);
   $("#drawRect").addEventListener("click", () => (draw.mode === "rect" ? cancelDraw() : startDraw("rect")));
   $("#drawPoly").addEventListener("click", () => (draw.mode === "poly" ? cancelDraw() : startDraw("poly")));
   $("#colorBtn").addEventListener("click", (e) => { const on = $("#mapWrap").classList.toggle("true-color"); e.currentTarget.setAttribute("aria-pressed", String(on)); });

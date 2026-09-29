@@ -36,7 +36,7 @@ const cfg = {
   keepaliveMs: num(env.PING_KEEPALIVE_S, 60) * 1000,
   visitGapMs: num(env.VISIT_GAP_MIN, 3) * 60_000,
   maxScan: num(env.AREA_MAX_ROWS, 600_000),
-  musicId: env.MUSIC_VIDEO_ID ?? 'kk4oSLA8jD4',
+  musicFile: env.MUSIC_FILE ?? 'The Batcave _ Brother Eye [kk4oSLA8jD4].mp3',
   source: {
     type: (env.SOURCE_TYPE || 'demo').toLowerCase(),
     url: env.SOURCE_URL || '',
@@ -75,7 +75,11 @@ if (cfg.source.type === 'bluemap') {
   worlds = Object.values(maps).map((m) => ({ id: m.id, name: m.name, start: m.start }));
   tilesInfo = {
     mode: 'squaremap',
-    maps: Object.fromEntries(Object.values(maps).map((m) => [m.id, { tileSize: m.tileSize, maxZoom: m.maxZoom }])),
+    maps: Object.fromEntries(Object.values(maps).map((m) => [m.id, {
+      tileSize: m.tileSize,
+      maxZoom: m.maxZoom,
+      extraZoom: m.extraZoom,
+    }])),
   };
   console.log(`[squaremap] maps: ${Object.keys(maps).join(', ')}`);
 } else if (cfg.template.url) {
@@ -266,7 +270,7 @@ app.get(route('/api/config'), (_req, res) => {
   const s = st.stats.get();
   res.json({
     appName: cfg.appName, authRequired: !!cfg.token, source: cfg.source.type,
-    pollMs: cfg.pollMs, worlds, tiles: tilesInfo, musicId: cfg.musicId,
+    pollMs: cfg.pollMs, worlds, tiles: tilesInfo, musicFile: cfg.musicFile,
     historySince: s.since, retentionDays: cfg.retentionDays,
   });
 });

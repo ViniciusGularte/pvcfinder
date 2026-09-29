@@ -28,11 +28,10 @@ export async function discoverSquaremap(base, wanted = []) {
   const selected = wanted.length ? listed.filter((w) => allowed.has(String(w.name))) : listed;
   if (!selected.length) throw new Error('Squaremap did not expose any requested worlds');
 
-  const maps = {};
-  await Promise.all(selected.map(async (world) => {
+  const entries = await Promise.all(selected.map(async (world) => {
     const id = String(world.name);
     const config = await getJSON(`${root}tiles/${encodeURIComponent(id)}/settings.json`);
-    maps[id] = {
+    return [id, {
       id,
       name: friendlyName(world),
       start: config.spawn && Number.isFinite(config.spawn.x) && Number.isFinite(config.spawn.z)
@@ -40,7 +39,8 @@ export async function discoverSquaremap(base, wanted = []) {
         : null,
       tileSize: 512,
       maxZoom: Math.max(0, Number(config.zoom?.max) || 0),
-    };
+      extraZoom: Math.max(0, Number(config.zoom?.extra) || 0),
+    }];
   }));
-  return maps;
+  return Object.fromEntries(entries);
 }
