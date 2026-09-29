@@ -7008,7 +7008,6 @@
 
       function buildEnchantSection(listing, terms) {
         if (listing.enchants.length) {
-          const previewEntries = listing.enchants.slice(0, 2);
           const rows = listing.enchants
             .map((entry) => {
               const levelMatch = entry.match(/^(.*?)(\s+[IVXLCM]+|\s+\d+)$/);
@@ -7029,6 +7028,21 @@
               );
             })
             .join("");
+
+          if (listing.enchants.length === 1) {
+            return [
+              '<div class="card-enchant-panel">',
+              '  <div class="enchant-summary">',
+              '    <div class="enchant-summary-top">',
+              '      <span class="enchant-summary-label pixel-font">✦ ENCHANT</span>',
+              "    </div>",
+              '    <div class="enchant-list">' + rows + "</div>",
+              "  </div>",
+              "</div>",
+            ].join("");
+          }
+
+          const previewEntries = listing.enchants.slice(0, 2);
 
           return [
             '<div class="card-enchant-panel">',
