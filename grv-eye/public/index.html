@@ -122,8 +122,6 @@ main.body{display:grid;grid-template-columns:1fr var(--side);min-height:0}
 .map-wrap{position:relative;min-height:0}
 #map{position:absolute;inset:0;background:#000}
 .leaflet-container{background:#000;font-family:var(--ui)}
-.mc-tiles{filter:grayscale(1) brightness(.62) sepia(1) hue-rotate(78deg) saturate(3) contrast(1.15)}
-.map-wrap.true-color .mc-tiles{filter:none}
 .map-wrap.drawing #map{cursor:crosshair}
 .toolbar{position:absolute;top:12px;left:12px;z-index:500;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 24px)}
 .toolbar select{background:#000;border:1px solid var(--line-hi);padding:6px 8px;font-size:13px}
@@ -321,7 +319,6 @@ button.row:hover{background:rgba(61,255,140,.05)}
         <button class="btn players-fit" id="fitPlayers"><strong id="worldOnline">0</strong> players · frame all</button>
         <button class="btn" id="drawRect">Select box</button>
         <button class="btn" id="drawPoly">Select polygon</button>
-        <button class="btn hidden" id="colorBtn" aria-pressed="false">True color</button>
       </div>
       <div class="draw-hint hidden" id="drawHint"></div>
       <div class="coords" id="coords">x 0 · z 0</div>
@@ -578,7 +575,7 @@ function stopMusic() { if (music) music.pause(); musicOn = false; syncMusic(); }
 function syncMusic() { $("#musicBtn").setAttribute("aria-pressed", String(musicOn)); }
 
 /* ═════════════ BOOT ═════════════ */
-const bootEye = mountEye($("#bootEye"), true, true);
+const bootEye = mountEye($("#bootEye"), true, false);
 const logEl = $("#bootLog");
 async function logLine(text, cls = "") {
   const line = document.createElement("div");
@@ -648,7 +645,6 @@ $("#bootForm").addEventListener("submit", async (e) => {
     return;
   }
   store.set("eye_token", S.token);
-  bootEye.classList.remove("closed");
   await sleep(1600);
   $("#app").classList.remove("hidden");
   initApp();
@@ -789,7 +785,6 @@ function initMap() {
       minZoom: -8, maxZoom: maxMapZoom, noWrap: true, className: "mc-tiles", zIndex: 1,
     }).addTo(map);
   }
-  if (tileLayer) $("#colorBtn").classList.remove("hidden");
   new Grid({ tileSize: 256, minZoom: -8, maxZoom: maxMapZoom, zIndex: 2 }).addTo(map);
   watchLayer = L.layerGroup().addTo(map);
   selLayer = L.layerGroup().addTo(map);
@@ -1616,7 +1611,6 @@ function initApp() {
   $("#fitPlayers").addEventListener("click", framePlayers);
   $("#drawRect").addEventListener("click", () => (draw.mode === "rect" ? cancelDraw() : startDraw("rect")));
   $("#drawPoly").addEventListener("click", () => (draw.mode === "poly" ? cancelDraw() : startDraw("poly")));
-  $("#colorBtn").addEventListener("click", (e) => { const on = $("#mapWrap").classList.toggle("true-color"); e.currentTarget.setAttribute("aria-pressed", String(on)); });
   $("#soundBtn").setAttribute("aria-pressed", String(S.sound));
   $("#soundBtn").addEventListener("click", (e) => { S.sound = !S.sound; store.set("eye_sound", S.sound); e.currentTarget.setAttribute("aria-pressed", String(S.sound)); });
   $("#musicBtn").addEventListener("click", () => (musicOn ? stopMusic() : playMusic()));
