@@ -2,6 +2,11 @@
 
 A history recorder, area watcher and player tracker for the Peaceful Vanilla Club Squaremap/LiveAtlas map.
 
+The same VPS process also records PVC shop stock changes in `data/market.db`.
+Stock increases are saved as restocks and decreases as estimated sales. Recent
+public restocks are exposed at `/grveye/api/market/restocks`. The first poll
+only establishes the baseline, so it never creates false historical events.
+
 - **Backend (same PVC Finder VPS):** reads every player's position from the public map every few seconds, stores it in SQLite, and serves the API, map tiles and skins.
 - **Frontend:** is served by the same process and published at `/grveye/` through the existing Nginx host.
 
@@ -12,6 +17,7 @@ A history recorder, area watcher and player tracker for the Peaceful Vanilla Clu
 **Watch.** Turn a selected area into a watch. While the tab is open, you get a desktop notification, a sound and an on-screen alert when someone walks in. Watches are saved per browser.
 
 **Players.** Search any player (Java or Bedrock) and select one:
+
 - Their skin appears as a rotating green hologram. It walks while they're online and idles while offline.
 - Pick a window (1h, 6h, 24h, 3d, 7d, or a custom from/to date) to trace their path on the map in green. Newer parts are brighter, and the line breaks on teleports, logouts and dimension changes.
 - Places where they stood still for 3+ minutes show as circles sized by how long they stayed, and are also listed in the sidebar.
@@ -29,6 +35,7 @@ grv-eye/
 │   ├── sources.js      bluemap / squaremap / dynmap / json / demo
 │   ├── tiles.js        caching proxy for Squaremap/BlueMap tiles
 │   ├── skins.js        Java + Bedrock skin resolver
+│   ├── market.js       shop stock history and restock detection
 │   ├── db.js           SQLite schema
 │   └── geo.js          point-in-polygon
 └── public/             page served at /grveye/
@@ -66,8 +73,9 @@ pm2 start server.js --name grv-eye
 pm2 save && pm2 startup
 ```
 
-Keep the SQLite file on persistent storage and include `grv-eye/data/eye.db*` in
-the VPS backup. The WAL sidecars may exist while the process is running.
+Keep the SQLite files on persistent storage and include both
+`grv-eye/data/eye.db*` and `grv-eye/data/market.db*` in the VPS backup. The WAL
+sidecars may exist while the process is running.
 
 ### Nginx route on the existing site
 

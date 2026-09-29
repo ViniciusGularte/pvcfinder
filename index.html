@@ -1552,6 +1552,11 @@
         filter: saturate(0.78);
       }
 
+      .shop-card.restocked {
+        border-color: rgba(74, 222, 128, 0.52);
+        box-shadow: inset 0 2px 0 rgba(74, 222, 128, 0.75);
+      }
+
       .card-header {
         position: relative;
         padding: 136px 16px 8px;
@@ -1795,6 +1800,19 @@
         line-height: 1.2;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+      }
+
+      .shop-restock-badge {
+        padding: 3px 6px;
+        border: 1px solid rgba(74, 222, 128, 0.55);
+        background: rgba(18, 78, 49, 0.34);
+        color: #86efac;
+        font-family: "Press Start 2P", monospace;
+        font-size: 6px;
+        line-height: 1.4;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        box-shadow: 0 0 14px rgba(74, 222, 128, 0.1);
       }
 
       .shop-line-sep {
@@ -3752,6 +3770,10 @@
           "/pvc/data/shops-snapshot.json",
         ],
         historyUrls: ["/api/pvc/history", "/api/history"],
+        restockUrls: [
+          "https://api.theyasked.co/grveye/api/market/restocks?hours=24",
+          "/grveye/api/market/restocks?hours=24",
+        ],
         loadingDuration: 420,
         loadingPause: 60,
         searchDebounce: 150,
@@ -3913,6 +3935,7 @@
           currencyValues: { emerald: 1 },
           productStats: {},
         },
+        restocks: new Map(),
         filtered: [],
         searchSuggestions: [],
         visibleCount: 0,
@@ -4401,6 +4424,7 @@
         const showLoadingScreen = options.showLoadingScreen !== false;
         const forceFresh = options.forceFresh === true;
         const requestId = ++state.requestSerial;
+        const restocksPromise = fetchRecentRestocks();
         let requestSucceeded = false;
 
         state.activeRequestId = requestId;
@@ -4428,10 +4452,23 @@
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
+          const initialRestocks = await Promise.race([
+            restocksPromise,
+            delay(1200).then(() => null),
+          ]);
+          if (requestId !== state.activeRequestId) return;
+          if (initialRestocks) applyRecentRestocks(initialRestocks);
           state.loadingError = false;
           refs.errorState.classList.add("hidden");
           updateStats();
           renderAll();
+          if (!initialRestocks) {
+            restocksPromise.then((restocks) => {
+              if (!restocks || requestId !== state.activeRequestId) return;
+              applyRecentRestocks(restocks);
+              renderAll();
+            });
+          }
           openUrlItemModalIfNeeded();
           startRelativeTime();
           requestSucceeded = true;
@@ -4474,6 +4511,34 @@
             updateRelativeTime();
           }
         }
+      }
+
+      async function fetchRecentRestocks() {
+        for (const restockUrl of CONFIG.restockUrls || []) {
+          try {
+            const payload = await fetchJsonUrl(restockUrl, {
+              cache: "no-store",
+            });
+            const rows = Array.isArray(payload.restocks)
+              ? payload.restocks
+              : [];
+            return new Map(rows.map((row) => [row.offerKey, row]));
+          } catch (error) {
+            console.warn(
+              "Could not load recent restocks from",
+              restockUrl,
+              error,
+            );
+          }
+        }
+        return null;
+      }
+
+      function applyRecentRestocks(restocks) {
+        state.restocks = restocks;
+        state.listings.forEach((listing) => {
+          listing.restock = state.restocks.get(listing.stockGroupKey) || null;
+        });
       }
 
       async function fetchJsonUrl(url, options = {}) {
@@ -6768,7 +6833,13 @@
             );
           }
 
+          const restockCompare = compareNumber(
+            Number(right.restock?.restockedAt) || 0,
+            Number(left.restock?.restockedAt) || 0,
+          );
+
           return (
+            restockCompare ||
             compareNumber(right.stock > 0 ? 1 : 0, left.stock > 0 ? 1 : 0) ||
             compareNumber(right.displayStock, left.displayStock) ||
             left.displayName.localeCompare(right.displayName)
@@ -6791,6 +6862,9 @@
         const cardClasses = ["shop-card"];
         if (listing.stock === 0) {
           cardClasses.push("sold-out");
+        }
+        if (listing.restock) {
+          cardClasses.push("restocked");
         }
 
         const shulkerSection = listing.shulkerContents.length
@@ -6832,6 +6906,13 @@
               escapeHtml(String(listing.offerLocationIndex)) +
               " of " +
               escapeHtml(String(listing.offerLocationCount)) +
+              "</span>"
+            : "",
+          listing.restock
+            ? '          <span class="shop-restock-badge">↻ RESTOCKED +' +
+              escapeHtml(formatNumber(listing.restock.amount || 0)) +
+              " · " +
+              escapeHtml(formatRestockAge(listing.restock.restockedAt)) +
               "</span>"
             : "",
           "        </div>",
@@ -9031,6 +9112,16 @@
 
       function formatNumber(value) {
         return new Intl.NumberFormat("en-US").format(value);
+      }
+
+      function formatRestockAge(timestamp) {
+        const minutes = Math.max(
+          0,
+          Math.floor((Date.now() - Number(timestamp || 0)) / 60_000),
+        );
+        if (minutes < 1) return "NOW";
+        if (minutes < 60) return minutes + "M AGO";
+        return Math.floor(minutes / 60) + "H AGO";
       }
 
       function formatMarketNumber(value) {

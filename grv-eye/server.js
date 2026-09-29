@@ -13,13 +13,20 @@ import { discoverSquaremap, withSlash as squaremapSlash } from './lib/squaremap.
 import { squaremapTileProxy, tileProxy } from './lib/tiles.js';
 import { createSkinResolver, isFloodgateUuid } from './lib/skins.js';
 import { bboxOf, pointInPolygon } from './lib/geo.js';
+import { createMarketTracker } from './lib/market.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = process.env;
 const num = (v, d) => (v === undefined || v === '' || !Number.isFinite(Number(v)) ? d : Number(v));
-const list = (v) => (v || '').split(',').map((s) => s.trim()).filter(Boolean);
+const list = (v) =>
+  (v || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 const basePath = (v) => {
-  const clean = String(v || '').trim().replace(/^\/+|\/+$/g, '');
+  const clean = String(v || '')
+    .trim()
+    .replace(/^\/+|\/+$/g, '');
   return clean ? `/${clean}` : '';
 };
 
@@ -31,6 +38,9 @@ const cfg = {
   token: env.ACCESS_TOKEN || '',
   pollMs: Math.max(2000, num(env.POLL_INTERVAL_MS, 20000)),
   dbFile: path.resolve(__dirname, env.DB_FILE || './data/eye.db'),
+  marketDbFile: path.resolve(__dirname, env.MARKET_DB_FILE || './data/market.db'),
+  marketPollMs: Math.max(20_000, num(env.MARKET_POLL_INTERVAL_MS, 60_000)),
+  marketRetentionDays: Math.max(1, num(env.MARKET_RETENTION_DAYS, 30)),
   retentionDays: num(env.HISTORY_RETENTION_DAYS, 60),
   minMove: num(env.PING_MIN_MOVE, 6),
   keepaliveMs: num(env.PING_KEEPALIVE_S, 60) * 1000,
@@ -41,15 +51,27 @@ const cfg = {
     type: (env.SOURCE_TYPE || 'demo').toLowerCase(),
     url: env.SOURCE_URL || '',
     world: env.SOURCE_WORLD || 'world',
-    bluemap: { base: withSlash(env.BLUEMAP_URL || 'https://web.peacefulvanilla.club/maps/'), maps: {} },
-    squaremap: { base: squaremapSlash(env.SQUAREMAP_URL || 'https://web.peacefulvanilla.club/maps/'), maps: {} },
+    bluemap: {
+      base: withSlash(env.BLUEMAP_URL || 'https://web.peacefulvanilla.club/maps/'),
+      maps: {},
+    },
+    squaremap: {
+      base: squaremapSlash(env.SQUAREMAP_URL || 'https://web.peacefulvanilla.club/maps/'),
+      maps: {},
+    },
     json: {
       listPath: env.JSON_LIST_PATH ?? 'players',
-      name: env.JSON_NAME_FIELD || 'name', x: env.JSON_X_FIELD || 'x',
-      z: env.JSON_Z_FIELD || 'z', world: env.JSON_WORLD_FIELD || 'world',
+      name: env.JSON_NAME_FIELD || 'name',
+      x: env.JSON_X_FIELD || 'x',
+      z: env.JSON_Z_FIELD || 'z',
+      world: env.JSON_WORLD_FIELD || 'world',
     },
   },
-  template: { url: env.TILE_URL || '', size: num(env.TILE_SIZE, 512), maxZoom: num(env.TILE_MAX_ZOOM, 3) },
+  template: {
+    url: env.TILE_URL || '',
+    size: num(env.TILE_SIZE, 512),
+    maxZoom: num(env.TILE_MAX_ZOOM, 3),
+  },
   worlds: list(env.WORLDS),
   corsOrigins: list(env.CORS_ORIGINS),
   bedrockPrefixes: list(env.BEDROCK_PREFIXES || '.,*'),
@@ -58,6 +80,11 @@ const cfg = {
 
 fs.mkdirSync(path.dirname(cfg.dbFile), { recursive: true });
 const db = openDb(cfg.dbFile);
+const market = createMarketTracker({
+  dbFile: cfg.marketDbFile,
+  pollMs: cfg.marketPollMs,
+  retentionDays: cfg.marketRetentionDays,
+});
 
 // ─── Map discovery ─────────────────────────────────────────
 let tilesInfo = { mode: 'none' };
@@ -66,26 +93,46 @@ let worlds = cfg.worlds.map((id) => ({ id, name: id }));
 if (cfg.source.type === 'bluemap') {
   const maps = await discoverMaps(cfg.source.bluemap.base, cfg.worlds);
   cfg.source.bluemap.maps = maps;
-  worlds = Object.values(maps).map((m) => ({ id: m.id, name: m.name, start: m.start }));
-  tilesInfo = { mode: 'bluemap', maps: Object.fromEntries(Object.values(maps).map((m) => [m.id, m.lowres])) };
+  worlds = Object.values(maps).map((m) => ({
+    id: m.id,
+    name: m.name,
+    start: m.start,
+  }));
+  tilesInfo = {
+    mode: 'bluemap',
+    maps: Object.fromEntries(Object.values(maps).map((m) => [m.id, m.lowres])),
+  };
   console.log(`[bluemap] maps: ${Object.keys(maps).join(', ')}`);
 } else if (cfg.source.type === 'squaremap') {
   const maps = await discoverSquaremap(cfg.source.squaremap.base, cfg.worlds);
   cfg.source.squaremap.maps = maps;
-  worlds = Object.values(maps).map((m) => ({ id: m.id, name: m.name, start: m.start }));
+  worlds = Object.values(maps).map((m) => ({
+    id: m.id,
+    name: m.name,
+    start: m.start,
+  }));
   tilesInfo = {
     mode: 'squaremap',
-    maps: Object.fromEntries(Object.values(maps).map((m) => [m.id, {
-      tileSize: m.tileSize,
-      maxZoom: m.maxZoom,
-      extraZoom: m.extraZoom,
-    }])),
+    maps: Object.fromEntries(
+      Object.values(maps).map((m) => [
+        m.id,
+        {
+          tileSize: m.tileSize,
+          maxZoom: m.maxZoom,
+          extraZoom: m.extraZoom,
+        },
+      ]),
+    ),
   };
   console.log(`[squaremap] maps: ${Object.keys(maps).join(', ')}`);
 } else if (cfg.template.url) {
   tilesInfo = { mode: 'template', ...cfg.template };
 }
-if (cfg.source.type === 'demo' && !worlds.length) worlds = [{ id: 'world', name: 'Overworld' }, { id: 'world_nether', name: 'Nether' }];
+if (cfg.source.type === 'demo' && !worlds.length)
+  worlds = [
+    { id: 'world', name: 'Overworld' },
+    { id: 'world_nether', name: 'Nether' },
+  ];
 
 const source = createSource(cfg.source);
 
@@ -111,7 +158,13 @@ const st = {
 // ─── Live state ────────────────────────────────────────────
 const online = new Map();
 const lastPing = new Map();
-let status = { ok: false, error: 'waiting for first read', lastOk: 0, count: 0, source: cfg.source.type };
+let status = {
+  ok: false,
+  error: 'waiting for first read',
+  lastOk: 0,
+  count: 0,
+  source: cfg.source.type,
+};
 
 const app = express();
 const server = http.createServer(app);
@@ -125,14 +178,18 @@ const originRes = cfg.corsOrigins.map((o) => new RegExp('^' + o.replace(/[.+?^${
 const originAllowed = (o) => !!o && originRes.some((r) => r.test(o));
 
 const wss = new WebSocketServer({
-  server, path: route('/ws'),
+  server,
+  path: route('/ws'),
   verifyClient: (info) => {
     const o = info.origin || info.req.headers.origin;
     if (o && cfg.corsOrigins.length && !originAllowed(o) && o !== `http://${info.req.headers.host}` && o !== `https://${info.req.headers.host}`) return false;
     return authorized(new URL(info.req.url, 'http://x').searchParams.get('token'));
   },
 });
-const broadcast = (msg) => { const d = JSON.stringify(msg); for (const c of wss.clients) if (c.readyState === 1) c.send(d); };
+const broadcast = (msg) => {
+  const d = JSON.stringify(msg);
+  for (const c of wss.clients) if (c.readyState === 1) c.send(d);
+};
 wss.on('connection', (ws) => ws.send(JSON.stringify({ type: 'snapshot', players: [...online.values()], status })));
 
 const recordTick = db.transaction((players, now) => {
@@ -140,7 +197,14 @@ const recordTick = db.transaction((players, now) => {
   for (const p of players) {
     if (seen.has(p.name)) continue;
     seen.add(p.name);
-    st.upsert.run({ name: p.name, uuid: p.uuid, ts: now, world: p.world, x: p.x, z: p.z });
+    st.upsert.run({
+      name: p.name,
+      uuid: p.uuid,
+      ts: now,
+      world: p.world,
+      x: p.x,
+      z: p.z,
+    });
     if (!online.has(p.name)) st.session.run(p.name);
     online.set(p.name, p);
     const lp = lastPing.get(p.name);
@@ -149,14 +213,24 @@ const recordTick = db.transaction((players, now) => {
       lastPing.set(p.name, { x: p.x, z: p.z, world: p.world, ts: now });
     }
   }
-  for (const name of online.keys()) if (!seen.has(name)) { online.delete(name); lastPing.delete(name); }
+  for (const name of online.keys())
+    if (!seen.has(name)) {
+      online.delete(name);
+      lastPing.delete(name);
+    }
 });
 
 async function tick() {
   let players;
   try {
     players = await source.fetch();
-    status = { ok: true, error: null, lastOk: Date.now(), count: players.length, source: cfg.source.type };
+    status = {
+      ok: true,
+      error: null,
+      lastOk: Date.now(),
+      count: players.length,
+      source: cfg.source.type,
+    };
   } catch (err) {
     status = { ...status, ok: false, error: String(err.message || err) };
     console.warn('[source]', status.error);
@@ -169,7 +243,11 @@ async function tick() {
 }
 async function loop() {
   const t0 = Date.now();
-  try { await tick(); } catch (err) { console.error('[tick]', err); }
+  try {
+    await tick();
+  } catch (err) {
+    console.error('[tick]', err);
+  }
   setTimeout(loop, Math.max(500, cfg.pollMs - (Date.now() - t0)));
 }
 function prune() {
@@ -184,12 +262,24 @@ function areaHistory({ world, points, from, to, buckets = 48 }) {
   const span = Math.max(1, to - from);
   const hist = Array.from({ length: buckets }, () => new Set());
   const players = new Map();
-  let scanned = 0, truncated = false, cur = null;
+  let scanned = 0,
+    truncated = false,
+    cur = null;
 
   const flush = () => {
     if (!cur) return;
     let p = players.get(cur.player);
-    if (!p) { p = { name: cur.player, visits: [], total: 0, first: cur.start, last: cur.end, pings: 0 }; players.set(cur.player, p); }
+    if (!p) {
+      p = {
+        name: cur.player,
+        visits: [],
+        total: 0,
+        first: cur.start,
+        last: cur.end,
+        pings: 0,
+      };
+      players.set(cur.player, p);
+    }
     p.visits.push({ start: cur.start, end: cur.end, x: cur.x, z: cur.z });
     p.total += cur.end - cur.start;
     p.pings += cur.n;
@@ -198,21 +288,35 @@ function areaHistory({ world, points, from, to, buckets = 48 }) {
     cur = null;
   };
 
-  for (const r of st.area.iterate(world,
-    Math.floor(bbox.minX / CELL), Math.floor(bbox.maxX / CELL),
-    Math.floor(bbox.minZ / CELL), Math.floor(bbox.maxZ / CELL), from, to)) {
-    if (++scanned > cfg.maxScan) { truncated = true; break; }
+  for (const r of st.area.iterate(world, Math.floor(bbox.minX / CELL), Math.floor(bbox.maxX / CELL), Math.floor(bbox.minZ / CELL), Math.floor(bbox.maxZ / CELL), from, to)) {
+    if (++scanned > cfg.maxScan) {
+      truncated = true;
+      break;
+    }
     const inside = r.x >= bbox.minX && r.x <= bbox.maxX && r.z >= bbox.minZ && r.z <= bbox.maxZ && pointInPolygon(r.x, r.z, points);
-    if (!inside) { if (cur && cur.player === r.player) flush(); continue; }
-    if (cur && cur.player === r.player && r.ts - cur.end <= cfg.visitGapMs) { cur.end = r.ts; cur.n++; }
-    else { flush(); cur = { player: r.player, start: r.ts, end: r.ts, x: r.x, z: r.z, n: 1 }; }
+    if (!inside) {
+      if (cur && cur.player === r.player) flush();
+      continue;
+    }
+    if (cur && cur.player === r.player && r.ts - cur.end <= cfg.visitGapMs) {
+      cur.end = r.ts;
+      cur.n++;
+    } else {
+      flush();
+      cur = { player: r.player, start: r.ts, end: r.ts, x: r.x, z: r.z, n: 1 };
+    }
     hist[Math.min(buckets - 1, Math.floor(((r.ts - from) / span) * buckets))].add(r.player);
   }
   flush();
 
   const out = [...players.values()].sort((a, b) => b.last - a.last);
   for (const p of out) p.visits.sort((a, b) => b.start - a.start);
-  return { players: out, histogram: { from, to, counts: hist.map((s) => s.size) }, truncated, scanned };
+  return {
+    players: out,
+    histogram: { from, to, counts: hist.map((s) => s.size) },
+    truncated,
+    scanned,
+  };
 }
 
 // ─── HTTP ──────────────────────────────────────────────────
@@ -222,7 +326,7 @@ app.use((req, res, next) => {
   if (originAllowed(o)) {
     res.set({
       'Access-Control-Allow-Origin': o,
-      'Vary': 'Origin',
+      Vary: 'Origin',
       'Access-Control-Allow-Headers': 'Authorization, Content-Type',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Expose-Headers': 'X-Skin-Model, X-Skin-Edition, X-Skin-Source',
@@ -234,10 +338,11 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '128kb' }));
 if (cfg.servePage) {
-  if (cfg.basePath) app.get(cfg.basePath, (req, res, next) => {
-    if (req.path.endsWith('/')) return next();
-    res.redirect(308, `${cfg.basePath}/`);
-  });
+  if (cfg.basePath)
+    app.get(cfg.basePath, (req, res, next) => {
+      if (req.path.endsWith('/')) return next();
+      res.redirect(308, `${cfg.basePath}/`);
+    });
   app.use(route('/'), express.static(path.join(__dirname, 'public')));
 }
 
@@ -251,10 +356,15 @@ app.get(route('/skin/:name'), async (req, res) => {
   if (!/^[A-Za-z0-9_.*\-]{1,32}$/.test(name)) return res.sendStatus(400);
   try {
     const s = await getSkin(name);
-    res.set({
-      'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600',
-      'X-Skin-Model': s.model, 'X-Skin-Edition': s.edition, 'X-Skin-Source': s.source,
-    }).send(s.buf);
+    res
+      .set({
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=3600',
+        'X-Skin-Model': s.model,
+        'X-Skin-Edition': s.edition,
+        'X-Skin-Source': s.source,
+      })
+      .send(s.buf);
   } catch (err) {
     console.warn('[skin]', name, err.message);
     res.sendStatus(502);
@@ -263,15 +373,39 @@ app.get(route('/skin/:name'), async (req, res) => {
 if (tilesInfo.mode === 'bluemap') {
   app.use(route('/tiles'), tileProxy({ base: cfg.source.bluemap.base, maps: cfg.source.bluemap.maps }));
 } else if (tilesInfo.mode === 'squaremap') {
-  app.use(route('/tiles'), squaremapTileProxy({ base: cfg.source.squaremap.base, maps: cfg.source.squaremap.maps }));
+  app.use(
+    route('/tiles'),
+    squaremapTileProxy({
+      base: cfg.source.squaremap.base,
+      maps: cfg.source.squaremap.maps,
+    }),
+  );
 }
 
 app.get(route('/api/config'), (_req, res) => {
   const s = st.stats.get();
   res.json({
-    appName: cfg.appName, authRequired: !!cfg.token, source: cfg.source.type,
-    pollMs: cfg.pollMs, worlds, tiles: tilesInfo, musicFile: cfg.musicFile,
-    historySince: s.since, retentionDays: cfg.retentionDays,
+    appName: cfg.appName,
+    authRequired: !!cfg.token,
+    source: cfg.source.type,
+    pollMs: cfg.pollMs,
+    worlds,
+    tiles: tilesInfo,
+    musicFile: cfg.musicFile,
+    historySince: s.since,
+    retentionDays: cfg.retentionDays,
+  });
+});
+
+// Public market activity contains only data already visible on the PVC shop map.
+app.get(route('/api/market/restocks'), (req, res) => {
+  const windowHours = Math.min(168, Math.max(1, num(req.query.hours, 24)));
+  res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
+  res.json({
+    generatedAt: Date.now(),
+    windowHours,
+    restocks: market.recentRestocks(windowHours, req.query.limit),
+    status: market.getStatus(),
   });
 });
 
@@ -286,8 +420,7 @@ app.get(route('/api/status'), (_req, res) => res.json(status));
 app.post(route('/api/area'), (req, res) => {
   const { world, points, from, to } = req.body || {};
   if (typeof world !== 'string' || !world) return res.status(400).json({ error: 'Missing world' });
-  if (!Array.isArray(points) || points.length < 3 || points.length > 200 ||
-      !points.every((p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite))) {
+  if (!Array.isArray(points) || points.length < 3 || points.length > 200 || !points.every((p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite))) {
     return res.status(400).json({ error: 'An area needs 3 to 200 [x, z] points' });
   }
   const now = Date.now();
@@ -302,7 +435,9 @@ app.get(route('/api/players'), (req, res) => {
   const limit = Math.min(500, num(req.query.limit, 200));
   const q = String(req.query.q || '').trim();
   const rows = q ? st.playersSearch.all(`%${q.replace(/[\\%_]/g, (c) => '\\' + c)}%`, limit) : st.playersRecent.all(limit);
-  res.json({ players: rows.map((p) => ({ ...p, online: online.has(p.name) })) });
+  res.json({
+    players: rows.map((p) => ({ ...p, online: online.has(p.name) })),
+  });
 });
 
 app.get(route('/api/players/:name'), (req, res) => {
@@ -323,9 +458,7 @@ app.get(route('/api/players/:name/trail'), (req, res) => {
   if (all.length > MAX) {
     // Downsample but keep points around gaps / world changes so segments still break correctly.
     const k = Math.ceil(all.length / MAX);
-    rows = all.filter((r, i) => i % k === 0 || i === all.length - 1 ||
-      (i > 0 && (r.world !== all[i - 1].world || r.ts - all[i - 1].ts > 300_000)) ||
-      (i < all.length - 1 && (r.world !== all[i + 1].world || all[i + 1].ts - r.ts > 300_000)));
+    rows = all.filter((r, i) => i % k === 0 || i === all.length - 1 || (i > 0 && (r.world !== all[i - 1].world || r.ts - all[i - 1].ts > 300_000)) || (i < all.length - 1 && (r.world !== all[i + 1].world || all[i + 1].ts - r.ts > 300_000)));
   }
   res.json({ trail: rows, total: all.length, from, to });
 });
@@ -337,7 +470,12 @@ server.listen(cfg.port, cfg.host, () => {
   console.log(`  access: ${cfg.token ? 'protected by ACCESS_TOKEN' : 'OPEN (set ACCESS_TOKEN!)'}\n`);
   prune();
   loop();
+  market.start();
 });
-const shutdown = () => { db.close(); process.exit(0); };
+const shutdown = () => {
+  market.close();
+  db.close();
+  process.exit(0);
+};
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
