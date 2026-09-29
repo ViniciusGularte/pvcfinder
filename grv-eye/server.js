@@ -29,7 +29,7 @@ const cfg = {
   appName: env.APP_NAME || 'GRV EYE',
   basePath: basePath(env.BASE_PATH ?? '/grveye'),
   token: env.ACCESS_TOKEN || '',
-  pollMs: Math.max(2000, num(env.POLL_INTERVAL_MS, 5000)),
+  pollMs: Math.max(2000, num(env.POLL_INTERVAL_MS, 20000)),
   dbFile: path.resolve(__dirname, env.DB_FILE || './data/eye.db'),
   retentionDays: num(env.HISTORY_RETENTION_DAYS, 60),
   minMove: num(env.PING_MIN_MOVE, 6),
