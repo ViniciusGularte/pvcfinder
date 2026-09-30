@@ -9,8 +9,8 @@
     "grveye:install": "npm ci --prefix grv-eye",
     "grveye:dev": "npm run demo --prefix grv-eye",
     "grveye:start": "npm start --prefix grv-eye",
-    "lobby:install": "npm ci --prefix lobby",
-    "lobby:start": "npm start --prefix lobby",
+    "lobby:install": "npm ci --prefix lobby-server",
+    "lobby:start": "npm start --prefix lobby-server",
     "textures:generate": "node scripts/generate-item-textures.mjs"
   }
 }
