@@ -1194,7 +1194,11 @@ function interact() {
     return;
   }
   if (action === "eye") {
-    openTerminal("GRV EYE // OBSERVATION", `${location.origin}/grveye/`, false);
+    openTerminal(
+      "GRV EYE // OBSERVATION",
+      `${location.origin}/grv-eye/public/`,
+      false,
+    );
     return;
   }
   if (action === "core") {
