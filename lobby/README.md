@@ -1,9 +1,9 @@
 # PVC Lobby
 
-A standalone Three.js multiplayer lounge served by Vercel at `/lobby/`. The VPS
-Node process is backend-only and owns the WebSocket plus ephemeral room state:
-connected players, positions, seats, chat history, jukebox state and the
-selected map dimension.
+A standalone Three.js multiplayer lounge from `lobby-web/`, served by Vercel at
+`/lobby/`. The VPS Node process is backend-only and owns the WebSocket plus
+ephemeral room state: connected players, positions, seats, chat history,
+jukebox state and the selected map dimension.
 
 ## Local
 

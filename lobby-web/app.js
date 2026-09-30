@@ -744,6 +744,9 @@ function addSkinLimb(group, image, size, pivot, faces, name) {
   group.add(joint);
   return joint;
 }
+function skinSource(name) {
+  return `${state.config.skinUrl}${encodeURIComponent(name)}${state.config.skinSuffix || ""}`;
+}
 function buildAvatar(player) {
   const group = new THREE.Group();
   group.position.set(player.x, 0, player.z);
@@ -827,9 +830,9 @@ function buildAvatar(player) {
   img.onerror = () => {
     if (triedSteve) return;
     triedSteve = true;
-    img.src = `${state.config.skinUrl}${encodeURIComponent("Steve")}`;
+    img.src = skinSource("Steve");
   };
-  img.src = `${state.config.skinUrl}${encodeURIComponent(player.skin)}`;
+  img.src = skinSource(player.skin);
   return group;
 }
 function buildFirstPersonHand(skin) {
@@ -856,9 +859,9 @@ function buildFirstPersonHand(skin) {
   img.onerror = () => {
     if (triedSteve) return;
     triedSteve = true;
-    img.src = `${state.config.skinUrl}${encodeURIComponent("Steve")}`;
+    img.src = skinSource("Steve");
   };
-  img.src = `${state.config.skinUrl}${encodeURIComponent(skin)}`;
+  img.src = skinSource(skin);
 }
 function triggerHandAction(type = "use", duration = 620) {
   state.handActionStarted = performance.now();
@@ -924,8 +927,13 @@ function handleMessage(msg) {
     ui.joinStatus.textContent = "LOUNGE ONLINE // ENTER WHEN READY";
     state.id = msg.id;
     state.config = msg.config;
-    if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1")
+    if (
+      location.hostname !== "localhost" &&
+      location.hostname !== "127.0.0.1"
+    ) {
       state.config.skinUrl = `${location.origin}/lobby/skin/`;
+      state.config.skinSuffix = ".png";
+    }
     state.shared = msg.shared;
     state.seats = msg.seats || {};
     msg.players.forEach((p) => upsertPlayer(p));

@@ -3,20 +3,20 @@
   "trailingSlash": true,
   "rewrites": [
     {
-      "source": "/lobby/skin/:name",
+      "source": "/lobby/skin/:name.png",
       "destination": "https://api.theyasked.co/grveye/skin/:name"
     },
     {
       "source": "/lobby",
-      "destination": "/lobby/public/index.html"
+      "destination": "/lobby-web/index.html"
     },
     {
       "source": "/lobby/",
-      "destination": "/lobby/public/index.html"
+      "destination": "/lobby-web/index.html"
     },
     {
       "source": "/lobby/:path*",
-      "destination": "/lobby/public/:path*"
+      "destination": "/lobby-web/:path*"
     },
     {
       "source": "/grveye",
