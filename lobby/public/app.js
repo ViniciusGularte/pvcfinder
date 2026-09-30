@@ -889,9 +889,11 @@ function nameSprite(name) {
 }
 
 function connect() {
-  const protocol = location.protocol === "https:" ? "wss" : "ws";
-  const base = location.pathname.startsWith("/lobby") ? "/lobby" : "";
-  const socket = new WebSocket(`${protocol}://${location.host}${base}/ws`);
+  const backendUrl =
+    location.hostname === "localhost" || location.hostname === "127.0.0.1"
+      ? `ws://${location.hostname}:8081/lobby/ws`
+      : "wss://api.theyasked.co/lobby/ws";
+  const socket = new WebSocket(backendUrl);
   state.socket = socket;
   socket.onopen = () => {
     ui.joinStatus.textContent = "SYNCING ROOM STATE";
@@ -922,6 +924,8 @@ function handleMessage(msg) {
     ui.joinStatus.textContent = "LOUNGE ONLINE // ENTER WHEN READY";
     state.id = msg.id;
     state.config = msg.config;
+    if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1")
+      state.config.skinUrl = `${location.origin}/lobby/skin/`;
     state.shared = msg.shared;
     state.seats = msg.seats || {};
     msg.players.forEach((p) => upsertPlayer(p));
@@ -1182,11 +1186,7 @@ function interact() {
     return;
   }
   if (action === "eye") {
-    openTerminal(
-      "GRV EYE // OBSERVATION",
-      "https://api.theyasked.co/grveye/",
-      false,
-    );
+    openTerminal("GRV EYE // OBSERVATION", `${location.origin}/grveye/`, false);
     return;
   }
   if (action === "core") {

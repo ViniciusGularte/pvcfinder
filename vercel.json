@@ -3,6 +3,22 @@
   "trailingSlash": true,
   "rewrites": [
     {
+      "source": "/lobby/skin/:name",
+      "destination": "https://api.theyasked.co/grveye/skin/:name"
+    },
+    {
+      "source": "/lobby",
+      "destination": "/lobby/public/index.html"
+    },
+    {
+      "source": "/lobby/",
+      "destination": "/lobby/public/index.html"
+    },
+    {
+      "source": "/lobby/:path*",
+      "destination": "/lobby/public/:path*"
+    },
+    {
       "source": "/grveye",
       "destination": "/grv-eye/public/index.html"
     },

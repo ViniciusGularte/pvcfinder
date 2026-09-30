@@ -1,12 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import http from "node:http";
-import path from "node:path";
 import crypto from "node:crypto";
-import { fileURLToPath } from "node:url";
 import { WebSocketServer, WebSocket } from "ws";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = process.env;
 const num = (value, fallback) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -22,6 +19,7 @@ const cfg = {
   mapUrl: env.MAP_URL || "https://web.peacefulvanilla.club/maps/",
   skinUrl: env.SKIN_URL || "https://api.theyasked.co/grveye/skin/",
   shopUrl: env.SHOP_URL || "https://pvcstorefinder.vercel.app/",
+  frontendUrl: env.FRONTEND_URL || "https://pvcstorefinder.vercel.app/lobby/",
 };
 const route = (suffix) => `${cfg.basePath}${suffix}` || "/";
 
@@ -224,26 +222,9 @@ app.get(route("/api/status"), (_req, res) => {
     shared,
   });
 });
-app.get(route("/media/jukebox.mp3"), (_req, res) => {
-  res.sendFile(
-    path.resolve(
-      __dirname,
-      "../grv-eye/public/The Batcave _ Brother Eye [kk4oSLA8jD4].mp3",
-    ),
-  );
-});
-app.use(
-  route("/vendor"),
-  express.static(path.join(__dirname, "node_modules/three/build"), {
-    maxAge: "30d",
-  }),
-);
-app.use(
-  route("/"),
-  express.static(path.join(__dirname, "public"), { index: "index.html" }),
-);
+app.get(route("/"), (_req, res) => res.redirect(308, cfg.frontendUrl));
 if (cfg.basePath)
-  app.get(cfg.basePath, (_req, res) => res.redirect(308, `${cfg.basePath}/`));
+  app.get(cfg.basePath, (_req, res) => res.redirect(308, cfg.frontendUrl));
 
 server.listen(cfg.port, cfg.host, () => {
   console.log(
