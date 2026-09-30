@@ -241,6 +241,11 @@ server.listen(cfg.port, cfg.host, () => {
   );
 });
 
-const shutdown = () => server.close(() => process.exit(0));
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+const shutdown = () => {
+  for (const client of wss.clients) client.terminate();
+  wss.close();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 5000).unref();
+};
+process.once("SIGINT", shutdown);
+process.once("SIGTERM", shutdown);
