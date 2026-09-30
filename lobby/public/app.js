@@ -54,6 +54,10 @@ const state = {
   fps: 0,
   frameCount: 0,
   fpsStartedAt: performance.now(),
+  firstPersonHand: null,
+  handActionStarted: 0,
+  handActionUntil: 0,
+  handActionType: "use",
 };
 const seatPositions = {
   "sofa-1": { x: -1.4, y: 1.25, z: 6.7, yaw: Math.PI },
@@ -87,7 +91,9 @@ ui.scene.append(renderer.domElement);
 
 const world = new THREE.Group();
 const interactables = [];
+const animatedProps = [];
 scene.add(world);
+scene.add(camera);
 const raycaster = new THREE.Raycaster();
 raycaster.far = 3.2;
 const clock = new THREE.Clock();
@@ -111,6 +117,26 @@ const materials = {
 };
 function box(name, size, position, material = materials.dark, parent = world) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
+  mesh.name = name;
+  mesh.position.set(...position);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+function cylinder(
+  name,
+  radiusTop,
+  radiusBottom,
+  height,
+  position,
+  material = materials.dark,
+  parent = world,
+) {
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 12),
+    material,
+  );
   mesh.name = name;
   mesh.position.set(...position);
   mesh.castShadow = true;
@@ -354,6 +380,85 @@ function buildExterior() {
   buildVoxelLetters();
 }
 
+function buildRoomDetails() {
+  const trim = mat(0xb56b24, {
+    emissive: 0x351500,
+    emissiveIntensity: 0.45,
+    metalness: 0.5,
+  });
+  const rug = mat(0x26383d, { roughness: 1 });
+  const leaf = mat(0x3e8157, { roughness: 0.95 });
+  const pot = mat(0xa75b32, { roughness: 0.9 });
+
+  box("lounge-rug", [8.2, 0.04, 5.4], [0, 0.015, 3.8], rug);
+  box("rug-stripe-a", [8.25, 0.025, 0.1], [0, 0.045, 2], trim);
+  box("rug-stripe-b", [8.25, 0.025, 0.1], [0, 0.045, 5.6], trim);
+  [-13.72, 13.72].forEach((x) =>
+    box("wall-trim", [0.08, 0.08, 20], [x, 2.8, 0], trim),
+  );
+
+  [-11.8, 11.8].forEach((x) => {
+    cylinder("plant-pot", 0.45, 0.34, 0.75, [x, 0.38, 8.9], pot);
+    const crown = new THREE.Group();
+    crown.position.set(x, 1.15, 8.9);
+    world.add(crown);
+    for (let index = 0; index < 5; index += 1) {
+      const frond = box(
+        "plant-leaf",
+        [0.17, 1.15, 0.42],
+        [0, 0.35, 0],
+        leaf,
+        crown,
+      );
+      frond.rotation.z = (index - 2) * 0.24;
+      frond.rotation.y = index * 1.7;
+    }
+  });
+
+  const holo = new THREE.Group();
+  holo.position.set(0, 1.2, 3.1);
+  world.add(holo);
+  [0.42, 0.62, 0.82].forEach((radius, index) => {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.025, 8, 32),
+      materials.screen,
+    );
+    ring.rotation.x = Math.PI / 2 + index * 0.35;
+    ring.rotation.y = index * 0.7;
+    holo.add(ring);
+  });
+  const core = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.3, 0),
+    materials.amber,
+  );
+  core.castShadow = true;
+  holo.add(core);
+  const holoLight = new THREE.PointLight(0x69d4e8, 4, 4, 2);
+  holo.add(holoLight);
+  animatedProps.push({ type: "hologram", object: holo });
+
+  const dustGeometry = new THREE.BufferGeometry();
+  const dust = new Float32Array(90 * 3);
+  for (let index = 0; index < 90; index += 1) {
+    dust[index * 3] = (Math.random() - 0.5) * 25;
+    dust[index * 3 + 1] = 0.3 + Math.random() * 6.7;
+    dust[index * 3 + 2] = (Math.random() - 0.5) * 18;
+  }
+  dustGeometry.setAttribute("position", new THREE.BufferAttribute(dust, 3));
+  const dustCloud = new THREE.Points(
+    dustGeometry,
+    new THREE.PointsMaterial({
+      color: 0xffdca1,
+      size: 0.025,
+      transparent: true,
+      opacity: 0.42,
+      depthWrite: false,
+    }),
+  );
+  world.add(dustCloud);
+  animatedProps.push({ type: "dust", object: dustCloud });
+}
+
 function buildRoom() {
   box("floor", [28, 0.35, 22], [0, -0.2, 0], materials.floor);
   box("ceiling", [28, 0.25, 22], [0, 7.8, 0], materials.dark);
@@ -392,6 +497,7 @@ function buildRoom() {
     box("ceiling-light", [2.5, 0.12, 0.35], [x, 7.58, 0], materials.amber);
   }
   scene.add(new THREE.HemisphereLight(0xe7f5ff, 0x62513b, 2.15));
+  buildRoomDetails();
 
   box("map-frame", [12.5, 5.7, 0.45], [0, 4.25, -10.55], materials.dark);
   const mapScreen = screenPlane(
@@ -444,6 +550,14 @@ function buildRoom() {
       { label: `USE ${t.title}`, action: t.action },
       t.kind,
     );
+    box("keyboard", [1.25, 0.07, 0.48], [t.x, 1.18, -5.55], materials.dark);
+    for (let key = -4; key <= 4; key += 1)
+      box(
+        "keyboard-key",
+        [0.09, 0.025, 0.09],
+        [t.x + key * 0.12, 1.23, -5.5],
+        materials.screen,
+      );
   });
 
   box("sofa-base", [4.7, 0.7, 1.7], [0, 0.55, 7.2], materials.leather);
@@ -505,6 +619,8 @@ function buildRoom() {
   );
   addInteraction(coffee, "BREW COFFEE", { type: "coffee" });
   box("coffee-glow", [0.9, 0.55, 0.06], [11.4, 1.45, 6.08], materials.amber);
+  box("coffee-spout", [0.22, 0.5, 0.35], [11.4, 0.73, 6.02], materials.dark);
+  cylinder("coffee-cup", 0.27, 0.22, 0.42, [11.4, 0.27, 6.05], mat(0xe7dcc8));
   box("food-counter", [5.5, 1.05, 1.6], [9.5, 0.52, 1.3], materials.wood);
   [
     [7.8, 0xed6b3a, "APPLE"],
@@ -527,6 +643,57 @@ function buildRoom() {
   );
 }
 buildRoom();
+
+const skinFaces = {
+  head: [
+    [0, 8, 8, 8],
+    [16, 8, 8, 8],
+    [8, 0, 8, 8],
+    [16, 0, 8, 8],
+    [8, 8, 8, 8],
+    [24, 8, 8, 8],
+  ],
+  body: [
+    [16, 20, 4, 12],
+    [28, 20, 4, 12],
+    [20, 16, 8, 4],
+    [28, 16, 8, 4],
+    [20, 20, 8, 12],
+    [32, 20, 8, 12],
+  ],
+  armR: [
+    [40, 20, 4, 12],
+    [48, 20, 4, 12],
+    [44, 16, 4, 4],
+    [48, 16, 4, 4],
+    [44, 20, 4, 12],
+    [52, 20, 4, 12],
+  ],
+  armL: [
+    [32, 52, 4, 12],
+    [40, 52, 4, 12],
+    [36, 48, 4, 4],
+    [40, 48, 4, 4],
+    [36, 52, 4, 12],
+    [44, 52, 4, 12],
+  ],
+  legR: [
+    [0, 20, 4, 12],
+    [8, 20, 4, 12],
+    [4, 16, 4, 4],
+    [8, 16, 4, 4],
+    [4, 20, 4, 12],
+    [12, 20, 4, 12],
+  ],
+  legL: [
+    [16, 52, 4, 12],
+    [24, 52, 4, 12],
+    [20, 48, 4, 4],
+    [24, 48, 4, 4],
+    [20, 52, 4, 12],
+    [28, 52, 4, 12],
+  ],
+};
 
 function cropTexture(image, x, y, w, h) {
   const canvas = document.createElement("canvas");
@@ -563,17 +730,40 @@ function addSkinPart(group, image, size, pos, faces, name) {
   group.add(mesh);
   return mesh;
 }
+function addSkinLimb(group, image, size, pivot, faces, name) {
+  const joint = new THREE.Group();
+  joint.name = name;
+  joint.position.set(...pivot);
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(...size),
+    faceMaterials(image, faces),
+  );
+  mesh.position.y = -size[1] / 2;
+  mesh.castShadow = true;
+  joint.add(mesh);
+  group.add(joint);
+  return joint;
+}
 function buildAvatar(player) {
   const group = new THREE.Group();
   group.position.set(player.x, 0, player.z);
   group.userData.target = new THREE.Vector3(player.x, 0, player.z);
   group.userData.yaw = player.yaw;
+  group.userData.moving = false;
+  group.userData.seated = false;
+  group.userData.emote = null;
+  group.userData.emoteStarted = 0;
+  group.userData.emoteUntil = 0;
+  group.userData.phase = Math.random() * Math.PI * 2;
+  const rig = new THREE.Group();
+  rig.name = "avatarRig";
+  group.add(rig);
   const placeholder = box(
     "placeholder",
     [0.55, 1.8, 0.35],
     [0, 0.9, 0],
     mat(0x8b5e34),
-    group,
+    rig,
   );
   const sprite = nameSprite(player.name);
   sprite.position.set(0, 2.35, 0);
@@ -584,61 +774,55 @@ function buildAvatar(player) {
   img.crossOrigin = "anonymous";
   let triedSteve = String(player.skin).toLowerCase() === "steve";
   img.onload = () => {
-    group.remove(placeholder);
-    const H = [
-      [0, 8, 8, 8],
-      [16, 8, 8, 8],
-      [8, 0, 8, 8],
-      [16, 0, 8, 8],
-      [8, 8, 8, 8],
-      [24, 8, 8, 8],
-    ];
-    const B = [
-      [16, 20, 4, 12],
-      [28, 20, 4, 12],
-      [20, 16, 8, 4],
-      [28, 16, 8, 4],
-      [20, 20, 8, 12],
-      [32, 20, 8, 12],
-    ];
-    const RA = [
-      [40, 20, 4, 12],
-      [48, 20, 4, 12],
-      [44, 16, 4, 4],
-      [48, 16, 4, 4],
-      [44, 20, 4, 12],
-      [52, 20, 4, 12],
-    ];
-    const LA = [
-      [32, 52, 4, 12],
-      [40, 52, 4, 12],
-      [36, 48, 4, 4],
-      [40, 48, 4, 4],
-      [36, 52, 4, 12],
-      [44, 52, 4, 12],
-    ];
-    const RL = [
-      [0, 20, 4, 12],
-      [8, 20, 4, 12],
-      [4, 16, 4, 4],
-      [8, 16, 4, 4],
-      [4, 20, 4, 12],
-      [12, 20, 4, 12],
-    ];
-    const LL = [
-      [16, 52, 4, 12],
-      [24, 52, 4, 12],
-      [20, 48, 4, 4],
-      [24, 48, 4, 4],
-      [20, 52, 4, 12],
-      [28, 52, 4, 12],
-    ];
-    addSkinPart(group, img, [0.5, 0.5, 0.5], [0, 1.75, 0], H, "head");
-    addSkinPart(group, img, [0.5, 0.75, 0.25], [0, 1.12, 0], B, "body");
-    addSkinPart(group, img, [0.25, 0.75, 0.25], [-0.39, 1.12, 0], LA, "armL");
-    addSkinPart(group, img, [0.25, 0.75, 0.25], [0.39, 1.12, 0], RA, "armR");
-    addSkinPart(group, img, [0.25, 0.75, 0.25], [-0.14, 0.38, 0], LL, "legL");
-    addSkinPart(group, img, [0.25, 0.75, 0.25], [0.14, 0.38, 0], RL, "legR");
+    rig.remove(placeholder);
+    addSkinPart(
+      rig,
+      img,
+      [0.5, 0.5, 0.5],
+      [0, 1.75, 0],
+      skinFaces.head,
+      "head",
+    );
+    addSkinPart(
+      rig,
+      img,
+      [0.5, 0.75, 0.25],
+      [0, 1.12, 0],
+      skinFaces.body,
+      "body",
+    );
+    addSkinLimb(
+      rig,
+      img,
+      [0.25, 0.75, 0.25],
+      [-0.39, 1.49, 0],
+      skinFaces.armL,
+      "armL",
+    );
+    addSkinLimb(
+      rig,
+      img,
+      [0.25, 0.75, 0.25],
+      [0.39, 1.49, 0],
+      skinFaces.armR,
+      "armR",
+    );
+    addSkinLimb(
+      rig,
+      img,
+      [0.25, 0.75, 0.25],
+      [-0.14, 0.75, 0],
+      skinFaces.legL,
+      "legL",
+    );
+    addSkinLimb(
+      rig,
+      img,
+      [0.25, 0.75, 0.25],
+      [0.14, 0.75, 0],
+      skinFaces.legR,
+      "legR",
+    );
   };
   img.onerror = () => {
     if (triedSteve) return;
@@ -647,6 +831,39 @@ function buildAvatar(player) {
   };
   img.src = `${state.config.skinUrl}${encodeURIComponent(player.skin)}`;
   return group;
+}
+function buildFirstPersonHand(skin) {
+  if (state.firstPersonHand) camera.remove(state.firstPersonHand);
+  const hand = new THREE.Group();
+  hand.position.set(0.52, -0.5, -0.82);
+  hand.rotation.set(-0.42, -0.18, -0.14);
+  camera.add(hand);
+  state.firstPersonHand = hand;
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  let triedSteve = String(skin).toLowerCase() === "steve";
+  img.onload = () => {
+    addSkinPart(
+      hand,
+      img,
+      [0.26, 0.82, 0.26],
+      [0, -0.18, 0],
+      skinFaces.armR,
+      "viewHand",
+    );
+  };
+  img.onerror = () => {
+    if (triedSteve) return;
+    triedSteve = true;
+    img.src = `${state.config.skinUrl}${encodeURIComponent("Steve")}`;
+  };
+  img.src = `${state.config.skinUrl}${encodeURIComponent(skin)}`;
+}
+function triggerHandAction(type = "use", duration = 620) {
+  state.handActionStarted = performance.now();
+  state.handActionUntil = state.handActionStarted + duration;
+  state.handActionType = type;
 }
 function nameSprite(name) {
   const canvas = document.createElement("canvas");
@@ -677,8 +894,7 @@ function connect() {
   const socket = new WebSocket(`${protocol}://${location.host}${base}/ws`);
   state.socket = socket;
   socket.onopen = () => {
-    ui.joinStatus.textContent = "LOUNGE ONLINE // ENTER WHEN READY";
-    state.ready = true;
+    ui.joinStatus.textContent = "SYNCING ROOM STATE";
   };
   socket.onclose = () => {
     state.ready = false;
@@ -702,6 +918,8 @@ function send(message) {
 }
 function handleMessage(msg) {
   if (msg.type === "welcome") {
+    state.ready = true;
+    ui.joinStatus.textContent = "LOUNGE ONLINE // ENTER WHEN READY";
     state.id = msg.id;
     state.config = msg.config;
     state.shared = msg.shared;
@@ -734,6 +952,15 @@ function handleMessage(msg) {
     upsertPlayer(msg.player);
     return;
   }
+  if (msg.type === "emote") {
+    const avatar = state.avatars.get(msg.id);
+    if (avatar) {
+      avatar.userData.emote = msg.emote;
+      avatar.userData.emoteStarted = performance.now();
+      avatar.userData.emoteUntil = performance.now() + 1400;
+    }
+    return;
+  }
   if (msg.type === "chat") {
     addChat(msg.row);
     return;
@@ -762,12 +989,12 @@ function upsertPlayer(player) {
   avatar.userData.target.set(player.x, 0, player.z);
   avatar.userData.yaw = player.yaw;
   avatar.userData.moving = player.moving;
+  avatar.userData.seated = !!player.seatId;
   if (player.seatId && seatPositions[player.seatId]) {
     const seat = seatPositions[player.seatId];
     avatar.userData.target.set(seat.x, 0, seat.z);
     avatar.userData.yaw = seat.yaw;
-    avatar.scale.y = 0.78;
-  } else avatar.scale.y = 1;
+  }
 }
 function removePlayer(id) {
   const avatar = state.avatars.get(id);
@@ -837,6 +1064,7 @@ ui.joinForm.addEventListener("submit", (event) => {
   const name = ui.name.value.trim();
   localStorage.setItem("pvc-lobby-name", name);
   send({ type: "join", name, skin: name });
+  buildFirstPersonHand(name);
   state.joined = true;
   ui.join.classList.add("hidden");
   [ui.topbar, ui.players, ui.chat, ui.crosshair].forEach((el) =>
@@ -897,6 +1125,11 @@ document.addEventListener("keydown", (event) => {
     }
     interact();
   }
+  if (event.code === "KeyF" && !event.repeat && state.joined) {
+    triggerHandAction("wave", 1200);
+    send({ type: "emote", emote: "wave" });
+    toast("WAVE SENT TO THE ROOM");
+  }
 });
 document.addEventListener("keyup", (event) => state.keys.delete(event.code));
 ui.helpButton = $("#helpButton");
@@ -920,6 +1153,8 @@ document
 function interact() {
   const data = state.activeInteraction;
   if (!data) return;
+  triggerHandAction("use");
+  send({ type: "emote", emote: "use" });
   const action = data.action;
   if (action?.type === "sit") {
     if (state.seats[action.seatId]) toast("THAT SEAT IS OCCUPIED");
@@ -1072,6 +1307,135 @@ function updateMovement(delta, time) {
     });
   }
 }
+function damp(current, target, speed, delta) {
+  return THREE.MathUtils.lerp(current, target, 1 - Math.exp(-speed * delta));
+}
+function dampAngle(current, target, speed, delta) {
+  const difference = Math.atan2(
+    Math.sin(target - current),
+    Math.cos(target - current),
+  );
+  return current + difference * (1 - Math.exp(-speed * delta));
+}
+function animateAvatar(avatar, time, delta) {
+  avatar.position.lerp(avatar.userData.target, 1 - Math.exp(-10 * delta));
+  avatar.rotation.y = dampAngle(
+    avatar.rotation.y,
+    avatar.userData.yaw,
+    12,
+    delta,
+  );
+
+  const rig = avatar.getObjectByName("avatarRig");
+  const armL = avatar.getObjectByName("armL");
+  const armR = avatar.getObjectByName("armR");
+  const legL = avatar.getObjectByName("legL");
+  const legR = avatar.getObjectByName("legR");
+  const head = avatar.getObjectByName("head");
+  if (!rig || !armL) return;
+
+  const walking = avatar.userData.moving && !avatar.userData.seated;
+  const seated = avatar.userData.seated;
+  const walk = Math.sin(time * 0.012);
+  const idle = Math.sin(time * 0.0018 + avatar.userData.phase);
+  const swing = walking ? walk * 0.72 : 0;
+  let armLX = swing;
+  let armRX = -swing;
+  let armRZ = -idle * 0.025;
+  let legLX = walking ? -swing : 0;
+  let legRX = walking ? swing : 0;
+
+  if (seated) {
+    legLX = -1.45;
+    legRX = -1.45;
+    armLX = -0.16;
+    armRX = -0.16;
+  }
+  if (avatar.userData.emoteUntil > performance.now()) {
+    const elapsed = performance.now() - avatar.userData.emoteStarted;
+    if (avatar.userData.emote === "wave") {
+      armRX = -0.2;
+      armRZ = 2.7 + Math.sin(elapsed * 0.018) * 0.3;
+    } else {
+      armRX = -1.25 + Math.sin(elapsed * 0.02) * 0.16;
+    }
+  }
+
+  armL.rotation.x = damp(armL.rotation.x, armLX, 14, delta);
+  armR.rotation.x = damp(armR.rotation.x, armRX, 14, delta);
+  armR.rotation.z = damp(armR.rotation.z, armRZ, 16, delta);
+  legL.rotation.x = damp(legL.rotation.x, legLX, 14, delta);
+  legR.rotation.x = damp(legR.rotation.x, legRX, 14, delta);
+  rig.position.y = damp(
+    rig.position.y,
+    seated ? 0.3 : walking ? Math.abs(walk) * 0.055 : idle * 0.012,
+    12,
+    delta,
+  );
+  rig.rotation.z = damp(
+    rig.rotation.z,
+    walking ? Math.sin(time * 0.006) * 0.025 : idle * 0.008,
+    8,
+    delta,
+  );
+  if (head) {
+    head.rotation.y = damp(head.rotation.y, idle * 0.09, 3, delta);
+    head.rotation.x = damp(
+      head.rotation.x,
+      Math.sin(time * 0.0011) * 0.025,
+      3,
+      delta,
+    );
+  }
+}
+function animateFirstPersonHand(time, delta) {
+  const hand = state.firstPersonHand;
+  if (!hand) return;
+  const walk = state.moving ? Math.sin(time * 0.011) : 0;
+  const active = time < state.handActionUntil;
+  const duration = Math.max(1, state.handActionUntil - state.handActionStarted);
+  const progress = THREE.MathUtils.clamp(
+    (time - state.handActionStarted) / duration,
+    0,
+    1,
+  );
+  const action = active ? Math.sin(progress * Math.PI) : 0;
+  hand.position.x = damp(hand.position.x, 0.52 + walk * 0.025, 14, delta);
+  hand.position.y = damp(
+    hand.position.y,
+    -0.5 - Math.abs(walk) * 0.035 + action * 0.08,
+    14,
+    delta,
+  );
+  hand.rotation.x = damp(hand.rotation.x, -0.42 - action * 0.85, 16, delta);
+  hand.rotation.z = damp(
+    hand.rotation.z,
+    state.handActionType === "wave" && active
+      ? -0.14 + Math.sin(time * 0.026) * 0.32
+      : -0.14 + walk * 0.025,
+    18,
+    delta,
+  );
+}
+function animateEnvironment(time, delta) {
+  for (const prop of animatedProps) {
+    if (prop.type === "hologram") {
+      prop.object.rotation.y += delta * 0.42;
+      prop.object.position.y = 1.2 + Math.sin(time * 0.002) * 0.06;
+      prop.object.children.forEach((child, index) => {
+        if (child.isMesh) child.rotation.z += delta * (0.2 + index * 0.08);
+      });
+    } else if (prop.type === "dust") {
+      prop.object.rotation.y += delta * 0.008;
+    }
+  }
+  if (state.jukebox && state.shared.jukeboxPlaying) {
+    state.jukebox.scale.setScalar(1 + Math.sin(time * 0.009) * 0.018);
+  } else if (state.jukebox) {
+    const scale = damp(state.jukebox.scale.x, 1, 10, delta);
+    state.jukebox.scale.setScalar(scale);
+  }
+}
 function animate(time = 0) {
   requestAnimationFrame(animate);
   state.frameCount += 1;
@@ -1090,24 +1454,15 @@ function animate(time = 0) {
   const delta = Math.min(clock.getDelta(), 0.05);
   updateMovement(delta, time);
   camera.position.copy(state.position);
+  if (state.moving && !state.seated)
+    camera.position.y += Math.abs(Math.sin(time * 0.011)) * 0.035;
   camera.rotation.order = "YXZ";
   camera.rotation.y = state.yaw;
   camera.rotation.x = state.pitch;
-  for (const avatar of state.avatars.values()) {
-    avatar.position.lerp(avatar.userData.target, 0.16);
-    avatar.rotation.y += (avatar.userData.yaw - avatar.rotation.y) * 0.16;
-    const swing = avatar.userData.moving ? Math.sin(time * 0.012) * 0.55 : 0;
-    const armL = avatar.getObjectByName("armL"),
-      armR = avatar.getObjectByName("armR"),
-      legL = avatar.getObjectByName("legL"),
-      legR = avatar.getObjectByName("legR");
-    if (armL) {
-      armL.rotation.x = swing;
-      armR.rotation.x = -swing;
-      legL.rotation.x = -swing;
-      legR.rotation.x = swing;
-    }
-  }
+  for (const avatar of state.avatars.values())
+    animateAvatar(avatar, time, delta);
+  animateFirstPersonHand(time, delta);
+  animateEnvironment(time, delta);
   updateInteraction();
   renderer.render(scene, camera);
 }

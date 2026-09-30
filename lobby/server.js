@@ -85,6 +85,7 @@ wss.on("connection", (socket) => {
     joined: false,
     lastMove: 0,
     lastChat: 0,
+    lastEmote: 0,
   };
   players.set(id, player);
 
@@ -155,6 +156,15 @@ wss.on("connection", (socket) => {
       chat.push(row);
       if (chat.length > cfg.chatHistory) chat.shift();
       broadcast({ type: "chat", row });
+      return;
+    }
+
+    if (message.type === "emote") {
+      const now = Date.now();
+      if (now - player.lastEmote < 700) return;
+      player.lastEmote = now;
+      const emote = message.emote === "use" ? "use" : "wave";
+      broadcast({ type: "emote", id, emote, ts: now });
       return;
     }
 
