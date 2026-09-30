@@ -7,7 +7,6 @@ const ui = {
   joinForm: $("#joinForm"),
   joinStatus: $("#joinStatus"),
   name: $("#playerName"),
-  skin: $("#skinName"),
   topbar: $("#topbar"),
   online: $("#onlineCount"),
   players: $("#playersPanel"),
@@ -23,6 +22,13 @@ const ui = {
   map: $("#mapOverlay"),
   mapFrame: $("#mapFrame"),
   mapTitle: $("#mapTitle"),
+  terminal: $("#terminalOverlay"),
+  terminalTitle: $("#terminalTitle"),
+  terminalFrame: $("#terminalFrame"),
+  coreFps: $("#coreFps"),
+  coreTriangles: $("#coreTriangles"),
+  coreCalls: $("#coreCalls"),
+  corePlayers: $("#corePlayers"),
   help: $("#helpOverlay"),
   audio: $("#jukeboxAudio"),
 };
@@ -45,6 +51,9 @@ const state = {
   seated: null,
   activeInteraction: null,
   lastSent: 0,
+  fps: 0,
+  frameCount: 0,
+  fpsStartedAt: performance.now(),
 };
 const seatPositions = {
   "sofa-1": { x: -1.4, y: 1.25, z: 6.7, yaw: Math.PI },
@@ -55,11 +64,10 @@ const seatPositions = {
 };
 
 ui.name.value = localStorage.getItem("pvc-lobby-name") || "";
-ui.skin.value = localStorage.getItem("pvc-lobby-skin") || "";
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x070503);
-scene.fog = new THREE.FogExp2(0x070503, 0.018);
+scene.background = new THREE.Color(0x9bc9dc);
+scene.fog = new THREE.Fog(0x9bc9dc, 34, 92);
 const camera = new THREE.PerspectiveCamera(
   68,
   innerWidth / innerHeight,
@@ -92,11 +100,11 @@ const mat = (color, extra = {}) =>
     ...extra,
   });
 const materials = {
-  floor: mat(0x17120d),
-  wall: mat(0x21170f),
-  dark: mat(0x0b0a09, { metalness: 0.52, roughness: 0.38 }),
-  wood: mat(0x4b2d18),
-  leather: mat(0x3a2115),
+  floor: mat(0x514a40),
+  wall: mat(0xddd2bf),
+  dark: mat(0x20282b, { metalness: 0.52, roughness: 0.38 }),
+  wood: mat(0x85532f),
+  leather: mat(0x86512f),
   amber: mat(0xf59e0b, { emissive: 0x7a3300, emissiveIntensity: 1.4 }),
   screen: mat(0x13222a, { emissive: 0x1c7891, emissiveIntensity: 1.25 }),
   green: mat(0x3bd27b, { emissive: 0x126335, emissiveIntensity: 1 }),
@@ -110,30 +118,160 @@ function box(name, size, position, material = materials.dark, parent = world) {
   parent.add(mesh);
   return mesh;
 }
-function labelTexture(title, subtitle = "", accent = "#f59e0b") {
+function monitorTexture(kind, title, subtitle = "", accent = "#f59e0b") {
   const canvas = document.createElement("canvas");
-  canvas.width = 768;
-  canvas.height = 256;
+  canvas.width = 1024;
+  canvas.height = 512;
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#080705";
+  const gradient = ctx.createLinearGradient(0, 0, 1024, 512);
+  gradient.addColorStop(0, "#071116");
+  gradient.addColorStop(1, "#0d0905");
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "rgba(115,190,210,.12)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 1024; x += 32) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 512);
+    ctx.stroke();
+  }
+  for (let y = 0; y < 512; y += 32) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(1024, y);
+    ctx.stroke();
+  }
   ctx.strokeStyle = accent;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(12, 12, 744, 232);
+  ctx.lineWidth = 8;
+  ctx.strokeRect(16, 16, 992, 480);
+
+  if (kind.startsWith("map")) {
+    const nether = kind.includes("nether");
+    const colors = nether
+      ? ["#541d17", "#8a2f1d", "#c2582e", "#27100e"]
+      : ["#315d3d", "#557d47", "#af9a65", "#24465a"];
+    for (let y = 0; y < 11; y += 1)
+      for (let x = 0; x < 25; x += 1) {
+        const noise = Math.abs(Math.sin(x * 9.13 + y * 3.77));
+        ctx.fillStyle =
+          colors[
+            Math.min(colors.length - 1, Math.floor(noise * colors.length))
+          ];
+        ctx.fillRect(60 + x * 36, 62 + y * 31, 34, 29);
+      }
+    ctx.strokeStyle = nether ? "#ff9a62" : "#f9d26f";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(110, 350);
+    ctx.bezierCurveTo(300, 80, 610, 450, 910, 160);
+    ctx.stroke();
+    [
+      [270, 210],
+      [520, 300],
+      [760, 175],
+    ].forEach(([x, y]) => {
+      ctx.fillStyle = "#fff4c6";
+      ctx.beginPath();
+      ctx.arc(x, y, 11, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else if (kind === "store") {
+    ["DIAMOND BLOCK", "RED MUSHROOM", "ELYTRA"].forEach((item, index) => {
+      const y = 92 + index * 105;
+      ctx.fillStyle = "rgba(245,158,11,.12)";
+      ctx.fillRect(62, y, 900, 76);
+      ctx.fillStyle = ["#62d8f1", "#ef5c45", "#b9c0c9"][index];
+      ctx.fillRect(82, y + 14, 48, 48);
+      ctx.fillStyle = "#f4eadb";
+      ctx.font = "bold 26px monospace";
+      ctx.textAlign = "left";
+      ctx.fillText(item, 158, y + 45);
+      ctx.fillStyle = "#7cf0a5";
+      ctx.textAlign = "right";
+      ctx.fillText(["IN STOCK", "RESTOCKED", "5 SHOPS"][index], 928, y + 45);
+    });
+  } else if (kind === "eye") {
+    ctx.strokeStyle = "rgba(89,227,145,.55)";
+    ctx.lineWidth = 4;
+    [80, 145, 210].forEach((radius) => {
+      ctx.beginPath();
+      ctx.arc(512, 260, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+    ctx.beginPath();
+    ctx.moveTo(280, 260);
+    ctx.lineTo(744, 260);
+    ctx.moveTo(512, 28);
+    ctx.lineTo(512, 492);
+    ctx.stroke();
+    [
+      [430, 170],
+      [605, 310],
+      [350, 335],
+      [690, 145],
+    ].forEach(([x, y]) => {
+      ctx.fillStyle = "#59e391";
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowColor = "#59e391";
+      ctx.shadowBlur = 20;
+    });
+    ctx.shadowBlur = 0;
+  } else if (kind === "core") {
+    ctx.strokeStyle = "#64cce5";
+    ctx.lineWidth = 4;
+    const points = [
+      [512, 75],
+      [260, 225],
+      [385, 420],
+      [665, 420],
+      [775, 225],
+    ];
+    points.forEach((p, i) => {
+      const q = points[(i + 1) % points.length];
+      ctx.beginPath();
+      ctx.moveTo(...p);
+      ctx.lineTo(...q);
+      ctx.stroke();
+    });
+    points.forEach(([x, y]) => {
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(x - 12, y - 12, 24, 24);
+    });
+    ctx.fillStyle = "#9ce5f5";
+    ctx.font = "22px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("SCENE 60 FPS  //  WEBSOCKET LIVE", 512, 470);
+  }
+
+  ctx.fillStyle = "rgba(5,7,8,.86)";
+  ctx.fillRect(34, 28, 956, 54);
   ctx.fillStyle = accent;
-  ctx.font = "bold 34px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText(title, 384, 112);
+  ctx.font = "bold 30px monospace";
+  ctx.textAlign = "left";
+  ctx.fillText(title, 58, 64);
   ctx.fillStyle = "#b9aa98";
-  ctx.font = "20px monospace";
-  ctx.fillText(subtitle, 384, 158);
+  ctx.font = "18px monospace";
+  ctx.textAlign = "right";
+  ctx.fillText(subtitle, 965, 63);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
-function screenPlane(name, size, position, rotation, title, subtitle, action) {
+function screenPlane(
+  name,
+  size,
+  position,
+  rotation,
+  title,
+  subtitle,
+  action,
+  kind = "sign",
+) {
   const material = new THREE.MeshBasicMaterial({
-    map: labelTexture(title, subtitle),
+    map: monitorTexture(kind, title, subtitle),
     toneMapped: false,
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...size), material);
@@ -150,13 +288,102 @@ function addInteraction(mesh, label, action) {
   interactables.push(mesh);
 }
 
+function buildVoxelLetters() {
+  const patterns = {
+    P: ["1110", "1001", "1110", "1000", "1000"],
+    V: ["10001", "10001", "01010", "01010", "00100"],
+    C: ["0111", "1000", "1000", "1000", "0111"],
+  };
+  let cursor = -9.2;
+  for (const letter of ["P", "V", "C"]) {
+    const rows = patterns[letter];
+    rows.forEach((row, rowIndex) =>
+      [...row].forEach((cell, columnIndex) => {
+        if (cell !== "1") return;
+        const block = box(
+          `PVC-${letter}`,
+          [1.15, 1.15, 0.8],
+          [cursor + columnIndex * 1.2, 6.4 - rowIndex * 1.2, 31],
+          materials.amber,
+        );
+        block.castShadow = false;
+      }),
+    );
+    cursor += Math.max(...rows.map((row) => row.length)) * 1.2 + 1.2;
+  }
+  box("pvc-sign-base", [22, 0.7, 2.2], [0, 0.15, 31], materials.dark);
+}
+
+function buildExterior() {
+  const grass = mat(0x64834e, { roughness: 1 });
+  box("outside-ground", [90, 0.6, 75], [0, -0.45, 36], grass);
+  const sun = new THREE.DirectionalLight(0xfff2d1, 3.2);
+  sun.position.set(-18, 26, 18);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  world.add(sun);
+  const hillMaterial = mat(0x78945a, { roughness: 1 });
+  [
+    [-24, 24, 8, 4],
+    [24, 22, 10, 3],
+    [-18, 44, 14, 6],
+    [20, 48, 18, 5],
+  ].forEach(([x, z, w, h]) =>
+    box("hill", [w, h, 8], [x, h / 2 - 0.1, z], hillMaterial),
+  );
+  [
+    [-10, 18],
+    [12, 20],
+    [-25, 38],
+    [27, 36],
+  ].forEach(([x, z]) => {
+    box("tree-trunk", [1.1, 5, 1.1], [x, 2.2, z], mat(0x795033));
+    box(
+      "tree-leaves",
+      [4.2, 3.8, 4.2],
+      [x, 5.1, z],
+      mat(0x426d3d, { roughness: 1 }),
+    );
+    box(
+      "tree-leaves",
+      [3, 2.5, 3],
+      [x, 7.5, z],
+      mat(0x527f45, { roughness: 1 }),
+    );
+  });
+  buildVoxelLetters();
+}
+
 function buildRoom() {
   box("floor", [28, 0.35, 22], [0, -0.2, 0], materials.floor);
   box("ceiling", [28, 0.25, 22], [0, 7.8, 0], materials.dark);
   box("back-wall", [28, 8, 0.35], [0, 3.8, -11], materials.wall);
-  box("front-wall", [28, 8, 0.35], [0, 3.8, 11], materials.wall);
   box("left-wall", [0.35, 8, 22], [-14, 3.8, 0], materials.wall);
   box("right-wall", [0.35, 8, 22], [14, 3.8, 0], materials.wall);
+  box("window-sill", [28, 1.1, 0.55], [0, 0.35, 10.85], materials.wall);
+  box("window-header", [28, 0.65, 0.55], [0, 7.45, 10.85], materials.dark);
+  [-14, -9.3, -4.65, 0, 4.65, 9.3, 14].forEach((x) =>
+    box("window-frame", [0.28, 6.5, 0.48], [x, 4, 10.8], materials.dark),
+  );
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xbde9f2,
+    transparent: true,
+    opacity: 0.2,
+    roughness: 0.08,
+    metalness: 0.05,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  [-11.65, -7, -2.32, 2.32, 7, 11.65].forEach((x) => {
+    const glass = box(
+      "window-glass",
+      [4.35, 6.2, 0.08],
+      [x, 4, 10.76],
+      glassMaterial,
+    );
+    glass.castShadow = false;
+  });
+  buildExterior();
   for (let x = -11; x <= 11; x += 5.5) {
     const light = new THREE.PointLight(0xf59e0b, 16, 12, 2);
     light.position.set(x, 6.8, 0);
@@ -164,7 +391,7 @@ function buildRoom() {
     world.add(light);
     box("ceiling-light", [2.5, 0.12, 0.35], [x, 7.58, 0], materials.amber);
   }
-  scene.add(new THREE.HemisphereLight(0x8dbbd0, 0x241207, 1.35));
+  scene.add(new THREE.HemisphereLight(0xe7f5ff, 0x62513b, 2.15));
 
   box("map-frame", [12.5, 5.7, 0.45], [0, 4.25, -10.55], materials.dark);
   const mapScreen = screenPlane(
@@ -175,20 +402,34 @@ function buildRoom() {
     "PVC LIVE MAP",
     "OVERWORLD // E TO OPEN",
     { label: "OPEN SHARED SERVER MAP", action: "map" },
+    "map-overworld",
   );
   state.mapScreen = mapScreen;
   box("map-console", [8, 0.8, 1.5], [0, 0.4, -8.8], materials.dark);
   box("map-console-glow", [5, 0.04, 0.7], [0, 0.82, -8.55], materials.screen);
 
   const terminals = [
-    { x: -9, title: "PVC STORE", sub: "MARKET TERMINAL", action: "shop" },
+    {
+      x: -9,
+      title: "PVC STORE",
+      sub: "MARKET TERMINAL",
+      action: "shop",
+      kind: "store",
+    },
     {
       x: -5.8,
       title: "THREE.JS CORE",
       sub: "ROOM RENDER NODE",
       action: "core",
+      kind: "core",
     },
-    { x: 8.2, title: "GRV EYE", sub: "OBSERVATION NODE", action: "eye" },
+    {
+      x: 8.2,
+      title: "GRV EYE",
+      sub: "OBSERVATION NODE",
+      action: "eye",
+      kind: "eye",
+    },
   ];
   terminals.forEach((t) => {
     box("desk", [2.8, 0.18, 1.4], [t.x, 1.05, -5.8], materials.wood);
@@ -201,6 +442,7 @@ function buildRoom() {
       t.title,
       t.sub,
       { label: `USE ${t.title}`, action: t.action },
+      t.kind,
     );
   });
 
@@ -281,6 +523,7 @@ function buildRoom() {
     "PVC COMMON ROOM",
     "MARKET // MAP // PEOPLE",
     { label: "PVC SOCIAL NODE", action: "noop" },
+    "sign",
   );
 }
 buildRoom();
@@ -339,6 +582,7 @@ function buildAvatar(player) {
   state.avatars.set(player.id, group);
   const img = new Image();
   img.crossOrigin = "anonymous";
+  let triedSteve = String(player.skin).toLowerCase() === "steve";
   img.onload = () => {
     group.remove(placeholder);
     const H = [
@@ -395,6 +639,11 @@ function buildAvatar(player) {
     addSkinPart(group, img, [0.25, 0.75, 0.25], [0.39, 1.12, 0], RA, "armR");
     addSkinPart(group, img, [0.25, 0.75, 0.25], [-0.14, 0.38, 0], LL, "legL");
     addSkinPart(group, img, [0.25, 0.75, 0.25], [0.14, 0.38, 0], RL, "legR");
+  };
+  img.onerror = () => {
+    if (triedSteve) return;
+    triedSteve = true;
+    img.src = `${state.config.skinUrl}${encodeURIComponent("Steve")}`;
   };
   img.src = `${state.config.skinUrl}${encodeURIComponent(player.skin)}`;
   return group;
@@ -465,7 +714,7 @@ function handleMessage(msg) {
       send({
         type: "join",
         name: ui.name.value.trim(),
-        skin: ui.skin.value.trim(),
+        skin: ui.name.value.trim(),
       });
     return;
   }
@@ -585,11 +834,9 @@ ui.joinForm.addEventListener("submit", (event) => {
     toast("SERVER IS STILL CONNECTING");
     return;
   }
-  const name = ui.name.value.trim(),
-    skin = ui.skin.value.trim();
+  const name = ui.name.value.trim();
   localStorage.setItem("pvc-lobby-name", name);
-  localStorage.setItem("pvc-lobby-skin", skin);
-  send({ type: "join", name, skin });
+  send({ type: "join", name, skin: name });
   state.joined = true;
   ui.join.classList.add("hidden");
   [ui.topbar, ui.players, ui.chat, ui.crosshair].forEach((el) =>
@@ -611,6 +858,7 @@ renderer.domElement.addEventListener("click", () => {
   if (
     state.joined &&
     !ui.map.classList.contains("open") &&
+    !ui.terminal.classList.contains("open") &&
     !ui.help.classList.contains("open")
   )
     renderer.domElement.requestPointerLock();
@@ -660,6 +908,7 @@ function openHelp(open) {
   if (open) document.exitPointerLock();
 }
 $("#closeMap").addEventListener("click", closeMap);
+$("#closeTerminal").addEventListener("click", closeTerminal);
 document
   .querySelectorAll("[data-world]")
   .forEach((button) =>
@@ -694,17 +943,19 @@ function interact() {
     return;
   }
   if (action === "shop") {
-    window.open(state.config.shopUrl, "_blank", "noopener");
+    openTerminal("PVC STORE // LIVE MARKET", state.config.shopUrl, false);
     return;
   }
   if (action === "eye") {
-    window.open("https://api.theyasked.co/grveye/", "_blank", "noopener");
+    openTerminal(
+      "GRV EYE // OBSERVATION",
+      "https://api.theyasked.co/grveye/",
+      false,
+    );
     return;
   }
   if (action === "core") {
-    toast(
-      `THREE.JS r186 // ${renderer.info.render.triangles.toLocaleString()} TRIANGLES`,
-    );
+    openTerminal("THREE.JS // LIVE RENDER CORE", "", true);
     return;
   }
 }
@@ -720,6 +971,20 @@ function closeMap() {
   ui.map.setAttribute("aria-hidden", "true");
   renderer.domElement.requestPointerLock();
 }
+function openTerminal(title, url, coreMode) {
+  document.exitPointerLock();
+  ui.terminalTitle.textContent = title;
+  ui.terminal.classList.toggle("core-mode", coreMode);
+  ui.terminal.classList.add("open");
+  ui.terminal.setAttribute("aria-hidden", "false");
+  if (!coreMode && url) ui.terminalFrame.src = url;
+}
+function closeTerminal() {
+  ui.terminal.classList.remove("open", "core-mode");
+  ui.terminal.setAttribute("aria-hidden", "true");
+  ui.terminalFrame.src = "about:blank";
+  renderer.domElement.requestPointerLock();
+}
 function syncShared() {
   const worldName = state.shared.mapWorld === "nether" ? "NETHER" : "OVERWORLD";
   ui.mapTitle.textContent = `${worldName} // LIVE MAP`;
@@ -730,7 +995,8 @@ function syncShared() {
     );
   if (state.mapScreen) {
     state.mapScreen.material.map.dispose();
-    state.mapScreen.material.map = labelTexture(
+    state.mapScreen.material.map = monitorTexture(
+      state.shared.mapWorld === "nether" ? "map-nether" : "map-overworld",
       "PVC LIVE MAP",
       `${worldName} // E TO OPEN`,
       state.shared.mapWorld === "nether" ? "#ef5f42" : "#f59e0b",
@@ -808,6 +1074,19 @@ function updateMovement(delta, time) {
 }
 function animate(time = 0) {
   requestAnimationFrame(animate);
+  state.frameCount += 1;
+  if (time - state.fpsStartedAt >= 500) {
+    state.fps = Math.round(
+      (state.frameCount * 1000) / (time - state.fpsStartedAt),
+    );
+    state.frameCount = 0;
+    state.fpsStartedAt = time;
+    ui.coreFps.textContent = `${state.fps} FPS`;
+    ui.coreTriangles.textContent =
+      renderer.info.render.triangles.toLocaleString();
+    ui.coreCalls.textContent = renderer.info.render.calls.toLocaleString();
+    ui.corePlayers.textContent = `${state.players.size} PLAYERS`;
+  }
   const delta = Math.min(clock.getDelta(), 0.05);
   updateMovement(delta, time);
   camera.position.copy(state.position);

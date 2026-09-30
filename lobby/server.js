@@ -115,9 +115,12 @@ wss.on("connection", (socket) => {
     }
 
     if (message.type === "join" && !player.joined) {
-      player.name = text(message.name, 24) || player.name;
+      player.name = text(message.name, 32) || player.name;
       player.skin =
-        text(message.skin, 32).replace(/[^A-Za-z0-9_.*-]/g, "") || "Steve";
+        text(message.skin || player.name, 32).replace(
+          /[^A-Za-z0-9_.*-]/g,
+          "",
+        ) || "Steve";
       player.joined = true;
       broadcast({ type: "player-join", player: publicPlayer(player) });
       return;

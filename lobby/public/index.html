@@ -27,24 +27,16 @@
         <div class="join-kicker">MULTIPLAYER LOUNGE</div>
         <h1>ENTER THE<br /><span>COMMON ROOM</span></h1>
         <p>
-          Use your Minecraft name to load your skin. Meet, talk, sit down and
-          explore the live PVC systems together.
+          Enter your Minecraft nickname. Your skin loads automatically; if it
+          cannot be found, Steve welcomes you in.
         </p>
         <form id="joinForm">
-          <label for="playerName">DISPLAY NAME</label>
+          <label for="playerName">MINECRAFT NICKNAME</label>
           <input
             id="playerName"
-            maxlength="24"
-            autocomplete="nickname"
-            placeholder="Your name"
-            required
-          />
-          <label for="skinName">MINECRAFT SKIN</label>
-          <input
-            id="skinName"
             maxlength="32"
-            autocomplete="off"
-            placeholder="Java or Bedrock username"
+            autocomplete="nickname"
+            placeholder="Java or Bedrock nickname"
             required
           />
           <button type="submit">CONNECT TO LOUNGE <span>→</span></button>
@@ -107,6 +99,42 @@
         src="about:blank"
         allowfullscreen
       ></iframe>
+    </section>
+
+    <section class="terminal-overlay" id="terminalOverlay" aria-hidden="true">
+      <header>
+        <div>
+          <small>IN-ROOM TERMINAL SESSION</small>
+          <strong id="terminalTitle">PVC TERMINAL</strong>
+        </div>
+        <button type="button" id="closeTerminal">CLOSE TERMINAL ×</button>
+      </header>
+      <iframe
+        id="terminalFrame"
+        title="PVC terminal view"
+        src="about:blank"
+      ></iframe>
+      <div class="core-terminal" id="coreTerminal">
+        <div class="core-visual" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><span>THREE.JS</span>
+        </div>
+        <div class="core-copy">
+          <small>LIVE ROOM RENDER NODE</small>
+          <h2>SCENE TELEMETRY</h2>
+          <dl>
+            <dt>FRAME RATE</dt>
+            <dd id="coreFps">-- FPS</dd>
+            <dt>TRIANGLES</dt>
+            <dd id="coreTriangles">--</dd>
+            <dt>DRAW CALLS</dt>
+            <dd id="coreCalls">--</dd>
+            <dt>CONNECTED</dt>
+            <dd id="corePlayers">-- PLAYERS</dd>
+            <dt>TRANSPORT</dt>
+            <dd>SECURE WEBSOCKET</dd>
+          </dl>
+        </div>
+      </div>
     </section>
 
     <section class="help-overlay" id="helpOverlay" aria-hidden="true">
