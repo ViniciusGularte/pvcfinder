@@ -1557,6 +1557,11 @@
         box-shadow: inset 0 2px 0 rgba(74, 222, 128, 0.75);
       }
 
+      .shop-card.admin-shop {
+        border-color: rgba(245, 158, 11, 0.48);
+        box-shadow: inset 0 2px 0 rgba(245, 158, 11, 0.72);
+      }
+
       .card-header {
         position: relative;
         padding: 136px 16px 8px;
@@ -1700,6 +1705,19 @@
         will-change: transform;
       }
 
+      .seller-showcase.admin .seller-pose {
+        width: 82px;
+        height: 82px;
+        object-position: center;
+        image-rendering: auto;
+        animation: none;
+        filter: drop-shadow(0 10px 18px rgba(245, 158, 11, 0.22));
+      }
+
+      .seller-showcase.admin .seller-stage {
+        border-color: rgba(245, 158, 11, 0.28);
+      }
+
       .seller-nameplate {
         position: absolute;
         left: 50%;
@@ -1813,6 +1831,18 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
         box-shadow: 0 0 14px rgba(74, 222, 128, 0.1);
+      }
+
+      .shop-only-badge {
+        padding: 3px 6px;
+        border: 1px solid rgba(245, 158, 11, 0.58);
+        background: rgba(120, 53, 15, 0.28);
+        color: #fbbf24;
+        font-family: "Press Start 2P", monospace;
+        font-size: 6px;
+        line-height: 1.4;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
 
       .shop-line-sep {
@@ -3584,6 +3614,12 @@
                 </div>
 
                 <div class="toggle-row">
+                  <label class="toggle admin-toggle">
+                    <input id="adminOnlyToggle" type="checkbox" />
+                    <span class="toggle-box" aria-hidden="true"></span>
+                    <span class="toggle-label">Admin shops only</span>
+                  </label>
+
                   <label class="toggle">
                     <input id="inStockOnlyToggle" type="checkbox" checked />
                     <span class="toggle-box" aria-hidden="true"></span>
@@ -3760,6 +3796,7 @@
     </div>
 
     <script src="data/item-textures.js"></script>
+    <script src="data/admin-shops.js"></script>
     <script>
       const CONFIG = {
         dataUrls: [
@@ -3895,6 +3932,7 @@
         intentChips: document.getElementById("intentChips"),
         mobileFilterToggle: document.getElementById("mobileFilterToggle"),
         mobileFilterCount: document.getElementById("mobileFilterCount"),
+        adminOnlyToggle: document.getElementById("adminOnlyToggle"),
         inStockOnlyToggle: document.getElementById("inStockOnlyToggle"),
         includeShulkerToggle: document.getElementById("includeShulkerToggle"),
         onlyShulkerToggle: document.getElementById("onlyShulkerToggle"),
@@ -3920,6 +3958,7 @@
         searchScope: "item",
         tradeIntent: "both",
         mobileFiltersOpen: false,
+        adminOnly: false,
         inStockOnly: true,
         includeShulker: true,
         onlyShulker: false,
@@ -4127,6 +4166,12 @@
           renderAll();
         });
 
+        refs.adminOnlyToggle.addEventListener("change", () => {
+          state.adminOnly = refs.adminOnlyToggle.checked;
+          closeMobileFiltersIfNeeded();
+          renderAll();
+        });
+
         refs.includeShulkerToggle.addEventListener("change", () => {
           state.includeShulker = refs.includeShulkerToggle.checked;
           if (!state.includeShulker && state.onlyShulker) {
@@ -4181,6 +4226,9 @@
           } else if (filter === "stock") {
             refs.inStockOnlyToggle.checked = false;
             state.inStockOnly = false;
+          } else if (filter === "admin") {
+            refs.adminOnlyToggle.checked = false;
+            state.adminOnly = false;
           } else if (filter === "shulker") {
             refs.includeShulkerToggle.checked = true;
             state.includeShulker = true;
@@ -4437,7 +4485,9 @@
             return;
           }
 
-          state.shops = Array.isArray(payload.data) ? payload.data : [];
+          state.shops = mergeAdminShops(
+            Array.isArray(payload.data) ? payload.data : [],
+          );
           state.lastDumpedAt =
             payload.information && payload.information.timeDumped
               ? new Date(payload.information.timeDumped)
@@ -4538,6 +4588,19 @@
         state.listings.forEach((listing) => {
           listing.restock = state.restocks.get(listing.stockGroupKey) || null;
         });
+      }
+
+      function mergeAdminShops(liveShops) {
+        const adminShops = Array.isArray(window.PVC_ADMIN_SHOPS)
+          ? window.PVC_ADMIN_SHOPS
+          : [];
+        const adminNames = new Set(
+          adminShops.map((shop) => normalizeForSearch(shop.shopName)),
+        );
+
+        return liveShops
+          .filter((shop) => !adminNames.has(normalizeForSearch(shop.shopName)))
+          .concat(adminShops);
       }
 
       async function fetchJsonUrl(url, options = {}) {
@@ -6171,6 +6234,13 @@
           return;
         }
 
+        if (listing.isAdminShop) {
+          listing.sellerVisualPending = false;
+          listing.poseUrl = "assets/pvc-logo.png";
+          listing.poseFallbacks = ["assets/pvc-logo.png"];
+          return;
+        }
+
         const cacheKey =
           listing.sellerLookupKey || getSellerLookupKey(listing.shopOwner);
         listing.sellerLookupKey = cacheKey;
@@ -6188,7 +6258,7 @@
       function hydrateVisibleSellerVisuals(listings) {
         listings.forEach((listing) => {
           ensureSellerVisual(listing);
-          resolveBedrockSellerVisual(listing);
+          if (!listing.isAdminShop) resolveBedrockSellerVisual(listing);
         });
       }
 
@@ -6417,10 +6487,12 @@
 
       function clearFilters() {
         refs.searchInput.value = "";
+        refs.adminOnlyToggle.checked = false;
         refs.inStockOnlyToggle.checked = true;
         refs.includeShulkerToggle.checked = true;
         refs.onlyShulkerToggle.checked = false;
         state.query = "";
+        state.adminOnly = false;
         state.inStockOnly = true;
         state.includeShulker = true;
         state.onlyShulker = false;
@@ -6562,6 +6634,7 @@
           state.sort,
           state.searchScope,
           state.tradeIntent,
+          state.adminOnly ? "1" : "0",
           state.inStockOnly ? "1" : "0",
           state.includeShulker ? "1" : "0",
           state.onlyShulker ? "1" : "0",
@@ -6577,6 +6650,7 @@
           state.query ||
             state.searchScope !== "item" ||
             state.tradeIntent !== "both" ||
+            state.adminOnly ||
             state.inStockOnly ||
             !state.includeShulker ||
             state.onlyShulker ||
@@ -6641,6 +6715,10 @@
 
         if (state.inStockOnly) {
           tags.push(buildFilterTag("stock", "in stock"));
+        }
+
+        if (state.adminOnly) {
+          tags.push(buildFilterTag("admin", "admin shops"));
         }
 
         if (!state.includeShulker) {
@@ -6748,6 +6826,10 @@
         const terms = tokenize(state.query);
         const exactPhrase = getExactSearchPhrase();
         const filtered = state.listings.filter((listing) => {
+          if (state.adminOnly && !listing.isAdminShop) {
+            return false;
+          }
+
           if (state.inStockOnly && listing.stock === 0) {
             return false;
           }
@@ -6865,6 +6947,12 @@
         if (listing.restock) {
           cardClasses.push("restocked");
         }
+        if (listing.isAdminShop) {
+          cardClasses.push("admin-shop");
+        }
+        if (listing.isOnlyShop) {
+          cardClasses.push("only-shop");
+        }
 
         const shulkerSection = listing.shulkerContents.length
           ? buildShulkerSection(listing, terms)
@@ -6908,17 +6996,19 @@
               "</span>"
             : "",
           listing.restock
-            ? '          <span class="shop-restock-badge">↻ RESTOCKED +' +
-              escapeHtml(formatNumber(listing.restock.amount || 0)) +
-              " · " +
+            ? '          <span class="shop-restock-badge">↻ BACK IN STOCK · ' +
               escapeHtml(formatRestockAge(listing.restock.restockedAt)) +
               "</span>"
+            : "",
+          listing.isOnlyShop
+            ? '          <span class="shop-only-badge">ONLY SHOP</span>'
             : "",
           "        </div>",
           "      </div>",
           "    </div>",
           '    <div class="seller-showcase' +
             (listing.sellerVisualPending ? " loading" : "") +
+            (listing.isAdminShop ? " admin" : "") +
             '" data-seller-key="' +
             escapeAttribute(listing.sellerLookupKey) +
             '" aria-hidden="true">',
@@ -6932,13 +7022,14 @@
             poseFallbacks +
             '" data-pose-index="0" alt="" loading="lazy" decoding="async" onerror="window.handlePoseError(this)" />',
           '      <div class="seller-nameplate">',
-          '        <a class="seller-nameplate-link" href="' +
-            escapeAttribute(profileUrl) +
-            '" target="_blank" rel="noreferrer">' +
-            '<span class="seller-nameplate-name">' +
-            escapeHtml(listing.shopOwner) +
-            "</span>" +
-            "</a>",
+          listing.isAdminShop
+            ? '        <span class="seller-nameplate-link"><span class="seller-nameplate-name">PVC ADMIN</span></span>'
+            : '        <a class="seller-nameplate-link" href="' +
+              escapeAttribute(profileUrl) +
+              '" target="_blank" rel="noreferrer">' +
+              '<span class="seller-nameplate-name">' +
+              escapeHtml(listing.shopOwner) +
+              "</span></a>",
           "      </div>",
           "    </div>",
           "  </div>",
@@ -6950,9 +7041,11 @@
           shulkerSection,
           '  <div class="card-footer">',
           '    <div class="card-footer-main">',
-          '    <a class="footer-button profile-button" href="' +
-            escapeAttribute(profileUrl) +
-            '" target="_blank" rel="noreferrer">VIEW PROFILE ↗</a>',
+          listing.isAdminShop
+            ? '    <span class="footer-button profile-button admin-official">OFFICIAL PVC SHOP</span>'
+            : '    <a class="footer-button profile-button" href="' +
+              escapeAttribute(profileUrl) +
+              '" target="_blank" rel="noreferrer">VIEW PROFILE ↗</a>',
           '    <a class="footer-button map-button" href="' +
             escapeAttribute(listing.mapUrl) +
             '" target="_blank" rel="noreferrer">VIEW SHOP →</a>',
@@ -6969,6 +7062,15 @@
       }
 
       function buildStockSummary(listing) {
+        if (listing.isAdminShop) {
+          return [
+            '<div class="stock-summary" title="Admin shops have unlimited supply.">',
+            '  <span class="stock-summary-piece">official admin supply</span>',
+            '  <div class="stock-summary-main"><span class="stock-summary-strong">∞</span><span class="stock-summary-unit">unlimited</span></div>',
+            "</div>",
+          ].join("");
+        }
+
         const unitLabel = listing.sellerDisplayStock === 1 ? "unit" : "units";
         const shulkerNote =
           listing.isShulker &&
@@ -7550,6 +7652,7 @@
             }
 
             const resultItem = recipe.resultItem;
+            const isAdminShop = shop.isAdminShop === true;
             const shopName = cleanText(shop.shopName) || "Unnamed Shop";
             const shopOwner = cleanText(shop.shopOwner) || "Unknown Seller";
             const rawLore = cleanLore(resultItem.lore);
@@ -7710,8 +7813,11 @@
               sellerLookupKey,
               sellerUuid: null,
               sellerVisualPending: false,
-              poseUrl: SELLER_POSE_PLACEHOLDER,
-              poseFallbacks: [],
+              poseUrl: isAdminShop
+                ? "assets/pvc-logo.png"
+                : SELLER_POSE_PLACEHOLDER,
+              poseFallbacks: isAdminShop ? ["assets/pvc-logo.png"] : [],
+              isAdminShop,
               offerStock,
               stock: grossStockUnits,
               displayStock: displayStockUnits,
@@ -7865,6 +7971,23 @@
           listing.sellerDisplayStock =
             sellerDisplayStockTotals[listing.stockGroupKey] ||
             listing.displayStock;
+        });
+
+        const availableLocationsByItem = new Map();
+        listings.forEach((listing) => {
+          if (listing.stock <= 0) return;
+          if (!availableLocationsByItem.has(listing.marketKey)) {
+            availableLocationsByItem.set(listing.marketKey, new Set());
+          }
+          availableLocationsByItem
+            .get(listing.marketKey)
+            .add(listing.locationKey);
+        });
+        listings.forEach((listing) => {
+          const locations = availableLocationsByItem.get(listing.marketKey);
+          listing.availableLocationCount = locations ? locations.size : 0;
+          listing.isOnlyShop =
+            listing.stock > 0 && listing.availableLocationCount === 1;
         });
 
         const marketContext = buildMarketContext(listings);

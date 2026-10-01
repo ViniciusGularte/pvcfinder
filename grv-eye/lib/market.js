@@ -97,15 +97,24 @@ export function createMarketTracker({
         o.shop_name AS shopName, o.shop_owner AS shopOwner,
         o.world, o.x, o.y, o.z, o.item_name AS itemName,
         o.stock AS stockNow,
-        (SELECT amount FROM market_stock_events latest
-          WHERE latest.offer_key=e.offer_key AND latest.event_type='restock'
-          ORDER BY latest.detected_at DESC LIMIT 1) AS amount,
-        (SELECT stock_before FROM market_stock_events latest
-          WHERE latest.offer_key=e.offer_key AND latest.event_type='restock'
-          ORDER BY latest.detected_at DESC LIMIT 1) AS stockBefore
+        MAX(e.amount) AS amount,
+        0 AS stockBefore
       FROM market_stock_events e
       JOIN market_offers o ON o.offer_key=e.offer_key
-      WHERE e.event_type='restock' AND e.detected_at >= ?
+      WHERE e.event_type='restock'
+        AND e.stock_before=0
+        AND e.stock_after>0
+        AND e.detected_at >= ?
+        AND e.detected_at <= ?
+        AND o.stock>0
+        AND NOT EXISTS (
+          SELECT 1
+          FROM market_stock_events reversal
+          WHERE reversal.offer_key=e.offer_key
+            AND reversal.detected_at>e.detected_at
+            AND reversal.detected_at<=e.detected_at+900000
+            AND reversal.stock_after=e.stock_before
+        )
       GROUP BY e.offer_key
       ORDER BY restockedAt DESC
       LIMIT ?`),
@@ -178,7 +187,12 @@ export function createMarketTracker({
   function recentRestocks(hours = 24, limit = 500) {
     const safeHours = Math.min(168, Math.max(1, Number(hours) || 24));
     const safeLimit = Math.min(2_000, Math.max(1, Number(limit) || 500));
-    return statements.recent.all(Date.now() - safeHours * 3_600_000, safeLimit);
+    const now = Date.now();
+    return statements.recent.all(
+      now - safeHours * 3_600_000,
+      now - 15 * 60_000,
+      safeLimit,
+    );
   }
 
   function close() {
