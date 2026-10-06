@@ -10,11 +10,16 @@
     />
     <link rel="icon" type="image/png" href="assets/pvc-logo.png" />
     <link rel="apple-touch-icon" href="assets/pvc-logo.png" />
-    <link rel="preload" as="image" href="assets/pvc-logo.png" />
+    <link
+      rel="preload"
+      as="image"
+      href="assets/merchant-guild-loader.webp"
+      type="image/webp"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Press+Start+2P&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -57,7 +62,7 @@
         min-height: 100vh;
         background: var(--bg);
         color: var(--text);
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "IBM Plex Sans", sans-serif;
         text-rendering: optimizeLegibility;
         overflow-x: hidden;
       }
@@ -107,8 +112,9 @@
       }
 
       .pixel-font {
-        font-family: "Press Start 2P", monospace;
-        letter-spacing: 0.08em;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.06em;
       }
 
       .hidden {
@@ -624,18 +630,18 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 24px;
+        padding: 20px;
         background:
           radial-gradient(
-            circle at 50% 46%,
-            rgba(232, 118, 10, 0.18),
-            transparent 21%
+            circle at 50% 42%,
+            rgba(232, 118, 10, 0.22),
+            transparent 30%
           ),
           radial-gradient(
             circle at 50% 50%,
             #171007 0%,
-            #080604 38%,
-            #020202 76%
+            #080604 42%,
+            #020202 78%
           );
         overflow: hidden;
         transition:
@@ -644,50 +650,49 @@
       }
 
       .loading-panel {
-        width: min(82vw, 300px);
+        width: min(90vw, 520px);
         text-align: center;
       }
 
       .loading-title {
-        margin-top: 24px;
+        margin-top: 18px;
         color: #f6d38a;
-        font-size: clamp(10px, 2.4vw, 13px);
-        line-height: 1.7;
+        font-size: clamp(17px, 3.2vw, 26px);
+        line-height: 1.25;
         text-shadow: 0 0 22px rgba(232, 118, 10, 0.65);
       }
 
       .loading-subtitle {
-        margin-top: 8px;
-        color: var(--text-ghost);
-        font-size: 9px;
-        letter-spacing: 0.2em;
+        margin-top: 6px;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
       }
 
       .loading-sigil {
         position: relative;
-        width: 126px;
-        height: 126px;
+        width: min(74vw, 390px);
+        aspect-ratio: 1;
         margin: 0 auto;
-        display: grid;
-        place-items: center;
+        overflow: hidden;
+        border: 1px solid rgba(232, 118, 10, 0.5);
+        background: #050403;
+        box-shadow:
+          0 0 0 1px rgba(246, 211, 138, 0.08),
+          0 24px 70px rgba(0, 0, 0, 0.58),
+          0 0 46px rgba(232, 118, 10, 0.14);
       }
 
-      .loading-sigil::before,
-      .loading-sigil::after {
+      .loading-sigil::before {
         content: "";
         position: absolute;
         inset: 0;
-        border: 1px solid rgba(232, 118, 10, 0.72);
-        transform: rotate(45deg);
-        box-shadow: 0 0 28px rgba(232, 118, 10, 0.16);
-        animation: loaderOrbit 1.8s linear infinite;
-      }
-
-      .loading-sigil::after {
-        inset: 13px;
-        border-color: rgba(246, 211, 138, 0.36);
-        animation-direction: reverse;
-        animation-duration: 2.6s;
+        z-index: 2;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, transparent 68%, rgba(4, 3, 2, 0.74)),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 25%);
       }
 
       body.app-ready .loading-screen {
@@ -697,60 +702,54 @@
       }
 
       .loading-mark {
-        width: 74px;
-        height: 74px;
-        object-fit: contain;
-        image-rendering: pixelated;
-        filter: drop-shadow(0 0 20px rgba(240, 161, 74, 0.7));
-        animation: loaderPulse 900ms ease-in-out infinite alternate;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.025);
+        animation: loaderImageBreathe 4s ease-in-out infinite alternate;
       }
 
       .loading-progress {
-        height: 2px;
-        margin-top: 20px;
+        height: 8px;
+        margin-top: 18px;
         overflow: hidden;
-        background: rgba(232, 118, 10, 0.13);
+        border: 1px solid rgba(232, 118, 10, 0.34);
+        background: rgba(25, 15, 8, 0.84);
       }
 
-      .loading-progress::after {
-        content: "";
-        display: block;
-        width: 45%;
+      .loading-progress-fill {
+        width: 0%;
         height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          #f6d38a,
-          var(--accent),
-          transparent
-        );
-        filter: drop-shadow(0 0 5px var(--accent));
-        animation: loaderScan 900ms ease-in-out infinite;
+        background: linear-gradient(90deg, var(--accent), #ffbb54, #f6d38a);
+        box-shadow: 0 0 18px rgba(232, 118, 10, 0.62);
+        transition: width 180ms ease-out;
       }
 
-      @keyframes loaderOrbit {
-        to {
-          transform: rotate(405deg);
-        }
+      .loading-progress-meta {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--text-muted);
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
       }
 
-      @keyframes loaderPulse {
+      .loading-progress-value {
+        color: #f6d38a;
+        font-variant-numeric: tabular-nums;
+      }
+
+      @keyframes loaderImageBreathe {
         from {
-          transform: scale(0.92);
-          opacity: 0.72;
+          transform: scale(1.025);
+          filter: brightness(0.9) saturate(0.92);
         }
         to {
-          transform: scale(1.04);
-          opacity: 1;
-        }
-      }
-
-      @keyframes loaderScan {
-        from {
-          transform: translateX(-110%);
-        }
-        to {
-          transform: translateX(225%);
+          transform: scale(1.055);
+          filter: brightness(1.06) saturate(1.06);
         }
       }
 
@@ -799,7 +798,7 @@
 
       .brand-label {
         color: var(--text-bright);
-        font-size: 8px;
+        font-size: 11px;
         white-space: nowrap;
       }
 
@@ -815,7 +814,7 @@
         align-items: center;
         gap: 8px;
         color: var(--text-bright);
-        font-size: 8px;
+        font-size: 10px;
         white-space: nowrap;
       }
 
@@ -928,19 +927,19 @@
       }
 
       .refresh-kicker {
-        font-size: 6px;
+        font-size: 9px;
         color: var(--text-muted);
       }
 
       .refresh-label {
-        font-size: 10px;
+        font-size: 11px;
         color: var(--text-bright);
         line-height: 1;
       }
 
       .hero {
-        min-height: 200px;
-        padding: 56px 24px 34px;
+        min-height: 164px;
+        padding: 36px 24px 26px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -953,16 +952,16 @@
       .hero-title {
         margin: 0;
         color: var(--text-bright);
-        font-size: 16px;
-        line-height: 1.5;
-        letter-spacing: 4px;
+        font-size: 21px;
+        line-height: 1.35;
+        letter-spacing: 2px;
         text-shadow: 0 0 40px rgba(232, 118, 10, 0.35);
       }
 
       .hero-subtitle {
         margin: 10px 0 0;
         color: var(--text);
-        font-size: 13px;
+        font-size: 15px;
         line-height: 1.7;
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
       }
@@ -1135,7 +1134,7 @@
       .search-suggestion-kind {
         flex: 0 0 auto;
         color: var(--text-ghost);
-        font-size: 8px;
+        font-size: 10px;
         line-height: 1.6;
       }
 
@@ -1147,7 +1146,7 @@
         flex-wrap: wrap;
         gap: 8px;
         color: var(--text);
-        font-size: 11px;
+        font-size: 13px;
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
       }
 
@@ -1256,7 +1255,7 @@
 
       .filter-label {
         color: var(--text-muted);
-        font-size: 8px;
+        font-size: 11px;
         line-height: 1.8;
         white-space: nowrap;
       }
@@ -1277,7 +1276,7 @@
         background: rgba(20, 14, 10, 0.96);
         color: var(--text);
         padding: 6px 14px;
-        font-size: 10px;
+        font-size: 12px;
         line-height: 1.4;
         transition:
           border-color 100ms ease,
@@ -1316,7 +1315,7 @@
         align-items: center;
         gap: 8px;
         color: var(--text);
-        font-size: 11px;
+        font-size: 12px;
         cursor: pointer;
         user-select: none;
       }
@@ -1385,7 +1384,7 @@
         flex-wrap: wrap;
         gap: 8px;
         color: var(--text);
-        font-size: 10px;
+        font-size: 12px;
       }
 
       .results-meta.visible {
@@ -1481,9 +1480,9 @@
       .results-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 96px 18px;
-        align-items: stretch;
-        padding-top: 18px;
+        gap: 18px;
+        align-items: start;
+        padding-top: 14px;
       }
 
       .shop-card {
@@ -1513,8 +1512,8 @@
         animation: cardIntro 520ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         animation-delay: var(--card-delay, 0ms);
         overflow: visible;
-        align-self: stretch;
-        height: 100%;
+        align-self: start;
+        height: auto;
       }
 
       .shop-card:hover {
@@ -1564,8 +1563,8 @@
 
       .card-header {
         position: relative;
-        padding: 136px 16px 8px;
-        min-height: 204px;
+        padding: 118px 14px 12px;
+        min-height: 180px;
         overflow: visible;
       }
 
@@ -1586,7 +1585,7 @@
       .card-header-main {
         position: relative;
         z-index: 1;
-        min-height: 56px;
+        min-height: 48px;
         padding-right: 0;
       }
 
@@ -1600,8 +1599,8 @@
         position: absolute;
         top: 8px;
         left: 50%;
-        width: 104px;
-        height: 116px;
+        width: 96px;
+        height: 102px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1668,7 +1667,7 @@
       .seller-stage {
         position: absolute;
         left: 50%;
-        bottom: 2px;
+        bottom: 0;
         width: 70px;
         height: 14px;
         transform: translateX(-50%);
@@ -1692,8 +1691,8 @@
       .seller-pose {
         position: relative;
         z-index: 3;
-        width: 96px;
-        height: 108px;
+        width: 88px;
+        height: 98px;
         object-fit: contain;
         object-position: center bottom;
         image-rendering: pixelated;
@@ -1721,13 +1720,13 @@
       .seller-nameplate {
         position: absolute;
         left: 50%;
-        bottom: -10px;
+        bottom: -7px;
         width: max-content;
         min-width: 82px;
         max-width: 132px;
         transform: translateX(-50%);
         z-index: 4;
-        padding: 4px 7px 5px;
+        padding: 3px 7px 4px;
         border: 1px solid rgba(94, 112, 151, 0.28);
         background: linear-gradient(
           180deg,
@@ -1743,9 +1742,10 @@
       .seller-nameplate-name {
         display: block;
         color: var(--text-bright);
-        font-family: "Press Start 2P", monospace;
-        font-size: 6px;
-        line-height: 1.4;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.2;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1784,25 +1784,25 @@
       }
 
       .item-title {
-        margin-top: 20px;
+        margin-top: 10px;
         color: var(--text-bright);
-        font-family: "Press Start 2P", monospace;
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 1.45;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.22;
         word-break: break-word;
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
         text-align: center;
       }
 
       .shop-line {
-        margin-top: 4px;
+        margin-top: 3px;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
         flex-wrap: wrap;
-        font-size: 11px;
+        font-size: 13px;
         text-align: center;
       }
 
@@ -1814,7 +1814,7 @@
         padding: 2px 5px;
         border: 1px solid rgba(245, 158, 11, 0.42);
         color: #f6ad55;
-        font-size: 8px;
+        font-size: 10px;
         line-height: 1.2;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -1825,9 +1825,10 @@
         border: 1px solid rgba(74, 222, 128, 0.55);
         background: rgba(18, 78, 49, 0.34);
         color: #86efac;
-        font-family: "Press Start 2P", monospace;
-        font-size: 6px;
-        line-height: 1.4;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1.3;
         letter-spacing: 0.04em;
         text-transform: uppercase;
         box-shadow: 0 0 14px rgba(74, 222, 128, 0.1);
@@ -1838,9 +1839,10 @@
         border: 1px solid rgba(245, 158, 11, 0.58);
         background: rgba(120, 53, 15, 0.28);
         color: #fbbf24;
-        font-family: "Press Start 2P", monospace;
-        font-size: 6px;
-        line-height: 1.4;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1.3;
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
@@ -1855,7 +1857,7 @@
         gap: 4px;
         width: 100%;
         min-height: 0;
-        padding: 10px 14px 12px;
+        padding: 8px 12px 9px;
         border: 1px solid rgba(74, 222, 128, 0.42);
         background:
           linear-gradient(
@@ -1872,7 +1874,7 @@
 
       .stock-summary-piece {
         color: #c7d2c6;
-        font-size: 8px;
+        font-size: 10px;
         line-height: 1.2;
         letter-spacing: 0.16em;
         text-transform: uppercase;
@@ -1881,9 +1883,9 @@
 
       .stock-summary-strong {
         color: #86efac;
-        font-family: "Press Start 2P", monospace;
-        font-weight: 400;
-        font-size: 16px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 24px;
         line-height: 1.15;
         text-align: center;
         text-shadow:
@@ -1893,7 +1895,7 @@
 
       .stock-summary-unit {
         color: #d8f7e1;
-        font-size: 8px;
+        font-size: 10px;
         line-height: 1.2;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -1910,7 +1912,7 @@
 
       .stock-summary-note {
         color: #c7d2c6;
-        font-size: 9px;
+        font-size: 11px;
         line-height: 1.5;
         text-align: center;
       }
@@ -1921,7 +1923,7 @@
       }
 
       .card-price {
-        padding: 12px 16px 14px;
+        padding: 10px 12px 11px;
       }
 
       .price-panel {
@@ -1935,21 +1937,21 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: stretch;
-        gap: 10px;
+        gap: 8px;
       }
 
       .price-side {
         min-width: 0;
         border: 1px solid rgba(56, 65, 86, 0.28);
         background: rgba(13, 16, 24, 0.18);
-        padding: 8px;
+        padding: 9px;
         display: grid;
         gap: 6px;
       }
 
       .price-side-label {
         color: var(--text-ghost);
-        font-size: 8px;
+        font-size: 10px;
         line-height: 1.7;
       }
 
@@ -1963,7 +1965,7 @@
         align-items: flex-start;
         gap: 7px;
         color: var(--text-bright);
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.4;
       }
 
@@ -1991,12 +1993,12 @@
       .price-side-row-note {
         display: block;
         color: var(--text-muted);
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1.4;
       }
 
       .price-side-row.result {
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 700;
         color: #f8fbff;
       }
@@ -2052,7 +2054,7 @@
 
       .enchant-summary-label {
         color: var(--enchant);
-        font-size: 6px;
+        font-size: 10px;
         line-height: 1.8;
       }
 
@@ -2146,7 +2148,7 @@
 
       .shulker-summary-label {
         color: var(--shulker);
-        font-size: 6px;
+        font-size: 10px;
         line-height: 1.8;
       }
 
@@ -2263,16 +2265,16 @@
       }
 
       .card-footer {
-        padding: 12px 16px 14px;
+        padding: 10px 12px 12px;
         display: grid;
-        gap: 12px;
-        margin-top: auto;
+        gap: 8px;
+        margin-top: 0;
       }
 
       .card-footer-main {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        gap: 8px;
       }
 
       .footer-coords {
@@ -2284,8 +2286,8 @@
           rgba(10, 13, 21, 0.98)
         );
         color: var(--text-muted);
-        padding: 9px 12px;
-        font-size: 10px;
+        padding: 7px 10px;
+        font-size: 12px;
         line-height: 1.5;
         letter-spacing: 0.05em;
         text-align: center;
@@ -2324,8 +2326,8 @@
           rgba(12, 15, 23, 0.98)
         );
         color: #e6edf8;
-        padding: 8px 10px;
-        font-size: 11px;
+        padding: 8px 9px;
+        font-size: 12px;
         line-height: 1.4;
         letter-spacing: 0.04em;
         white-space: nowrap;
@@ -3255,10 +3257,7 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .loading-sigil::before,
-        .loading-sigil::after,
         .loading-mark,
-        .loading-progress::after,
         .seller-pose,
         .seller-showcase.loading::after {
           animation: none !important;
@@ -3348,7 +3347,7 @@
           min-height: 0;
           display: flex;
           flex-direction: column-reverse;
-          padding-top: 140px;
+          padding-top: 116px;
         }
 
         .price-flow {
@@ -3377,8 +3376,8 @@
         .seller-showcase {
           top: 8px;
           left: 50%;
-          width: 104px;
-          height: 116px;
+          width: 96px;
+          height: 102px;
         }
       }
 
@@ -3394,8 +3393,8 @@
         }
 
         .hero-title {
-          font-size: 10px;
-          letter-spacing: 3px;
+          font-size: 17px;
+          letter-spacing: 1px;
         }
 
         .search-wrap {
@@ -3427,17 +3426,17 @@
         }
 
         .card-header {
-          padding-top: 126px;
+          padding-top: 110px;
         }
 
         .seller-showcase {
           width: 92px;
-          height: 106px;
+          height: 98px;
         }
 
         .seller-pose {
-          width: 82px;
-          height: 98px;
+          width: 80px;
+          height: 92px;
         }
       }
     </style>
@@ -3455,14 +3454,32 @@
         <div class="loading-sigil" aria-hidden="true">
           <img
             class="loading-mark"
-            src="assets/pvc-logo.png"
+            src="assets/merchant-guild-loader.webp"
             alt=""
             fetchpriority="high"
           />
         </div>
-        <div class="loading-title pixel-font">OPENING THE MARKET</div>
-        <div class="loading-subtitle pixel-font">SYNCING LIVE SHOPS</div>
-        <div class="loading-progress" aria-hidden="true"></div>
+        <div class="loading-title pixel-font">ENTERING THE MERCHANT GUILD</div>
+        <div class="loading-subtitle pixel-font" id="loadingStatus">
+          CONTACTING THE MARKET
+        </div>
+        <div
+          class="loading-progress"
+          id="loadingProgress"
+          role="progressbar"
+          aria-label="Loading market"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <div class="loading-progress-fill" id="loadingProgressFill"></div>
+        </div>
+        <div class="loading-progress-meta" aria-hidden="true">
+          <span>LIVE SHOP INDEX</span>
+          <span class="loading-progress-value" id="loadingProgressValue"
+            >0%</span
+          >
+        </div>
       </div>
     </div>
 
@@ -3810,8 +3827,8 @@
           "https://api.theyasked.co/grveye/api/market/restocks?hours=24",
           "/grveye/api/market/restocks?hours=24",
         ],
-        loadingDuration: 420,
-        loadingPause: 60,
+        loadingDuration: 4000,
+        loadingPause: 240,
         searchDebounce: 150,
         fetchTimeout: 15000,
         pageSize: 48,
@@ -3915,6 +3932,10 @@
 
       const refs = {
         loadingScreen: document.getElementById("loadingScreen"),
+        loadingStatus: document.getElementById("loadingStatus"),
+        loadingProgress: document.getElementById("loadingProgress"),
+        loadingProgressFill: document.getElementById("loadingProgressFill"),
+        loadingProgressValue: document.getElementById("loadingProgressValue"),
         appShell: document.getElementById("appShell"),
         searchWrap: document.getElementById("searchWrap"),
         searchInput: document.getElementById("searchInput"),
@@ -3996,6 +4017,7 @@
       let searchTimer = null;
       let relativeTimeTimer = null;
       let resultsObserver = null;
+      let loadingProgressFrame = null;
 
       init();
 
@@ -4015,6 +4037,7 @@
           syncIntentChips();
           syncMobileFilterUI();
           initInfiniteScroll();
+          startLoadingProgress();
           loadData();
         } catch (error) {
           handleBootError(error);
@@ -4032,7 +4055,12 @@
         if (refs.loadingScreen) {
           if (visible) {
             refs.loadingScreen.style.display = "flex";
+            startLoadingProgress();
           } else {
+            if (loadingProgressFrame) {
+              window.cancelAnimationFrame(loadingProgressFrame);
+              loadingProgressFrame = null;
+            }
             window.setTimeout(() => {
               if (document.body.classList.contains("app-ready")) {
                 refs.loadingScreen.style.display = "none";
@@ -4044,6 +4072,48 @@
             visible ? "false" : "true",
           );
         }
+      }
+
+      function setLoadingProgress(value, status) {
+        const safeValue = Math.max(0, Math.min(100, Math.round(value)));
+        if (refs.loadingProgressFill) {
+          refs.loadingProgressFill.style.width = safeValue + "%";
+        }
+        if (refs.loadingProgressValue) {
+          refs.loadingProgressValue.textContent = safeValue + "%";
+        }
+        if (refs.loadingProgress) {
+          refs.loadingProgress.setAttribute("aria-valuenow", String(safeValue));
+        }
+        if (status && refs.loadingStatus) {
+          refs.loadingStatus.textContent = status;
+        }
+      }
+
+      function startLoadingProgress() {
+        if (loadingProgressFrame) {
+          window.cancelAnimationFrame(loadingProgressFrame);
+        }
+        setLoadingProgress(2, "CONTACTING THE MARKET");
+
+        const tick = () => {
+          const elapsed = performance.now() - state.loadingStartedAt;
+          const ratio = Math.min(1, elapsed / CONFIG.loadingDuration);
+          const eased = 1 - Math.pow(1 - ratio, 1.45);
+          const value = 2 + eased * 92;
+          const status =
+            ratio < 0.32
+              ? "CONTACTING THE MARKET"
+              : ratio < 0.72
+                ? "CATALOGING LIVE SHOPS"
+                : "PREPARING THE SHOP FLOOR";
+          setLoadingProgress(value, status);
+          if (!state.loadingResolved) {
+            loadingProgressFrame = window.requestAnimationFrame(tick);
+          }
+        };
+
+        loadingProgressFrame = window.requestAnimationFrame(tick);
       }
 
       function handleBootError(error) {
@@ -6372,8 +6442,13 @@
           await delay(waitMs);
         }
 
-        await delay(CONFIG.loadingPause);
         state.loadingResolved = true;
+        if (loadingProgressFrame) {
+          window.cancelAnimationFrame(loadingProgressFrame);
+          loadingProgressFrame = null;
+        }
+        setLoadingProgress(100, "MARKET READY");
+        await delay(CONFIG.loadingPause);
         setLoadingVisible(false);
       }
 
