@@ -631,18 +631,12 @@
         align-items: center;
         justify-content: center;
         padding: 20px;
-        background:
-          radial-gradient(
-            circle at 50% 42%,
-            rgba(232, 118, 10, 0.22),
-            transparent 30%
-          ),
-          radial-gradient(
-            circle at 50% 50%,
-            #171007 0%,
-            #080604 42%,
-            #020202 78%
-          );
+        background: radial-gradient(
+          circle at 50% 48%,
+          #120c07 0%,
+          #080604 44%,
+          #020202 78%
+        );
         overflow: hidden;
         transition:
           opacity 320ms ease,
@@ -654,16 +648,8 @@
         text-align: center;
       }
 
-      .loading-title {
-        margin-top: 18px;
-        color: #f6d38a;
-        font-size: clamp(17px, 3.2vw, 26px);
-        line-height: 1.25;
-        text-shadow: 0 0 22px rgba(232, 118, 10, 0.65);
-      }
-
       .loading-subtitle {
-        margin-top: 6px;
+        margin-top: 12px;
         color: var(--text-muted);
         font-size: 12px;
         font-weight: 600;
@@ -671,28 +657,9 @@
       }
 
       .loading-sigil {
-        position: relative;
         width: min(74vw, 390px);
         aspect-ratio: 1;
         margin: 0 auto;
-        overflow: hidden;
-        border: 1px solid rgba(232, 118, 10, 0.5);
-        background: #050403;
-        box-shadow:
-          0 0 0 1px rgba(246, 211, 138, 0.08),
-          0 24px 70px rgba(0, 0, 0, 0.58),
-          0 0 46px rgba(232, 118, 10, 0.14);
-      }
-
-      .loading-sigil::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        pointer-events: none;
-        background:
-          linear-gradient(180deg, transparent 68%, rgba(4, 3, 2, 0.74)),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 25%);
       }
 
       body.app-ready .loading-screen {
@@ -705,8 +672,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transform: scale(1.025);
-        animation: loaderImageBreathe 4s ease-in-out infinite alternate;
+        mix-blend-mode: screen;
       }
 
       .loading-progress {
@@ -740,17 +706,6 @@
       .loading-progress-value {
         color: #f6d38a;
         font-variant-numeric: tabular-nums;
-      }
-
-      @keyframes loaderImageBreathe {
-        from {
-          transform: scale(1.025);
-          filter: brightness(0.9) saturate(0.92);
-        }
-        to {
-          transform: scale(1.055);
-          filter: brightness(1.06) saturate(1.06);
-        }
       }
 
       .site-header {
@@ -3459,7 +3414,6 @@
             fetchpriority="high"
           />
         </div>
-        <div class="loading-title pixel-font">ENTERING THE MERCHANT GUILD</div>
         <div class="loading-subtitle pixel-font" id="loadingStatus">
           CONTACTING THE MARKET
         </div>
