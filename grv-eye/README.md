@@ -6,6 +6,8 @@ The same VPS process also records PVC shop stock changes in `data/market.db`.
 Stock increases are saved as restocks and decreases as estimated sales. Recent
 public restocks are exposed at `/grveye/api/market/restocks`. The first poll
 only establishes the baseline, so it never creates false historical events.
+Qualified weekly market activity is aggregated into privacy-safe player and
+merchant leaderboards at `/grveye/api/market/rankings`.
 
 - **Backend (same PVC Finder VPS):** reads every player's position from the public map every few seconds, stores it in SQLite, and serves the API, map tiles and skins.
 - **Frontend:** is served by the same process and published at `/grveye/` through the existing Nginx host.
@@ -138,6 +140,7 @@ Open http://localhost:8080/grveye/.
 GET  /grveye/api/config                          public
 GET  /grveye/skin/:name                          public
 GET  /grveye/tiles/:map/:lod/...png              public
+GET  /grveye/api/market/rankings                 public
 GET  /grveye/api/status                          Bearer ACCESS_TOKEN
 POST /grveye/api/area   {world, points, from, to}
 GET  /grveye/api/players?q=

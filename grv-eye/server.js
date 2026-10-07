@@ -16,6 +16,7 @@ import { createSkinResolver, isFloodgateUuid } from './lib/skins.js';
 import { bboxOf, pointInPolygon } from './lib/geo.js';
 import { createMarketTracker } from './lib/market.js';
 import { createShopVisitorTracker } from './lib/shop-visitors.js';
+import { createWeeklyRankings } from './lib/weekly-rankings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = process.env;
@@ -43,6 +44,7 @@ const cfg = {
   marketDbFile: path.resolve(__dirname, env.MARKET_DB_FILE || './data/market.db'),
   marketPollMs: Math.max(20_000, num(env.MARKET_POLL_INTERVAL_MS, 60_000)),
   marketRetentionDays: Math.max(1, num(env.MARKET_RETENTION_DAYS, 30)),
+  rankingsCacheMs: Math.max(60_000, num(env.RANKINGS_CACHE_MS, 300_000)),
   shopVisitorRadius: Math.max(1, num(env.SHOP_VISITOR_RADIUS, 6)),
   retentionDays: num(env.HISTORY_RETENTION_DAYS, 60),
   minMove: num(env.PING_MIN_MOVE, 6),
@@ -87,6 +89,12 @@ const market = createMarketTracker({
   dbFile: cfg.marketDbFile,
   pollMs: cfg.marketPollMs,
   retentionDays: cfg.marketRetentionDays,
+});
+const weeklyRankings = createWeeklyRankings({
+  marketDbFile: cfg.marketDbFile,
+  eyeDbFile: cfg.dbFile,
+  cacheMs: cfg.rankingsCacheMs,
+  days: 7,
 });
 
 function loadManualShopLocations() {
@@ -459,6 +467,16 @@ app.get(route('/api/market/visitors'), (req, res) => {
   res.json({ generatedAt: Date.now(), ...shopVisitors.weeklyCounts(days) });
 });
 
+app.get(route('/api/market/rankings'), (_req, res) => {
+  try {
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=240');
+    res.json(weeklyRankings.getRankings());
+  } catch (error) {
+    console.warn('[weekly-rankings]', error.message);
+    res.status(503).json({ error: 'Weekly rankings are temporarily unavailable' });
+  }
+});
+
 app.use(route('/api'), (req, res, next) => {
   const h = req.get('authorization') || '';
   if (!authorized(h.startsWith('Bearer ') ? h.slice(7) : null)) return res.status(401).json({ error: 'Invalid access code' });
@@ -533,6 +551,7 @@ setTimeout(() => {
 }, 2_500);
 const shutdown = () => {
   market.close();
+  weeklyRankings.close();
   db.close();
   process.exit(0);
 };
