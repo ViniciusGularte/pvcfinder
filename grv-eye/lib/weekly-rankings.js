@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { Worker } from "node:worker_threads";
 
 const DAY_MS = 86_400_000;
 
@@ -21,12 +22,16 @@ WITH nearby AS MATERIALIZED (
     MIN(ABS(ping.ts-event.detected_at)) AS nearest_ms
   FROM market_stock_events event
   JOIN market_offers offer ON offer.offer_key=event.offer_key
-  JOIN eye.pings ping INDEXED BY idx_pings_ts
+  JOIN eye.pings ping INDEXED BY idx_pings_area
     ON ping.ts BETWEEN event.detected_at-180000 AND event.detected_at+30000
    AND ping.world=CASE
      WHEN lower(offer.world) LIKE '%nether%' THEN 'minecraft_the_nether'
      ELSE 'minecraft_overworld'
    END
+   AND ping.cx BETWEEN CAST(floor((CAST(offer.x AS REAL)-6)/64.0) AS INTEGER)
+                   AND CAST(floor((CAST(offer.x AS REAL)+6)/64.0) AS INTEGER)
+   AND ping.cz BETWEEN CAST(floor((CAST(offer.z AS REAL)-6)/64.0) AS INTEGER)
+                   AND CAST(floor((CAST(offer.z AS REAL)+6)/64.0) AS INTEGER)
    AND ping.x BETWEEN CAST(offer.x AS REAL)-6 AND CAST(offer.x AS REAL)+6
    AND ping.z BETWEEN CAST(offer.z AS REAL)-6 AND CAST(offer.z AS REAL)+6
    AND (
@@ -284,5 +289,68 @@ export function createWeeklyRankings({
   return {
     getRankings,
     close: () => db.close(),
+  };
+}
+
+export function createWeeklyRankingsService(options = {}) {
+  const safeOptions = {
+    marketDbFile: options.marketDbFile,
+    eyeDbFile: options.eyeDbFile,
+    cacheMs: options.cacheMs || 300_000,
+    days: options.days || 7,
+  };
+  let cache = null;
+  let worker = null;
+  let lastError = null;
+  let closed = false;
+
+  function refresh() {
+    if (closed || worker) return;
+    worker = new Worker(new URL("./weekly-rankings-worker.js", import.meta.url), {
+      workerData: safeOptions,
+      execArgv: process.execArgv.filter(
+        (argument) => !argument.startsWith("--input-type"),
+      ),
+    });
+    worker.on("message", (message) => {
+      if (message?.ok && message.data) {
+        cache = message.data;
+        lastError = null;
+      } else {
+        lastError = message?.error || "Weekly ranking worker failed";
+      }
+    });
+    worker.on("error", (error) => {
+      lastError = error.message;
+      console.warn("[weekly-rankings] worker:", error.message);
+    });
+    worker.on("exit", (code) => {
+      if (code && !closed && !lastError) {
+        lastError = `Weekly ranking worker exited with code ${code}`;
+      }
+      worker = null;
+    });
+  }
+
+  function getRankings() {
+    const stale =
+      !cache || Date.now() - Number(cache.generatedAt || 0) >= safeOptions.cacheMs;
+    if (stale) refresh();
+    return cache;
+  }
+
+  return {
+    refresh,
+    getRankings,
+    getStatus: () => ({
+      ready: !!cache,
+      refreshing: !!worker,
+      error: lastError,
+    }),
+    close: () => {
+      closed = true;
+      if (worker) worker.terminate();
+      worker = null;
+    },
   };
 }

@@ -16,7 +16,7 @@ import { createSkinResolver, isFloodgateUuid } from './lib/skins.js';
 import { bboxOf, pointInPolygon } from './lib/geo.js';
 import { createMarketTracker } from './lib/market.js';
 import { createShopVisitorTracker } from './lib/shop-visitors.js';
-import { createWeeklyRankings } from './lib/weekly-rankings.js';
+import { createWeeklyRankingsService } from './lib/weekly-rankings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = process.env;
@@ -90,7 +90,7 @@ const market = createMarketTracker({
   pollMs: cfg.marketPollMs,
   retentionDays: cfg.marketRetentionDays,
 });
-const weeklyRankings = createWeeklyRankings({
+const weeklyRankings = createWeeklyRankingsService({
   marketDbFile: cfg.marketDbFile,
   eyeDbFile: cfg.dbFile,
   cacheMs: cfg.rankingsCacheMs,
@@ -469,8 +469,17 @@ app.get(route('/api/market/visitors'), (req, res) => {
 
 app.get(route('/api/market/rankings'), (_req, res) => {
   try {
+    const rankings = weeklyRankings.getRankings();
+    if (!rankings) {
+      res.set('Retry-After', '3');
+      return res.status(202).json({
+        pending: true,
+        retryAfterMs: 3_000,
+        ...weeklyRankings.getStatus(),
+      });
+    }
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=240');
-    res.json(weeklyRankings.getRankings());
+    res.json(rankings);
   } catch (error) {
     console.warn('[weekly-rankings]', error.message);
     res.status(503).json({ error: 'Weekly rankings are temporarily unavailable' });
@@ -539,6 +548,7 @@ server.listen(cfg.port, cfg.host, () => {
   prune();
   loop();
   market.start();
+  setTimeout(() => weeklyRankings.refresh(), 15_000);
 });
 
 setTimeout(() => {

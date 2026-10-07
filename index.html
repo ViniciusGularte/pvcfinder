@@ -5517,13 +5517,17 @@
         const errors = [];
         for (const rankingUrl of CONFIG.rankingUrls || []) {
           try {
-            const payload = await fetchJsonUrl(rankingUrl, {
-              cache: "no-store",
-            });
-            if (!payload || !payload.boards) {
-              throw new Error("Ranking payload is missing boards");
+            for (let attempt = 0; attempt < 15; attempt += 1) {
+              const payload = await fetchJsonUrl(rankingUrl, {
+                cache: "no-store",
+              });
+              if (payload && payload.boards) return payload;
+              if (!payload || !payload.pending) {
+                throw new Error("Ranking payload is missing boards");
+              }
+              await delay(Math.max(1_000, payload.retryAfterMs || 3_000));
             }
-            return payload;
+            throw new Error("Ranking calculation is still in progress");
           } catch (error) {
             errors.push(rankingUrl + ": " + (error.message || String(error)));
           }
