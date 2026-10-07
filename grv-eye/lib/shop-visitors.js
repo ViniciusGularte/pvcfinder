@@ -47,7 +47,7 @@ function normalizeName(value) {
 export function createShopVisitorTracker({
   db,
   getLocations,
-  pollMs = 20_000,
+  pollMs = 5_000,
   visitGapMs = 180_000,
   radius = 6,
   retentionDays = 60,
