@@ -3,56 +3,37 @@ import { Worker } from "node:worker_threads";
 
 const DAY_MS = 86_400_000;
 
-const QUALIFIED_PURCHASES_SQL = `
-WITH nearby AS MATERIALIZED (
-  SELECT
-    event.id AS sale_id,
-    event.detected_at,
-    event.offer_key,
-    offer.shop_owner AS source_owner,
-    offer.shop_name AS source_shop,
-    offer.world,
-    offer.x,
-    offer.y,
-    offer.z,
-    offer.item_id,
-    offer.item_name,
-    event.amount AS sale_trades,
-    ping.player,
-    MIN(ABS(ping.ts-event.detected_at)) AS nearest_ms
-  FROM market_stock_events event
-  JOIN market_offers offer ON offer.offer_key=event.offer_key
-  JOIN eye.pings ping INDEXED BY idx_pings_area
-    ON ping.ts BETWEEN event.detected_at-180000 AND event.detected_at+30000
-   AND ping.world=CASE
-     WHEN lower(offer.world) LIKE '%nether%' THEN 'minecraft_the_nether'
-     ELSE 'minecraft_overworld'
-   END
-   AND ping.cx BETWEEN CAST(floor((CAST(offer.x AS REAL)-6)/64.0) AS INTEGER)
-                   AND CAST(floor((CAST(offer.x AS REAL)+6)/64.0) AS INTEGER)
-   AND ping.cz BETWEEN CAST(floor((CAST(offer.z AS REAL)-6)/64.0) AS INTEGER)
-                   AND CAST(floor((CAST(offer.z AS REAL)+6)/64.0) AS INTEGER)
-   AND ping.x BETWEEN CAST(offer.x AS REAL)-6 AND CAST(offer.x AS REAL)+6
-   AND ping.z BETWEEN CAST(offer.z AS REAL)-6 AND CAST(offer.z AS REAL)+6
-   AND (
-     ping.y IS NULL OR (
-       (ping.x-CAST(offer.x AS REAL))*(ping.x-CAST(offer.x AS REAL))+
-       (ping.y-CAST(offer.y AS REAL))*(ping.y-CAST(offer.y AS REAL))+
-       (ping.z-CAST(offer.z AS REAL))*(ping.z-CAST(offer.z AS REAL))
-     )<=36
-   )
-   AND lower(ping.player)<>lower(offer.shop_owner)
-  WHERE event.event_type='sale'
-    AND event.detected_at>=?
-  GROUP BY event.id,ping.player
-), classified AS (
-  SELECT *,COUNT(*) OVER(PARTITION BY sale_id) AS candidates
-  FROM nearby
-)
-SELECT *
-FROM classified
-WHERE candidates=1
-ORDER BY detected_at`;
+const SALES_SQL = `SELECT
+  event.id AS sale_id,
+  event.detected_at,
+  event.offer_key,
+  offer.shop_owner AS source_owner,
+  offer.shop_name AS source_shop,
+  offer.world,
+  offer.x,
+  offer.y,
+  offer.z,
+  offer.item_id,
+  offer.item_name,
+  event.amount AS sale_trades
+FROM market_stock_events event
+JOIN market_offers offer ON offer.offer_key=event.offer_key
+WHERE event.event_type='sale' AND event.detected_at>=?
+ORDER BY event.detected_at`;
+
+const PINGS_IN_CELL_SQL = `SELECT ts,player,x,y,z
+FROM eye.pings INDEXED BY idx_pings_area
+WHERE world=? AND cx=? AND cz=? AND ts BETWEEN ? AND ?`;
+
+function marketWorldToMapWorld(world) {
+  return String(world || "").toLowerCase().includes("nether")
+    ? "minecraft_the_nether"
+    : "minecraft_overworld";
+}
+
+function cellRange(value) {
+  return [Math.floor((value - 6) / 64), Math.floor((value + 6) / 64)];
+}
 
 function parseOutputUnits(row) {
   const prefix = [
@@ -266,19 +247,66 @@ export function createWeeklyRankings({
   const db = new Database(marketDbFile, { readonly: true, fileMustExist: true });
   db.pragma("query_only = ON");
   db.prepare("ATTACH DATABASE ? AS eye").run(eyeDbFile);
-  const purchases = db.prepare(QUALIFIED_PURCHASES_SQL);
+  const sales = db.prepare(SALES_SQL);
+  const pingsInCell = db.prepare(PINGS_IN_CELL_SQL);
   const stockDrops = db.prepare(`SELECT COUNT(*) AS count
     FROM market_stock_events
     WHERE event_type='sale' AND detected_at>=?`);
   let cache = null;
   let cachedAt = 0;
 
+  function qualifiedPurchases(since) {
+    const qualified = [];
+    for (const sale of sales.iterate(since)) {
+      const shopX = Number(sale.x);
+      const shopY = Number(sale.y);
+      const shopZ = Number(sale.z);
+      if (![shopX, shopY, shopZ].every(Number.isFinite)) continue;
+
+      const [minCx, maxCx] = cellRange(shopX);
+      const [minCz, maxCz] = cellRange(shopZ);
+      const candidates = new Map();
+      for (let cx = minCx; cx <= maxCx; cx += 1) {
+        for (let cz = minCz; cz <= maxCz; cz += 1) {
+          for (const ping of pingsInCell.iterate(
+            marketWorldToMapWorld(sale.world),
+            cx,
+            cz,
+            sale.detected_at - 180_000,
+            sale.detected_at + 30_000,
+          )) {
+            if (
+              String(ping.player).toLowerCase() ===
+              String(sale.source_owner).toLowerCase()
+            ) {
+              continue;
+            }
+            const vertical = Number.isFinite(Number(ping.y))
+              ? Number(ping.y) - shopY
+              : 0;
+            const distance =
+              (Number(ping.x) - shopX) ** 2 +
+              vertical ** 2 +
+              (Number(ping.z) - shopZ) ** 2;
+            if (distance > 36) continue;
+            const key = String(ping.player).toLowerCase();
+            if (!candidates.has(key)) candidates.set(key, ping.player);
+          }
+        }
+      }
+      if (candidates.size === 1) {
+        qualified.push({ ...sale, player: [...candidates.values()][0] });
+      }
+    }
+    return qualified;
+  }
+
   function getRankings(force = false) {
     const now = Date.now();
     if (!force && cache && now - cachedAt < cacheMs) return cache;
     const since = now - days * DAY_MS;
     cache = buildRankings(
-      purchases.all(since),
+      qualifiedPurchases(since),
       Number(stockDrops.get(since)?.count) || 0,
       { days, now },
     );
