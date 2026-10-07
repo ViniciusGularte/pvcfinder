@@ -4,6 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import { openDb, CELL } from './lib/db.js';
@@ -14,6 +15,7 @@ import { squaremapTileProxy, tileProxy } from './lib/tiles.js';
 import { createSkinResolver, isFloodgateUuid } from './lib/skins.js';
 import { bboxOf, pointInPolygon } from './lib/geo.js';
 import { createMarketTracker } from './lib/market.js';
+import { createShopVisitorTracker } from './lib/shop-visitors.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = process.env;
@@ -41,6 +43,7 @@ const cfg = {
   marketDbFile: path.resolve(__dirname, env.MARKET_DB_FILE || './data/market.db'),
   marketPollMs: Math.max(20_000, num(env.MARKET_POLL_INTERVAL_MS, 60_000)),
   marketRetentionDays: Math.max(1, num(env.MARKET_RETENTION_DAYS, 30)),
+  shopVisitorRadius: Math.max(1, num(env.SHOP_VISITOR_RADIUS, 6)),
   retentionDays: num(env.HISTORY_RETENTION_DAYS, 60),
   minMove: num(env.PING_MIN_MOVE, 6),
   keepaliveMs: num(env.PING_KEEPALIVE_S, 60) * 1000,
@@ -84,6 +87,44 @@ const market = createMarketTracker({
   dbFile: cfg.marketDbFile,
   pollMs: cfg.marketPollMs,
   retentionDays: cfg.marketRetentionDays,
+});
+
+function loadManualShopLocations() {
+  try {
+    const file = path.resolve(__dirname, '../data/admin-shops.js');
+    const sandbox = { window: {} };
+    vm.runInNewContext(fs.readFileSync(file, 'utf8'), sandbox, {
+      filename: file,
+      timeout: 1_000,
+    });
+    return (sandbox.window.PVC_ADMIN_SHOPS || []).map((shop) => {
+      const [x, y, z] = String(shop.location || '')
+        .split(/[ ,]+/)
+        .filter(Boolean)
+        .map(Number);
+      return {
+        shopName: shop.shopName,
+        shopOwner: shop.shopOwner,
+        world: shop.world,
+        x,
+        y,
+        z,
+      };
+    });
+  } catch (error) {
+    console.warn('[shop-visitors] manual catalog unavailable:', error.message);
+    return [];
+  }
+}
+
+const manualShopLocations = loadManualShopLocations();
+const shopVisitors = createShopVisitorTracker({
+  db,
+  getLocations: () => market.shopLocations().concat(manualShopLocations),
+  pollMs: cfg.pollMs,
+  visitGapMs: cfg.visitGapMs,
+  radius: cfg.shopVisitorRadius,
+  retentionDays: cfg.retentionDays,
 });
 
 // ─── Map discovery ─────────────────────────────────────────
@@ -239,6 +280,7 @@ async function tick() {
   }
   const now = Date.now();
   recordTick(players, now);
+  shopVisitors.record(players, now);
   broadcast({ type: 'tick', ts: now, players: [...online.values()], status });
 }
 async function loop() {
@@ -253,6 +295,8 @@ async function loop() {
 function prune() {
   const r = st.prune.run(Date.now() - cfg.retentionDays * 86_400_000);
   if (r.changes) console.log(`[prune] removed ${r.changes} old pings`);
+  const shopVisitorRows = shopVisitors.prune();
+  if (shopVisitorRows) console.log(`[prune] removed ${shopVisitorRows} old shop visitors`);
 }
 setInterval(prune, 3_600_000);
 
@@ -409,6 +453,12 @@ app.get(route('/api/market/restocks'), (req, res) => {
   });
 });
 
+app.get(route('/api/market/visitors'), (req, res) => {
+  const days = Math.min(30, Math.max(1, num(req.query.days, 7)));
+  res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+  res.json({ generatedAt: Date.now(), ...shopVisitors.weeklyCounts(days) });
+});
+
 app.use(route('/api'), (req, res, next) => {
   const h = req.get('authorization') || '';
   if (!authorized(h.startsWith('Bearer ') ? h.slice(7) : null)) return res.status(401).json({ error: 'Invalid access code' });
@@ -472,6 +522,15 @@ server.listen(cfg.port, cfg.host, () => {
   loop();
   market.start();
 });
+
+setTimeout(() => {
+  try {
+    const result = shopVisitors.backfill(7);
+    console.log(`[shop-visitors] backfill: ${result.qualified} visitors from ${result.scanned} pings`);
+  } catch (error) {
+    console.warn('[shop-visitors] backfill failed:', error.message);
+  }
+}, 2_500);
 const shutdown = () => {
   market.close();
   db.close();

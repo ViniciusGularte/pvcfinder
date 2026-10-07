@@ -123,6 +123,10 @@ export function createMarketTracker({
       (SELECT COUNT(*) FROM market_stock_events WHERE event_type='restock') AS restocks,
       (SELECT COUNT(*) FROM market_stock_events WHERE event_type='sale') AS sales,
       (SELECT MIN(first_seen) FROM market_offers) AS since`),
+    locations: db.prepare(`SELECT
+      shop_name AS shopName, shop_owner AS shopOwner, world, x, y, z
+      FROM market_offers
+      GROUP BY shop_owner, world, x, y, z`),
   };
 
   const record = db.transaction((offers, now) => {
@@ -204,6 +208,7 @@ export function createMarketTracker({
     start,
     close,
     recentRestocks,
+    shopLocations: () => statements.locations.all(),
     getStatus: () => ({ ...status, ...statements.stats.get() }),
   };
 }

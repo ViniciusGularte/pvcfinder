@@ -1802,6 +1802,19 @@
         text-transform: uppercase;
       }
 
+      .shop-visitors-badge {
+        padding: 3px 6px;
+        border: 1px solid rgba(96, 165, 250, 0.5);
+        background: rgba(30, 64, 175, 0.2);
+        color: #bfdbfe;
+        font-family: "Chakra Petch", sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
       .shop-line-sep {
         color: var(--border);
       }
@@ -3781,6 +3794,10 @@
           "https://api.theyasked.co/grveye/api/market/restocks?hours=24",
           "/grveye/api/market/restocks?hours=24",
         ],
+        visitorUrls: [
+          "https://api.theyasked.co/grveye/api/market/visitors?days=7",
+          "/grveye/api/market/visitors?days=7",
+        ],
         loadingDuration: 4000,
         loadingPause: 240,
         searchDebounce: 150,
@@ -3949,6 +3966,8 @@
           productStats: {},
         },
         restocks: new Map(),
+        visitors: new Map(),
+        visitorCountsLoaded: false,
         filtered: [],
         searchSuggestions: [],
         visibleCount: 0,
@@ -4496,6 +4515,7 @@
         const forceFresh = options.forceFresh === true;
         const requestId = ++state.requestSerial;
         const restocksPromise = fetchRecentRestocks();
+        const visitorsPromise = fetchWeeklyVisitors();
         let requestSucceeded = false;
 
         state.activeRequestId = requestId;
@@ -4525,12 +4545,13 @@
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
-          const initialRestocks = await Promise.race([
-            restocksPromise,
-            delay(1200).then(() => null),
+          const [initialRestocks, initialVisitors] = await Promise.all([
+            Promise.race([restocksPromise, delay(1200).then(() => null)]),
+            Promise.race([visitorsPromise, delay(1200).then(() => null)]),
           ]);
           if (requestId !== state.activeRequestId) return;
           if (initialRestocks) applyRecentRestocks(initialRestocks);
+          if (initialVisitors) applyWeeklyVisitors(initialVisitors);
           state.loadingError = false;
           refs.errorState.classList.add("hidden");
           updateStats();
@@ -4539,6 +4560,13 @@
             restocksPromise.then((restocks) => {
               if (!restocks || requestId !== state.activeRequestId) return;
               applyRecentRestocks(restocks);
+              renderAll();
+            });
+          }
+          if (!initialVisitors) {
+            visitorsPromise.then((visitors) => {
+              if (!visitors || requestId !== state.activeRequestId) return;
+              applyWeeklyVisitors(visitors);
               renderAll();
             });
           }
@@ -4611,6 +4639,41 @@
         state.restocks = restocks;
         state.listings.forEach((listing) => {
           listing.restock = state.restocks.get(listing.stockGroupKey) || null;
+        });
+      }
+
+      async function fetchWeeklyVisitors() {
+        for (const visitorUrl of CONFIG.visitorUrls || []) {
+          try {
+            const payload = await fetchJsonUrl(visitorUrl, {
+              cache: "no-store",
+            });
+            const rows = Array.isArray(payload.locations)
+              ? payload.locations
+              : [];
+            return new Map(
+              rows.map((row) => [
+                row.locationKey,
+                Math.max(0, Number(row.visitors) || 0),
+              ]),
+            );
+          } catch (error) {
+            console.warn(
+              "Could not load weekly shop visitors from",
+              visitorUrl,
+              error,
+            );
+          }
+        }
+        return null;
+      }
+
+      function applyWeeklyVisitors(visitors) {
+        state.visitors = visitors;
+        state.visitorCountsLoaded = true;
+        state.listings.forEach((listing) => {
+          listing.weeklyVisitors =
+            state.visitors.get(listing.visitorLocationKey) || 0;
         });
       }
 
@@ -7032,6 +7095,14 @@
           listing.isOnlyShop
             ? '          <span class="shop-only-badge">ONLY SHOP</span>'
             : "",
+          state.visitorCountsLoaded
+            ? '          <span class="shop-visitors-badge" title="Unique visitors within 6 blocks during the last 7 days">◉ ' +
+              escapeHtml(formatNumber(listing.weeklyVisitors || 0)) +
+              ((listing.weeklyVisitors || 0) === 1
+                ? " VISITOR · 7D"
+                : " VISITORS · 7D") +
+              "</span>"
+            : "",
           "        </div>",
           "      </div>",
           "    </div>",
@@ -7669,6 +7740,30 @@
         return tradesAvailable * unitsPerTrade;
       }
 
+      function normalizeVisitorWorld(world) {
+        const value = String(world || "")
+          .trim()
+          .toLowerCase();
+        if (value.includes("nether")) return "minecraft_the_nether";
+        if (value.includes("end")) return "minecraft_the_end";
+        return "minecraft_overworld";
+      }
+
+      function visitorCoordinateToken(value) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return "0";
+        return String(Math.round(number * 100) / 100);
+      }
+
+      function buildShopVisitorKey(world, coords) {
+        return [
+          normalizeVisitorWorld(world),
+          visitorCoordinateToken(coords.x),
+          visitorCoordinateToken(coords.y),
+          visitorCoordinateToken(coords.z),
+        ].join("::");
+      }
+
       function flattenListings(shops) {
         let listings = [];
 
@@ -7719,6 +7814,7 @@
             );
             const coords = parseCoords(shop.location);
             const mapUrl = buildMapUrl(shop.world, coords);
+            const visitorLocationKey = buildShopVisitorKey(shop.world, coords);
             const searchType = formatType(resultItem.type);
             const searchLore = [
               rawLore.join(" "),
@@ -7853,6 +7949,8 @@
               stockGroupKey,
               offerGroupKey,
               locationKey,
+              visitorLocationKey,
+              weeklyVisitors: 0,
               offerLocationCount: 1,
               offerLocationIndex: 1,
               sellerItemTotalStock: 0,
