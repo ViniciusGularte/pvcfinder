@@ -2522,41 +2522,17 @@
         margin: 0 auto;
       }
 
-      .ranking-tabs {
+      .ranking-dual-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-        margin-bottom: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
       }
 
-      .ranking-tab {
-        min-height: 44px;
-        padding: 9px 10px;
-        border: 1px solid rgba(90, 52, 24, 0.92);
-        background: rgba(14, 10, 7, 0.94);
-        color: var(--text-muted);
-        font-size: 10px;
-        line-height: 1.35;
-        transition:
-          color 180ms ease,
-          border-color 180ms ease,
-          background 180ms ease;
-      }
-
-      .ranking-tab:hover,
-      .ranking-tab:focus-visible {
-        border-color: rgba(245, 184, 72, 0.72);
-        color: var(--text-bright);
-      }
-
-      .ranking-tab.active {
-        border-color: #f5b848;
-        background: linear-gradient(
-          180deg,
-          rgba(83, 50, 17, 0.96),
-          rgba(39, 25, 12, 0.98)
-        );
-        color: #fff4d4;
+      .ranking-board-section {
+        min-width: 0;
+        padding: 14px;
+        border: 1px solid rgba(90, 52, 24, 0.78);
+        background: rgba(10, 8, 7, 0.62);
       }
 
       .ranking-board-intro {
@@ -2736,56 +2712,6 @@
         text-transform: uppercase;
       }
 
-      .ranking-list {
-        display: grid;
-        gap: 7px;
-      }
-
-      .ranking-row {
-        min-height: 58px;
-        display: grid;
-        grid-template-columns: 38px minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 12px;
-        padding: 9px 12px;
-        border: 1px solid rgba(90, 52, 24, 0.66);
-        background: rgba(13, 10, 8, 0.86);
-      }
-
-      .ranking-row-position {
-        color: var(--text-ghost);
-        font-size: 12px;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .ranking-row-player {
-        color: var(--text-bright);
-        font-size: 13px;
-        overflow-wrap: anywhere;
-      }
-
-      .ranking-row-meta {
-        margin-top: 3px;
-        color: var(--text-muted);
-        font-size: 10px;
-        line-height: 1.4;
-      }
-
-      .ranking-row-score {
-        color: #f5c66c;
-        font-size: 14px;
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .ranking-row-score span {
-        display: block;
-        margin-top: 2px;
-        color: var(--text-ghost);
-        font-size: 8px;
-        text-transform: uppercase;
-      }
-
       .ranking-note {
         margin-top: 14px;
         padding-top: 12px;
@@ -2841,8 +2767,12 @@
       }
 
       @media (max-width: 680px) {
-        .ranking-tabs {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .ranking-dual-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .ranking-board-section {
+          padding: 10px;
         }
 
         .ranking-board-intro {
@@ -2882,12 +2812,6 @@
 
         .ranking-score-label {
           font-size: 7px;
-        }
-
-        .ranking-row {
-          grid-template-columns: 30px minmax(0, 1fr) auto;
-          gap: 8px;
-          padding: 9px 8px;
         }
       }
 
@@ -4426,7 +4350,6 @@
         weeklyRankingsFetchedAt: 0,
         weeklyRankingsLoading: false,
         weeklyRankingsError: "",
-        rankingBoard: "shoppers",
         filtered: [],
         searchSuggestions: [],
         visibleCount: 0,
@@ -4446,54 +4369,18 @@
         openedUrlItem: false,
       };
 
-      const RANKING_BOARDS = {
+      const WEEKLY_RANKING_SECTIONS = {
         shoppers: {
-          tab: "TOP SHOPPERS",
-          title: "Top shoppers",
-          copy: "Players with the most qualified shopping trips this week.",
+          title: "Top 3 shoppers this week",
+          copy: "Most qualified shopping trips.",
           singular: "shopping trip",
           plural: "shopping trips",
-          support: (row) =>
-            formatNumber(row.products || 0) +
-            " PRODUCTS · " +
-            formatNumber(row.merchants || 0) +
-            " MERCHANTS",
-        },
-        bulkBuyers: {
-          tab: "BULK BUYERS",
-          title: "Bulk buyers",
-          copy: "Players moving the largest estimated item volume.",
-          singular: "item",
-          plural: "items",
-          support: (row) =>
-            formatNumber(row.sessions || 0) +
-            " TRIPS · " +
-            formatNumber(row.products || 0) +
-            " PRODUCTS",
-        },
-        explorers: {
-          tab: "EXPLORERS",
-          title: "Market explorers",
-          copy: "Players shopping across the widest range of PVC stores.",
-          singular: "shop",
-          plural: "shops",
-          support: (row) =>
-            formatNumber(row.sessions || 0) +
-            " TRIPS · " +
-            formatNumber(row.merchants || 0) +
-            " MERCHANTS",
         },
         merchants: {
-          tab: "MERCHANTS",
-          title: "Top merchants",
-          copy: "Shop owners with the most qualified sales sessions.",
+          title: "Top 3 merchants this week",
+          copy: "Most qualified sales sessions.",
           singular: "sales session",
           plural: "sales sessions",
-          support: (row) =>
-            formatNumber(row.buyers || 0) +
-            " BUYERS · " +
-            formatNumber(row.products || 0) +
-            " PRODUCTS",
         },
       };
 
@@ -4864,14 +4751,6 @@
           const rankingRetry = event.target.closest("[data-ranking-retry]");
           if (rankingRetry) {
             loadWeeklyRankings(true);
-            return;
-          }
-
-          const rankingTab = event.target.closest("[data-ranking-board]");
-          if (rankingTab) {
-            state.rankingBoard =
-              rankingTab.getAttribute("data-ranking-board") || "shoppers";
-            renderWeeklyRankingsModal();
             return;
           }
 
@@ -5507,8 +5386,8 @@
       function openWeeklyRankingsModal() {
         openFeatureModal({
           kicker: "PVC MARKET LEADERBOARD",
-          title: "PVC weekly rankings",
-          subtitle: "Rolling 7 days · qualified observed market activity",
+          title: "Weekly top 3",
+          subtitle: "Rolling 7 days · qualified market activity",
           bodyHtml: state.weeklyRankings
             ? '<div class="weekly-rankings"></div>'
             : buildRankingLoadingMarkup("CALCULATING THIS WEEK'S RANKS"),
@@ -5636,31 +5515,8 @@
         ].join("");
       }
 
-      function buildRankingRow(row, config) {
-        return [
-          '<article class="ranking-row">',
-          '  <div class="ranking-row-position pixel-font">#' +
-            escapeHtml(String(row.rank)) +
-            "</div>",
-          "  <div>",
-          '    <div class="ranking-row-player pixel-font">' +
-            escapeHtml(row.player) +
-            "</div>",
-          '    <div class="ranking-row-meta pixel-font">' +
-            escapeHtml(config.support(row)) +
-            "</div>",
-          "  </div>",
-          '  <div class="ranking-row-score pixel-font">' +
-            escapeHtml(formatNumber(row.value || 0)) +
-            "<span>" +
-            escapeHtml(rankingMetricLabel(config, row.value)) +
-            "</span></div>",
-          "</article>",
-        ].join("");
-      }
-
       function hydrateRankingSkins(rows) {
-        rows.slice(0, 3).forEach((row) => {
+        rows.forEach((row) => {
           const resolved = getRankingPlayerVisual(row.player);
           if (!resolved.visual.isBedrock) return;
           resolveBedrockSellerVisual({
@@ -5697,29 +5553,6 @@
         }
 
         const payload = state.weeklyRankings;
-        const boardKey = RANKING_BOARDS[state.rankingBoard]
-          ? state.rankingBoard
-          : "shoppers";
-        const config = RANKING_BOARDS[boardKey];
-        const rows = Array.isArray(payload.boards[boardKey])
-          ? payload.boards[boardKey]
-          : [];
-        const tabs = Object.entries(RANKING_BOARDS)
-          .map(([key, board]) => {
-            const active = key === boardKey;
-            return (
-              '<button class="ranking-tab pixel-font' +
-              (active ? " active" : "") +
-              '" type="button" role="tab" aria-selected="' +
-              (active ? "true" : "false") +
-              '" data-ranking-board="' +
-              escapeAttribute(key) +
-              '">' +
-              escapeHtml(board.tab) +
-              "</button>"
-            );
-          })
-          .join("");
 
         refs.featureModalSubtitle.textContent =
           "Rolling " +
@@ -5727,46 +5560,43 @@
           " days · " +
           formatRankingUpdated(payload.generatedAt).toLowerCase();
 
-        if (!rows.length) {
-          refs.featureModalBody.innerHTML =
-            '<div class="weekly-rankings"><div class="ranking-tabs" role="tablist" aria-label="Weekly ranking category">' +
-            tabs +
-            '</div><div class="modal-status">No qualified market activity was recorded for this category.</div></div>';
-          return;
-        }
+        const rankedPlayers = [];
+        const sections = Object.entries(WEEKLY_RANKING_SECTIONS)
+          .map(([boardKey, config]) => {
+            const rows = Array.isArray(payload.boards[boardKey])
+              ? payload.boards[boardKey].slice(0, 3)
+              : [];
+            rankedPlayers.push(...rows);
+            const content = rows.length
+              ? '<div class="ranking-podium">' +
+                rows
+                  .map((row) => buildRankingPodiumCard(row, config))
+                  .join("") +
+                "</div>"
+              : '<div class="modal-status">No qualified activity recorded this week.</div>';
 
-        const podium = rows
-          .slice(0, 3)
-          .map((row) => buildRankingPodiumCard(row, config))
-          .join("");
-        const remaining = rows
-          .slice(3)
-          .map((row) => buildRankingRow(row, config))
+            return [
+              '<section class="ranking-board-section">',
+              '  <div class="ranking-board-intro">',
+              "    <div>",
+              '      <div class="ranking-board-title pixel-font">' +
+                escapeHtml(config.title) +
+                "</div>",
+              '      <div class="ranking-board-copy">' +
+                escapeHtml(config.copy) +
+                "</div>",
+              "    </div>",
+              "  </div>",
+              content,
+              "</section>",
+            ].join("");
+          })
           .join("");
         const coverage = payload.coverage || {};
 
         refs.featureModalBody.innerHTML = [
           '<div class="weekly-rankings">',
-          '  <div class="ranking-tabs" role="tablist" aria-label="Weekly ranking category">' +
-            tabs +
-            "</div>",
-          '  <div class="ranking-board-intro">',
-          "    <div>",
-          '      <div class="ranking-board-title pixel-font">' +
-            escapeHtml(config.title) +
-            "</div>",
-          '      <div class="ranking-board-copy">' +
-            escapeHtml(config.copy) +
-            "</div>",
-          "    </div>",
-          '    <div class="ranking-window pixel-font">ROLLING ' +
-            escapeHtml(String(payload.days || 7)) +
-            " DAYS</div>",
-          "  </div>",
-          '  <div class="ranking-podium">' + podium + "</div>",
-          remaining
-            ? '  <div class="ranking-list">' + remaining + "</div>"
-            : "",
+          '  <div class="ranking-dual-grid">' + sections + "</div>",
           '  <div class="ranking-note">' +
             escapeHtml(
               payload.note ||
@@ -5778,7 +5608,7 @@
           "</div>",
         ].join("");
 
-        hydrateRankingSkins(rows);
+        hydrateRankingSkins(rankedPlayers);
       }
 
       function openMarketHistoryHoldModal() {
