@@ -529,13 +529,6 @@ function buildRoom() {
       action: "core",
       kind: "core",
     },
-    {
-      x: 8.2,
-      title: "GRV EYE",
-      sub: "OBSERVATION NODE",
-      action: "eye",
-      kind: "eye",
-    },
   ];
   terminals.forEach((t) => {
     box("desk", [2.8, 0.18, 1.4], [t.x, 1.05, -5.8], materials.wood);
@@ -1191,14 +1184,6 @@ function interact() {
   }
   if (action === "shop") {
     openTerminal("PVC STORE // LIVE MARKET", state.config.shopUrl, false);
-    return;
-  }
-  if (action === "eye") {
-    openTerminal(
-      "GRV EYE // OBSERVATION",
-      `${location.origin}/grv-eye/public/`,
-      false,
-    );
     return;
   }
   if (action === "core") {

@@ -4,19 +4,7 @@
   "rewrites": [
     {
       "source": "/lobby/skin/:name.png",
-      "destination": "https://api.theyasked.co/grveye/skin/:name"
-    },
-    {
-      "source": "/grveye",
-      "destination": "/grv-eye/public/index.html"
-    },
-    {
-      "source": "/grveye/",
-      "destination": "/grv-eye/public/index.html"
-    },
-    {
-      "source": "/grveye/:path*",
-      "destination": "/grv-eye/public/:path*"
+      "destination": "https://api.theyasked.co/lobby/skin/:name.png"
     }
   ]
 }

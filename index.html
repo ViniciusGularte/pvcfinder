@@ -10,6 +10,12 @@
     />
     <link rel="icon" type="image/png" href="assets/pvc-logo.png" />
     <link rel="apple-touch-icon" href="assets/pvc-logo.png" />
+    <link
+      rel="preload"
+      as="image"
+      href="assets/merchant-guild-loader.webp"
+      type="image/webp"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -665,7 +671,7 @@
       .loading-mark {
         width: 100%;
         height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         mix-blend-mode: screen;
       }
 
@@ -1507,11 +1513,6 @@
         filter: saturate(0.78);
       }
 
-      .shop-card.restocked {
-        border-color: rgba(74, 222, 128, 0.52);
-        box-shadow: inset 0 2px 0 rgba(74, 222, 128, 0.75);
-      }
-
       .shop-card.admin-shop {
         border-color: rgba(245, 158, 11, 0.48);
         box-shadow: inset 0 2px 0 rgba(245, 158, 11, 0.72);
@@ -1776,38 +1777,11 @@
         text-transform: uppercase;
       }
 
-      .shop-restock-badge {
-        padding: 3px 6px;
-        border: 1px solid rgba(74, 222, 128, 0.55);
-        background: rgba(18, 78, 49, 0.34);
-        color: #86efac;
-        font-family: "Chakra Petch", sans-serif;
-        font-size: 10px;
-        font-weight: 700;
-        line-height: 1.3;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        box-shadow: 0 0 14px rgba(74, 222, 128, 0.1);
-      }
-
       .shop-only-badge {
         padding: 3px 6px;
         border: 1px solid rgba(245, 158, 11, 0.58);
         background: rgba(120, 53, 15, 0.28);
         color: #fbbf24;
-        font-family: "Chakra Petch", sans-serif;
-        font-size: 10px;
-        font-weight: 700;
-        line-height: 1.3;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .shop-visitors-badge {
-        padding: 3px 6px;
-        border: 1px solid rgba(96, 165, 250, 0.5);
-        background: rgba(30, 64, 175, 0.2);
-        color: #bfdbfe;
         font-family: "Chakra Petch", sans-serif;
         font-size: 10px;
         font-weight: 700;
@@ -2487,332 +2461,6 @@
         padding: 18px;
         scrollbar-width: thin;
         scrollbar-color: rgba(232, 118, 10, 0.72) rgba(15, 17, 23, 0.88);
-      }
-
-      .ranking-trigger {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        border-color: rgba(245, 184, 72, 0.72);
-        color: #ffe4a3;
-      }
-
-      .ranking-trigger:hover,
-      .ranking-trigger:focus-visible {
-        border-color: #f5b848;
-        color: #fff4d4;
-        background: rgba(73, 45, 16, 0.94);
-      }
-
-      .ranking-trigger-icon {
-        width: 17px;
-        height: 17px;
-        flex: 0 0 auto;
-      }
-
-      .feature-modal.ranking-modal .feature-modal-panel {
-        width: min(1000px, 100%);
-        border-color: rgba(174, 112, 39, 0.82);
-      }
-
-      .weekly-rankings {
-        width: min(920px, 100%);
-        margin: 0 auto;
-      }
-
-      .ranking-dual-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .ranking-board-section {
-        min-width: 0;
-        padding: 14px;
-        border: 1px solid rgba(90, 52, 24, 0.78);
-        background: rgba(10, 8, 7, 0.62);
-      }
-
-      .ranking-board-intro {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 12px;
-      }
-
-      .ranking-board-title {
-        color: var(--text-bright);
-        font-size: 16px;
-      }
-
-      .ranking-board-copy {
-        margin-top: 5px;
-        color: var(--text-muted);
-        font-size: 13px;
-        line-height: 1.5;
-      }
-
-      .ranking-window {
-        flex: 0 0 auto;
-        color: #f5c66c;
-        font-size: 9px;
-        white-space: nowrap;
-      }
-
-      .ranking-podium {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        align-items: end;
-        gap: 10px;
-        margin-bottom: 12px;
-      }
-
-      .ranking-podium-card {
-        position: relative;
-        min-width: 0;
-        min-height: 260px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 14px 10px 16px;
-        overflow: hidden;
-        border: 1px solid rgba(112, 74, 41, 0.8);
-        background:
-          radial-gradient(circle at 50% 28%, rgba(232, 118, 10, 0.13), transparent 38%),
-          linear-gradient(180deg, rgba(25, 19, 15, 0.97), rgba(11, 9, 8, 0.99));
-      }
-
-      .ranking-podium-card.rank-1 {
-        order: 2;
-        min-height: 290px;
-        border-color: #dca943;
-        background:
-          radial-gradient(circle at 50% 24%, rgba(255, 199, 78, 0.25), transparent 42%),
-          linear-gradient(180deg, rgba(50, 34, 17, 0.98), rgba(13, 10, 7, 0.99));
-      }
-
-      .ranking-podium-card.rank-2 {
-        order: 1;
-        border-color: #8e9baa;
-      }
-
-      .ranking-podium-card.rank-3 {
-        order: 3;
-        border-color: #a96335;
-      }
-
-      .ranking-medal {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        min-width: 30px;
-        height: 30px;
-        display: grid;
-        place-items: center;
-        border: 1px solid currentColor;
-        background: rgba(8, 6, 4, 0.78);
-        color: #b7c0ca;
-        font-size: 11px;
-      }
-
-      .rank-1 .ranking-medal {
-        color: #ffd46f;
-      }
-
-      .rank-3 .ranking-medal {
-        color: #d58954;
-      }
-
-      .ranking-skin-stage {
-        position: relative;
-        width: 100%;
-        height: 150px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        margin-bottom: 4px;
-      }
-
-      .ranking-skin-stage::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        bottom: 2px;
-        width: 76px;
-        height: 13px;
-        transform: translateX(-50%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(31, 22, 15, 0.9);
-      }
-
-      .rank-1 .ranking-skin-stage::after {
-        border-color: rgba(255, 210, 107, 0.45);
-        background: rgba(77, 48, 15, 0.94);
-      }
-
-      .ranking-skin {
-        --ranking-tilt: 0deg;
-        position: relative;
-        z-index: 1;
-        width: 112px;
-        height: 144px;
-        object-fit: contain;
-        object-position: center bottom;
-        image-rendering: pixelated;
-        transform-origin: 50% 92%;
-        filter: drop-shadow(0 14px 17px rgba(0, 0, 0, 0.42));
-        animation: rankingPose 4.4s ease-in-out infinite alternate;
-      }
-
-      .rank-1 .ranking-skin {
-        width: 126px;
-        height: 154px;
-        --ranking-tilt: -1deg;
-      }
-
-      .rank-2 .ranking-skin {
-        --ranking-tilt: -2deg;
-        animation-delay: -1.4s;
-      }
-
-      .rank-3 .ranking-skin {
-        --ranking-tilt: 2deg;
-        animation-delay: -2.6s;
-      }
-
-      .ranking-player {
-        width: 100%;
-        overflow-wrap: anywhere;
-        color: var(--text-bright);
-        font-size: 13px;
-        line-height: 1.35;
-        text-align: center;
-      }
-
-      .rank-1 .ranking-player {
-        color: #fff0bd;
-        font-size: 14px;
-      }
-
-      .ranking-score {
-        margin-top: 7px;
-        color: #f5c66c;
-        font-size: 16px;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .ranking-score-label {
-        margin-top: 2px;
-        color: var(--text-muted);
-        font-size: 9px;
-        text-transform: uppercase;
-      }
-
-      .ranking-note {
-        margin-top: 14px;
-        padding-top: 12px;
-        border-top: 1px solid rgba(90, 52, 24, 0.56);
-        color: var(--text-muted);
-        font-size: 11px;
-        line-height: 1.6;
-        text-align: center;
-      }
-
-      .ranking-loading {
-        min-height: 360px;
-        display: grid;
-        place-items: center;
-        color: var(--text-muted);
-        font-size: 11px;
-        text-align: center;
-      }
-
-      .ranking-loading-bar {
-        width: min(260px, 72vw);
-        height: 4px;
-        margin: 16px auto 0;
-        overflow: hidden;
-        background: rgba(90, 52, 24, 0.62);
-      }
-
-      .ranking-loading-bar::after {
-        content: "";
-        display: block;
-        width: 42%;
-        height: 100%;
-        background: #e8760a;
-        animation: rankingLoading 1.1s ease-in-out infinite alternate;
-      }
-
-      @keyframes rankingPose {
-        from {
-          transform: perspective(480px) rotateY(-6deg) rotateZ(var(--ranking-tilt));
-        }
-        to {
-          transform: perspective(480px) rotateY(6deg) rotateZ(var(--ranking-tilt)) translateY(-3px);
-        }
-      }
-
-      @keyframes rankingLoading {
-        from {
-          transform: translateX(-5%);
-        }
-        to {
-          transform: translateX(145%);
-        }
-      }
-
-      @media (max-width: 680px) {
-        .ranking-dual-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .ranking-board-section {
-          padding: 10px;
-        }
-
-        .ranking-board-intro {
-          align-items: flex-start;
-          flex-direction: column;
-          gap: 7px;
-        }
-
-        .ranking-podium {
-          gap: 5px;
-        }
-
-        .ranking-podium-card,
-        .ranking-podium-card.rank-1 {
-          min-height: 230px;
-          padding: 10px 5px 12px;
-        }
-
-        .ranking-skin-stage {
-          height: 124px;
-        }
-
-        .ranking-skin,
-        .rank-1 .ranking-skin {
-          width: min(94px, 26vw);
-          height: 124px;
-        }
-
-        .ranking-player,
-        .rank-1 .ranking-player {
-          font-size: 10px;
-        }
-
-        .ranking-score {
-          font-size: 13px;
-        }
-
-        .ranking-score-label {
-          font-size: 7px;
-        }
       }
 
       .market-hold {
@@ -3554,8 +3202,6 @@
       @media (prefers-reduced-motion: reduce) {
         .loading-mark,
         .seller-pose,
-        .ranking-skin,
-        .ranking-loading-bar::after,
         .seller-showcase.loading::after {
           animation: none !important;
         }
@@ -3750,36 +3396,12 @@
       <div class="loading-panel" role="status" aria-live="polite">
         <div class="loading-sigil" aria-hidden="true">
           <img
-            id="loadingArtwork"
             class="loading-mark"
+            src="assets/merchant-guild-loader.webp"
             alt=""
             fetchpriority="high"
-            referrerpolicy="no-referrer"
-            width="1000"
-            height="1000"
           />
         </div>
-        <script>
-          (() => {
-            const artwork = document.getElementById("loadingArtwork");
-            const fallbackArtwork =
-              "assets/loading/guild-loading-legacy.webp";
-            const requestId = window.crypto?.randomUUID
-              ? window.crypto.randomUUID()
-              : Date.now().toString(36) + Math.random().toString(36).slice(2);
-
-            artwork.addEventListener(
-              "error",
-              () => {
-                artwork.src = fallbackArtwork;
-              },
-              { once: true },
-            );
-            artwork.src =
-              "https://pvc.coolwebsite.uk/api/v2/media/random?request=" +
-              encodeURIComponent(requestId);
-          })();
-        </script>
         <div class="loading-subtitle pixel-font" id="loadingStatus">
           CONTACTING THE MARKET
         </div>
@@ -3850,29 +3472,6 @@
             <a class="mini-action active pixel-font" href="/mods"
               >INSTALL MODS</a
             >
-            <button
-              class="mini-action ranking-trigger pixel-font"
-              id="weeklyRankingsButton"
-              type="button"
-              aria-haspopup="dialog"
-              aria-controls="featureModal"
-            >
-              <svg
-                class="ranking-trigger-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M8 4h8v3c0 3.4-1.4 5.4-4 6.2C9.4 12.4 8 10.4 8 7V4Zm4 9.2V17m-4 3h8M9.5 17h5M8 6H4v1c0 2.6 1.6 4.4 4.3 4.8M16 6h4v1c0 2.6-1.6 4.4-4.3 4.8"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="square"
-                  stroke-linejoin="miter"
-                />
-              </svg>
-              <span>WEEKLY RANKINGS</span>
-            </button>
           </div>
 
           <div class="search-wrap" id="searchWrap">
@@ -4166,18 +3765,6 @@
           "/pvc/data/shops-snapshot.json",
         ],
         historyUrls: ["/api/pvc/history", "/api/history"],
-        restockUrls: [
-          "https://api.theyasked.co/grveye/api/market/restocks?hours=24",
-          "/grveye/api/market/restocks?hours=24",
-        ],
-        visitorUrls: [
-          "https://api.theyasked.co/grveye/api/market/visitors?days=7",
-          "/grveye/api/market/visitors?days=7",
-        ],
-        rankingUrls: [
-          "https://api.theyasked.co/grveye/api/market/rankings",
-          "/grveye/api/market/rankings",
-        ],
         loadingDuration: 4000,
         loadingPause: 240,
         searchDebounce: 150,
@@ -4298,9 +3885,6 @@
         updatedText: document.getElementById("updatedText"),
         refreshButton: document.getElementById("refreshButton"),
         refreshLabel: document.getElementById("refreshLabel"),
-        weeklyRankingsButton: document.getElementById(
-          "weeklyRankingsButton",
-        ),
         filterBar: document.querySelector(".filter-bar"),
         sortChips: document.getElementById("sortChips"),
         searchScopeChips: document.getElementById("searchScopeChips"),
@@ -4349,13 +3933,6 @@
           currencyValues: { emerald: 1 },
           productStats: {},
         },
-        restocks: new Map(),
-        visitors: new Map(),
-        visitorCountsLoaded: false,
-        weeklyRankings: null,
-        weeklyRankingsFetchedAt: 0,
-        weeklyRankingsLoading: false,
-        weeklyRankingsError: "",
         filtered: [],
         searchSuggestions: [],
         visibleCount: 0,
@@ -4373,21 +3950,6 @@
         modalAnalyticsPayload: null,
         modalListing: null,
         openedUrlItem: false,
-      };
-
-      const WEEKLY_RANKING_SECTIONS = {
-        shoppers: {
-          title: "Top 3 shoppers this week",
-          copy: "Most qualified shopping trips.",
-          singular: "shopping trip",
-          plural: "shopping trips",
-        },
-        merchants: {
-          title: "Top 3 merchants this week",
-          copy: "Most qualified sales sessions.",
-          singular: "sales session",
-          plural: "sales sessions",
-        },
       };
 
       let searchTimer = null;
@@ -4563,10 +4125,6 @@
           }
 
           loadData({ showLoadingScreen: false, forceFresh: true });
-        });
-
-        refs.weeklyRankingsButton.addEventListener("click", () => {
-          openWeeklyRankingsModal();
         });
 
         refs.mobileFilterToggle.addEventListener("click", () => {
@@ -4754,12 +4312,6 @@
         });
 
         refs.featureModalBody.addEventListener("click", (event) => {
-          const rankingRetry = event.target.closest("[data-ranking-retry]");
-          if (rankingRetry) {
-            loadWeeklyRankings(true);
-            return;
-          }
-
           const analyticsTab = event.target.closest("[data-analytics-tab]");
           if (analyticsTab) {
             state.analyticsTradeMode =
@@ -4950,8 +4502,6 @@
         const showLoadingScreen = options.showLoadingScreen !== false;
         const forceFresh = options.forceFresh === true;
         const requestId = ++state.requestSerial;
-        const restocksPromise = fetchRecentRestocks();
-        const visitorsPromise = fetchWeeklyVisitors();
         let requestSucceeded = false;
 
         state.activeRequestId = requestId;
@@ -4981,31 +4531,11 @@
           state.listings = flattened.listings;
           state.itemCatalog = buildItemCatalog(state.listings);
           state.market = flattened.marketContext;
-          const [initialRestocks, initialVisitors] = await Promise.all([
-            Promise.race([restocksPromise, delay(1200).then(() => null)]),
-            Promise.race([visitorsPromise, delay(1200).then(() => null)]),
-          ]);
           if (requestId !== state.activeRequestId) return;
-          if (initialRestocks) applyRecentRestocks(initialRestocks);
-          if (initialVisitors) applyWeeklyVisitors(initialVisitors);
           state.loadingError = false;
           refs.errorState.classList.add("hidden");
           updateStats();
           renderAll();
-          if (!initialRestocks) {
-            restocksPromise.then((restocks) => {
-              if (!restocks || requestId !== state.activeRequestId) return;
-              applyRecentRestocks(restocks);
-              renderAll();
-            });
-          }
-          if (!initialVisitors) {
-            visitorsPromise.then((visitors) => {
-              if (!visitors || requestId !== state.activeRequestId) return;
-              applyWeeklyVisitors(visitors);
-              renderAll();
-            });
-          }
           openUrlItemModalIfNeeded();
           startRelativeTime();
           requestSucceeded = true;
@@ -5048,69 +4578,6 @@
             updateRelativeTime();
           }
         }
-      }
-
-      async function fetchRecentRestocks() {
-        for (const restockUrl of CONFIG.restockUrls || []) {
-          try {
-            const payload = await fetchJsonUrl(restockUrl, {
-              cache: "no-store",
-            });
-            const rows = Array.isArray(payload.restocks)
-              ? payload.restocks
-              : [];
-            return new Map(rows.map((row) => [row.offerKey, row]));
-          } catch (error) {
-            console.warn(
-              "Could not load recent restocks from",
-              restockUrl,
-              error,
-            );
-          }
-        }
-        return null;
-      }
-
-      function applyRecentRestocks(restocks) {
-        state.restocks = restocks;
-        state.listings.forEach((listing) => {
-          listing.restock = state.restocks.get(listing.stockGroupKey) || null;
-        });
-      }
-
-      async function fetchWeeklyVisitors() {
-        for (const visitorUrl of CONFIG.visitorUrls || []) {
-          try {
-            const payload = await fetchJsonUrl(visitorUrl, {
-              cache: "no-store",
-            });
-            const rows = Array.isArray(payload.locations)
-              ? payload.locations
-              : [];
-            return new Map(
-              rows.map((row) => [
-                row.locationKey,
-                Math.max(0, Number(row.visitors) || 0),
-              ]),
-            );
-          } catch (error) {
-            console.warn(
-              "Could not load weekly shop visitors from",
-              visitorUrl,
-              error,
-            );
-          }
-        }
-        return null;
-      }
-
-      function applyWeeklyVisitors(visitors) {
-        state.visitors = visitors;
-        state.visitorCountsLoaded = true;
-        state.listings.forEach((listing) => {
-          listing.weeklyVisitors =
-            state.visitors.get(listing.visitorLocationKey) || 0;
-        });
       }
 
       function mergeAdminShops(liveShops) {
@@ -5361,13 +4828,12 @@
         openAnalyticsModal(listing);
       }
 
-      function openFeatureModal({ kicker, title, subtitle, bodyHtml, mode }) {
+      function openFeatureModal({ kicker, title, subtitle, bodyHtml }) {
         lastModalFocus = document.activeElement;
         refs.featureModalKicker.textContent = kicker;
         refs.featureModalTitle.textContent = title;
         refs.featureModalSubtitle.textContent = subtitle;
         refs.featureModalBody.innerHTML = bodyHtml;
-        refs.featureModal.classList.toggle("ranking-modal", mode === "rankings");
         refs.featureModal.classList.add("open");
         refs.featureModal.setAttribute("aria-hidden", "false");
         document.body.style.overflow = "hidden";
@@ -5377,244 +4843,6 @@
           );
           if (closeButton) closeButton.focus();
         });
-      }
-
-      function buildRankingLoadingMarkup(message) {
-        return (
-          '<div class="ranking-loading" role="status" aria-live="polite">' +
-          '  <div><div class="pixel-font">' +
-          escapeHtml(message || "CALCULATING THIS WEEK'S RANKS") +
-          '</div><div class="ranking-loading-bar" aria-hidden="true"></div></div>' +
-          "</div>"
-        );
-      }
-
-      function openWeeklyRankingsModal() {
-        openFeatureModal({
-          kicker: "PVC MARKET LEADERBOARD",
-          title: "Weekly top 3",
-          subtitle: "Rolling 7 days · qualified market activity",
-          bodyHtml: state.weeklyRankings
-            ? '<div class="weekly-rankings"></div>'
-            : buildRankingLoadingMarkup("CALCULATING THIS WEEK'S RANKS"),
-          mode: "rankings",
-        });
-
-        if (
-          state.weeklyRankings &&
-          Date.now() - state.weeklyRankingsFetchedAt < 300_000
-        ) {
-          renderWeeklyRankingsModal();
-          return;
-        }
-        loadWeeklyRankings();
-      }
-
-      async function fetchWeeklyRankings() {
-        const errors = [];
-        for (const rankingUrl of CONFIG.rankingUrls || []) {
-          try {
-            for (let attempt = 0; attempt < 15; attempt += 1) {
-              const payload = await fetchJsonUrl(rankingUrl, {
-                cache: "no-store",
-              });
-              if (payload && payload.boards) return payload;
-              if (!payload || !payload.pending) {
-                throw new Error("Ranking payload is missing boards");
-              }
-              await delay(Math.max(1_000, payload.retryAfterMs || 3_000));
-            }
-            throw new Error("Ranking calculation is still in progress");
-          } catch (error) {
-            errors.push(rankingUrl + ": " + (error.message || String(error)));
-          }
-        }
-        throw new Error(errors.join(" | ") || "No ranking endpoint available");
-      }
-
-      async function loadWeeklyRankings(force) {
-        if (state.weeklyRankingsLoading) return;
-        if (
-          !force &&
-          state.weeklyRankings &&
-          Date.now() - state.weeklyRankingsFetchedAt < 300_000
-        ) {
-          renderWeeklyRankingsModal();
-          return;
-        }
-
-        state.weeklyRankingsLoading = true;
-        state.weeklyRankingsError = "";
-        if (refs.featureModal.classList.contains("ranking-modal")) {
-          refs.featureModalBody.innerHTML = buildRankingLoadingMarkup(
-            "CALCULATING THIS WEEK'S RANKS",
-          );
-        }
-
-        try {
-          state.weeklyRankings = await fetchWeeklyRankings();
-          state.weeklyRankingsFetchedAt = Date.now();
-        } catch (error) {
-          console.warn("Could not load weekly rankings.", error);
-          state.weeklyRankingsError =
-            "The weekly leaderboard could not be loaded right now.";
-        } finally {
-          state.weeklyRankingsLoading = false;
-          renderWeeklyRankingsModal();
-        }
-      }
-
-      function getRankingPlayerVisual(playerName) {
-        const cacheKey = getSellerLookupKey(playerName);
-        if (!sellerVisualCache[cacheKey]) {
-          sellerVisualCache[cacheKey] = buildSellerVisual(
-            playerName,
-            normalizeAvatarName(getSellerGamertag(playerName)),
-          );
-        }
-        return { cacheKey, visual: sellerVisualCache[cacheKey] };
-      }
-
-      function buildRankingSkinMarkup(row) {
-        const resolved = getRankingPlayerVisual(row.player);
-        const visual = resolved.visual;
-        return (
-          '<img class="ranking-skin" src="' +
-          escapeAttribute(visual.poseUrl) +
-          '" data-seller-key="' +
-          escapeAttribute(resolved.cacheKey) +
-          '" data-pose-fallbacks="' +
-          escapeAttribute(visual.poseFallbacks.join("|")) +
-          '" data-pose-index="0" alt="Full skin of ' +
-          escapeAttribute(row.player) +
-          ', rank ' +
-          escapeAttribute(String(row.rank)) +
-          '" loading="eager" decoding="async" onerror="window.handlePoseError(this)" />'
-        );
-      }
-
-      function rankingMetricLabel(config, value) {
-        return Number(value) === 1 ? config.singular : config.plural;
-      }
-
-      function buildRankingPodiumCard(row, config) {
-        return [
-          '<article class="ranking-podium-card rank-' +
-            escapeAttribute(String(row.rank)) +
-            '">',
-          '  <div class="ranking-medal pixel-font">#' +
-            escapeHtml(String(row.rank)) +
-            "</div>",
-          '  <div class="ranking-skin-stage">' +
-            buildRankingSkinMarkup(row) +
-            "</div>",
-          '  <div class="ranking-player pixel-font">' +
-            escapeHtml(row.player) +
-            "</div>",
-          '  <div class="ranking-score pixel-font">' +
-            escapeHtml(formatNumber(row.value || 0)) +
-            "</div>",
-          '  <div class="ranking-score-label pixel-font">' +
-            escapeHtml(rankingMetricLabel(config, row.value)) +
-            "</div>",
-          "</article>",
-        ].join("");
-      }
-
-      function hydrateRankingSkins(rows) {
-        rows.forEach((row) => {
-          const resolved = getRankingPlayerVisual(row.player);
-          if (!resolved.visual.isBedrock) return;
-          resolveBedrockSellerVisual({
-            shopOwner: row.player,
-            avatarName: normalizeAvatarName(getSellerGamertag(row.player)),
-            sellerLookupKey: resolved.cacheKey,
-          });
-        });
-      }
-
-      function formatRankingUpdated(timestamp) {
-        const minutes = Math.max(
-          0,
-          Math.floor((Date.now() - Number(timestamp || 0)) / 60_000),
-        );
-        if (minutes < 1) return "UPDATED JUST NOW";
-        if (minutes < 60) return "UPDATED " + minutes + "M AGO";
-        return "UPDATED " + Math.floor(minutes / 60) + "H AGO";
-      }
-
-      function renderWeeklyRankingsModal() {
-        if (!refs.featureModal.classList.contains("ranking-modal")) return;
-        if (state.weeklyRankingsLoading) return;
-
-        if (state.weeklyRankingsError || !state.weeklyRankings) {
-          refs.featureModalBody.innerHTML =
-            '<div class="modal-status error">' +
-            escapeHtml(
-              state.weeklyRankingsError ||
-                "The weekly leaderboard is temporarily unavailable.",
-            ) +
-            '<div style="margin-top:16px"><button class="mini-action ranking-trigger pixel-font" type="button" data-ranking-retry>TRY AGAIN</button></div></div>';
-          return;
-        }
-
-        const payload = state.weeklyRankings;
-
-        refs.featureModalSubtitle.textContent =
-          "Rolling " +
-          (payload.days || 7) +
-          " days · " +
-          formatRankingUpdated(payload.generatedAt).toLowerCase();
-
-        const rankedPlayers = [];
-        const sections = Object.entries(WEEKLY_RANKING_SECTIONS)
-          .map(([boardKey, config]) => {
-            const rows = Array.isArray(payload.boards[boardKey])
-              ? payload.boards[boardKey].slice(0, 3)
-              : [];
-            rankedPlayers.push(...rows);
-            const content = rows.length
-              ? '<div class="ranking-podium">' +
-                rows
-                  .map((row) => buildRankingPodiumCard(row, config))
-                  .join("") +
-                "</div>"
-              : '<div class="modal-status">No qualified activity recorded this week.</div>';
-
-            return [
-              '<section class="ranking-board-section">',
-              '  <div class="ranking-board-intro">',
-              "    <div>",
-              '      <div class="ranking-board-title pixel-font">' +
-                escapeHtml(config.title) +
-                "</div>",
-              '      <div class="ranking-board-copy">' +
-                escapeHtml(config.copy) +
-                "</div>",
-              "    </div>",
-              "  </div>",
-              content,
-              "</section>",
-            ].join("");
-          })
-          .join("");
-        const coverage = payload.coverage || {};
-
-        refs.featureModalBody.innerHTML = [
-          '<div class="weekly-rankings">',
-          '  <div class="ranking-dual-grid">' + sections + "</div>",
-          '  <div class="ranking-note">' +
-            escapeHtml(
-              payload.note ||
-                "Rankings use qualified observed market activity and may not include every transaction.",
-            ) +
-            " · " +
-            escapeHtml(formatNumber(coverage.qualifiedDrops || 0)) +
-            " qualified stock changes.</div>",
-          "</div>",
-        ].join("");
-
-        hydrateRankingSkins(rankedPlayers);
       }
 
       function openMarketHistoryHoldModal() {
@@ -5635,7 +4863,6 @@
 
       function closeFeatureModal() {
         refs.featureModal.classList.remove("open");
-        refs.featureModal.classList.remove("ranking-modal");
         refs.featureModal.setAttribute("aria-hidden", "true");
         refs.featureModalBody.innerHTML = "";
         state.modalListing = null;
@@ -7689,13 +6916,7 @@
             );
           }
 
-          const restockCompare = compareNumber(
-            Number(right.restock?.restockedAt) || 0,
-            Number(left.restock?.restockedAt) || 0,
-          );
-
           return (
-            restockCompare ||
             compareNumber(right.stock > 0 ? 1 : 0, left.stock > 0 ? 1 : 0) ||
             compareNumber(right.displayStock, left.displayStock) ||
             left.displayName.localeCompare(right.displayName)
@@ -7718,9 +6939,6 @@
         const cardClasses = ["shop-card"];
         if (listing.stock === 0) {
           cardClasses.push("sold-out");
-        }
-        if (listing.restock) {
-          cardClasses.push("restocked");
         }
         if (listing.isAdminShop) {
           cardClasses.push("admin-shop");
@@ -7770,21 +6988,8 @@
               escapeHtml(String(listing.offerLocationCount)) +
               "</span>"
             : "",
-          listing.restock
-            ? '          <span class="shop-restock-badge">↻ BACK IN STOCK · ' +
-              escapeHtml(formatRestockAge(listing.restock.restockedAt)) +
-              "</span>"
-            : "",
           listing.isOnlyShop
             ? '          <span class="shop-only-badge">ONLY SHOP</span>'
-            : "",
-          state.visitorCountsLoaded
-            ? '          <span class="shop-visitors-badge" title="Unique visitors within 6 blocks during the last 7 days">◉ ' +
-              escapeHtml(formatNumber(listing.weeklyVisitors || 0)) +
-              ((listing.weeklyVisitors || 0) === 1
-                ? " VISITOR · 7D"
-                : " VISITORS · 7D") +
-              "</span>"
             : "",
           "        </div>",
           "      </div>",
@@ -8423,30 +7628,6 @@
         return tradesAvailable * unitsPerTrade;
       }
 
-      function normalizeVisitorWorld(world) {
-        const value = String(world || "")
-          .trim()
-          .toLowerCase();
-        if (value.includes("nether")) return "minecraft_the_nether";
-        if (value.includes("end")) return "minecraft_the_end";
-        return "minecraft_overworld";
-      }
-
-      function visitorCoordinateToken(value) {
-        const number = Number(value);
-        if (!Number.isFinite(number)) return "0";
-        return String(Math.round(number * 100) / 100);
-      }
-
-      function buildShopVisitorKey(world, coords) {
-        return [
-          normalizeVisitorWorld(world),
-          visitorCoordinateToken(coords.x),
-          visitorCoordinateToken(coords.y),
-          visitorCoordinateToken(coords.z),
-        ].join("::");
-      }
-
       function flattenListings(shops) {
         let listings = [];
 
@@ -8497,7 +7678,6 @@
             );
             const coords = parseCoords(shop.location);
             const mapUrl = buildMapUrl(shop.world, coords);
-            const visitorLocationKey = buildShopVisitorKey(shop.world, coords);
             const searchType = formatType(resultItem.type);
             const searchLore = [
               rawLore.join(" "),
@@ -8632,8 +7812,6 @@
               stockGroupKey,
               offerGroupKey,
               locationKey,
-              visitorLocationKey,
-              weeklyVisitors: 0,
               offerLocationCount: 1,
               offerLocationIndex: 1,
               sellerItemTotalStock: 0,
@@ -10044,16 +9222,6 @@
 
       function formatNumber(value) {
         return new Intl.NumberFormat("en-US").format(value);
-      }
-
-      function formatRestockAge(timestamp) {
-        const minutes = Math.max(
-          0,
-          Math.floor((Date.now() - Number(timestamp || 0)) / 60_000),
-        );
-        if (minutes < 1) return "NOW";
-        if (minutes < 60) return minutes + "M AGO";
-        return Math.floor(minutes / 60) + "H AGO";
       }
 
       function formatMarketNumber(value) {

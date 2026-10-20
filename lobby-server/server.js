@@ -3,6 +3,7 @@ import express from "express";
 import http from "node:http";
 import crypto from "node:crypto";
 import { WebSocketServer, WebSocket } from "ws";
+import { createSkinResolver } from "./lib/skins.js";
 
 const env = process.env;
 const num = (value, fallback) =>
@@ -17,7 +18,7 @@ const cfg = {
   maxPlayers: Math.min(100, Math.max(2, num(env.MAX_PLAYERS, 40))),
   chatHistory: Math.min(200, Math.max(10, num(env.CHAT_HISTORY, 50))),
   mapUrl: env.MAP_URL || "https://web.peacefulvanilla.club/maps/",
-  skinUrl: env.SKIN_URL || "https://api.theyasked.co/grveye/skin/",
+  skinUrl: env.SKIN_URL || `${cleanBase ? `/${cleanBase}` : ""}/skin/`,
   shopUrl: env.SHOP_URL || "https://pvcstorefinder.vercel.app/",
   frontendUrl: env.FRONTEND_URL || "https://pvcstorefinder.vercel.app/lobby/",
 };
@@ -30,6 +31,7 @@ const players = new Map();
 const seats = new Map();
 const chat = [];
 const shared = { jukeboxPlaying: false, mapWorld: "overworld" };
+const getSkin = createSkinResolver();
 const seatIds = new Set(["sofa-1", "sofa-2", "chair-1", "chair-2", "chair-3"]);
 
 const send = (socket, value) => {
@@ -214,6 +216,23 @@ wss.on("connection", (socket) => {
 });
 
 app.disable("x-powered-by");
+app.get(route("/skin/:name"), async (req, res) => {
+  const name = text(req.params.name, 32).replace(/\.png$/i, "");
+  if (!name || !/^[A-Za-z0-9_.*-]+$/.test(name)) {
+    return res.status(400).json({ error: "Invalid skin name" });
+  }
+  try {
+    const skin = await getSkin(name);
+    res.set({
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=1800, stale-while-revalidate=21600",
+      "X-Skin-Source": skin.source,
+    });
+    return res.send(skin.buf);
+  } catch {
+    return res.status(502).json({ error: "Skin lookup failed" });
+  }
+});
 app.get(route("/api/status"), (_req, res) => {
   res.json({
     ok: true,
