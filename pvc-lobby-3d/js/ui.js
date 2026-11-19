@@ -1,4 +1,4 @@
-// HUD wiring: login (nickname + skin), player chip, ambience and view toggle.
+// HUD wiring: login (nickname + skin), player chip, personal audio and view toggle.
 import { S } from './core.js';
 import { $, store, toast } from './util.js';
 import { audioFX } from './audio.js';
@@ -8,8 +8,10 @@ import { redrawBoard } from './board.js';
 const NICK_RE = /^[A-Za-z0-9_.]{2,16}$/;   // Java names + Bedrock (Geyser) "." prefix
 
 export function initUI() {
-  // Music is controlled only by interacting with the radio in the room.
-  $('ambBtn').onclick = () => audioFX.toggleAmb();
+  // The radio controls shared playback; this master control is local to each player.
+  $('masterVolume').oninput = event => audioFX.setMasterVolume(event.currentTarget.value / 100);
+  $('masterMute').onclick = () => audioFX.toggleMute();
+  $('flashBtn').onclick = () => S.player.toggleFlashlight();
   $('viewBtn').onclick = () => S.player.toggleView();
   audioFX.ui();
 

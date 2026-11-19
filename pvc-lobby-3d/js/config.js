@@ -7,6 +7,7 @@ export const MAP_SPAWN = { x: 54, z: 51, zoom: 1 };   // PVC server spawn
 export const GOTO_ZOOM = 1;
 
 export const ROOM = { w: 24, d: 24, h: 4.2 };       // x: -12..12, z: -12..12
+export const SURFACE_AREA = { centerX: 30, centerZ: 10, radius: 82, minX: -52, maxX: 112, minZ: -72, maxZ: 92 }; // circular exterior + mountain boundary
 export const SCREEN = { x: -5, y: 2.2, w: 5.6, h: 3.15, px: 1600 };  // live map on the back wall
 export const WIN = { z: 3, y: 2.35, w: 3.4, h: 2.2 };                // window on the right wall (x = +12)
 export const SPAWN = { x: 0, z: 5, yaw: Math.PI };

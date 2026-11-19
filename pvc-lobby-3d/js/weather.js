@@ -1,11 +1,11 @@
-// Outdoor scene seen through the window + weather state, transitions, lighting and the weather panel.
+// Outdoor scene seen through the window. Weather controls are temporarily disabled.
 import * as THREE from 'three';
 import { S } from './core.js';
-import { ROOM, WIN } from './config.js';
-import { $, V, rnd, clamp01, store, canvasTex, softDot } from './util.js';
+import { ROOM, WIN, SURFACE_AREA } from './config.js';
+import { V, rnd, clamp01, canvasTex, softDot, addCollider, addRotCollider } from './util.js';
 import { R } from './room.js';
-import { addInteractable } from './interact.js';
 import { audioFX } from './audio.js';
+import { SEWER_OPENINGS } from './sewer.js';
 
 export const PRESETS = {
   clear:  { icon: '✨', label: 'Clear',  rain: 0,   snow: 0,  clouds: .1,  fog: .05, wind: .15, lightning: false },
@@ -15,8 +15,8 @@ export const PRESETS = {
   snow:   { icon: '❄️', label: 'Snow',   rain: 0,   snow: .8, clouds: .8,  fog: .35, wind: .2,  lightning: false },
   fog:    { icon: '🌫️', label: 'Fog',    rain: 0,   snow: 0,  clouds: .6,  fog: .9,  wind: .05, lightning: false },
 };
-let globalWeatherSetter = null;
-export function setGlobalWeather(state) { globalWeatherSetter?.(state); }
+// Multiplayer weather updates are intentionally ignored until the controls return.
+export function setGlobalWeather() {}
 const TIMES = { night: { icon: '🌙', label: 'Night' }, sunset: { icon: '🌅', label: 'Sunset' }, day: { icon: '☀️', label: 'Day' } };
 const TIME_KEYS = Object.keys(TIMES);
 const KEYS = ['rain', 'snow', 'clouds', 'fog', 'wind'];
@@ -27,9 +27,7 @@ const PAL = {
 };
 
 export function buildWeather() {
-  const saved = store.get();
-  const wx = S.wx = Object.assign({ ...PRESETS.rain, time: 'night' }, saved.wx || {});
-  if (!TIMES[wx.time]) wx.time = 'night';
+  const wx = S.wx = { ...PRESETS.fog, clouds: .78, fog: .96, wind: 0, lightning: false, time: 'night' };
   const cur = { rain: wx.rain, snow: wx.snow, clouds: wx.clouds, fog: wx.fog, wind: wx.wind, lightning: wx.lightning ? 1 : 0,
     night: wx.time === 'night' ? 1 : 0, sunset: wx.time === 'sunset' ? 1 : 0, day: wx.time === 'day' ? 1 : 0, wet: wx.rain, snowAcc: wx.snow * .8 };
   const wx0 = ROOM.w / 2, wy0 = WIN.y - WIN.h / 2;
@@ -89,17 +87,46 @@ export function buildWeather() {
   }
 
   const groundMat = new THREE.MeshLambertMaterial({ color: 0x3f5a30 });
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 320), groundMat);
-  ground.rotation.x = -Math.PI / 2; ground.position.set(wx0 + 120, -.02, 0); ground.receiveShadow = true; out.add(ground);
+  // A real opening is cut for each sewer stairwell. A single PlaneGeometry used to
+  // cover the steps from above and disappear from below, which looked transparent.
+  const groundCenterX = wx0 + 120;
+  const groundShape = new THREE.Shape();
+  groundShape.moveTo(-120, -160); groundShape.lineTo(120, -160);
+  groundShape.lineTo(120, 160); groundShape.lineTo(-120, 160); groundShape.closePath();
+  for (const opening of SEWER_OPENINGS) {
+    const hole = new THREE.Path();
+    const x0 = opening.minX - groundCenterX, x1 = opening.maxX - groundCenterX;
+    const y0 = -opening.maxZ, y1 = -opening.minZ;
+    hole.moveTo(x0, y0).lineTo(x0, y1).lineTo(x1, y1).lineTo(x1, y0).closePath();
+    groundShape.holes.push(hole);
+  }
+  const ground = new THREE.Mesh(new THREE.ShapeGeometry(groundShape), groundMat);
+  ground.rotation.x = -Math.PI / 2; ground.position.set(groundCenterX, -.02, 0); ground.receiveShadow = true; out.add(ground);
+  S.camBlockers.push(ground);
   const hillMat = new THREE.MeshLambertMaterial({ color: 0x2e4628 });
-  for (let i = 0; i < 9; i++) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), hillMat); h.position.set(rnd(100, 210), -2, rnd(-160, 160)); h.scale.set(rnd(25, 50), rnd(8, 22), rnd(25, 50)); out.add(h); }
+  for (let i = 0; i < 9; i++) {
+    const h = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), hillMat);
+    const hx = rnd(100, 210), hz = rnd(-160, 160), sx = rnd(25, 50), sz = rnd(25, 50);
+    h.position.set(hx, -2, hz); h.scale.set(sx, rnd(8, 22), sz); out.add(h);
+    if (Math.hypot(hx - SURFACE_AREA.centerX, hz - SURFACE_AREA.centerZ) < SURFACE_AREA.radius + Math.max(sx, sz)) addCollider(hx, hz, sx * 1.35, sz * 1.35);
+  }
   const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4a3020 }), pineMat = new THREE.MeshLambertMaterial({ color: 0x2b4a2c });
   const snowMat = new THREE.MeshLambertMaterial({ color: 0xf4f7ff, transparent: true, opacity: 0 });
   const trees = [
     { x: wx0 + 7, z: WIN.z - 7, s: 1.3 }, { x: wx0 + 9.5, z: WIN.z + 6.5, s: 1.6 },
     { x: wx0 + 12, z: WIN.z - 12, s: 1.2 }, { x: wx0 + 6.5, z: WIN.z + 11, s: 1.1 },
   ];
-  for (let i = 0; i < 70; i++) trees.push({ x: rnd(wx0 + 14, wx0 + 100), z: rnd(-90, 90), s: rnd(.9, 2.2) });
+  const inReservedSurface = (x, z) =>
+    (x > -16 && x < 18 && z > -18 && z < 24) ||
+    (x > -7 && x < 55 && z > 11 && z < 31) ||
+    (x > 5 && x < 75 && z > 28 && z < 46) ||
+    (x > 15 && x < 61 && z > -23 && z < -17) ||
+    (x > 55 && x < 61 && z > -23 && z < 25);
+  for (let attempts = 0; trees.length < 74 && attempts < 500; attempts++) {
+    const tree = { x: rnd(wx0 + 14, wx0 + 100), z: rnd(-90, 90), s: rnd(.9, 2.2) };
+    if (!inReservedSurface(tree.x, tree.z)) trees.push(tree);
+  }
+  trees.forEach(tree => addCollider(tree.x, tree.z, .48 * tree.s, .48 * tree.s));
   const treeDummy = new THREE.Object3D();
   const treeInstances = (geometry, material, y, cast = false) => {
     const batch = new THREE.InstancedMesh(geometry, material, trees.length);
@@ -114,11 +141,119 @@ export function buildWeather() {
     treeInstances(new THREE.ConeGeometry(1.5 - k * .38, 1.9, 7), pineMat, 1.7 + k * 1.05, true);
     treeInstances(new THREE.ConeGeometry(1.0 - k * .26, .8, 7), snowMat, 2.25 + k * 1.05);
   }
+
+  // A future exploration area: visible from indoors, but deliberately outside the walkable room.
+  // Most repeated scenery is instanced so the richer skyline stays cheap to render.
+  const detail = S.quality.lowPower ? .55 : 1;
+  const dummy = new THREE.Object3D();
+  const instances = (geometry, material, items, place, cast = false) => {
+    const batch = new THREE.InstancedMesh(geometry, material, items.length);
+    items.forEach((item, index) => { place(dummy, item); dummy.updateMatrix(); batch.setMatrixAt(index, dummy.matrix); });
+    batch.instanceMatrix.needsUpdate = true; batch.castShadow = cast; batch.receiveShadow = true;
+    batch.computeBoundingSphere(); out.add(batch); return batch;
+  };
+
+  // Cracked country road and faded lane markings beyond the fence.
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(13, 118), new THREE.MeshLambertMaterial({ color: 0x292b2a }));
+  road.rotation.x = -Math.PI / 2; road.position.set(wx0 + 17, .006, 2); road.receiveShadow = true; out.add(road);
+  const shoulderMat = new THREE.MeshLambertMaterial({ color: 0x544d3e });
+  for (const x of [wx0 + 10.55, wx0 + 23.45]) {
+    const shoulder = new THREE.Mesh(new THREE.BoxGeometry(.45, .025, 118), shoulderMat);
+    shoulder.position.set(x, .015, 2); shoulder.receiveShadow = true; out.add(shoulder);
+  }
+  const marks = Array.from({ length: 12 }, (_, i) => ({ z: -52 + i * 10 }));
+  instances(new THREE.BoxGeometry(.13, .025, 3.4), new THREE.MeshLambertMaterial({ color: 0xb8aa79 }), marks,
+    (d, item) => { d.position.set(wx0 + 17, .026, item.z); d.rotation.set(0, 0, 0); d.scale.set(1, 1, 1); });
+
+  // Broad-leaf trees break up the pine silhouette without adding individual draw calls.
+  const deciduous = [];
+  const deciduousCount = Math.round(30 * detail);
+  for (let attempts = 0; deciduous.length < deciduousCount && attempts < 400; attempts++) {
+    const tree = { x: rnd(wx0 + 11, wx0 + 76), z: rnd(-72, 76), s: rnd(.75, 1.65), r: rnd(0, Math.PI * 2) };
+    if (!inReservedSurface(tree.x, tree.z)) deciduous.push(tree);
+  }
+  deciduous.forEach(tree => addCollider(tree.x, tree.z, .7 * tree.s, .7 * tree.s));
+  const decidTrunk = new THREE.MeshLambertMaterial({ color: 0x58402a });
+  const decidLeaf = new THREE.MeshLambertMaterial({ color: 0x385b2f });
+  instances(new THREE.CylinderGeometry(.18, .28, 1.8, 6), decidTrunk, deciduous, (d, t) => {
+    d.position.set(t.x, .9 * t.s, t.z); d.rotation.set(0, t.r, 0); d.scale.set(t.s, t.s, t.s);
+  });
+  const crownGeo = new THREE.IcosahedronGeometry(1.25, 1);
+  instances(crownGeo, decidLeaf, deciduous, (d, t) => {
+    d.position.set(t.x, 2.45 * t.s, t.z); d.rotation.set(t.r * .08, t.r, 0); d.scale.set(1.05 * t.s, .9 * t.s, 1.05 * t.s);
+  }, true);
+
+  const bushes = [];
+  const bushCount = Math.round(58 * detail);
+  for (let attempts = 0; bushes.length < bushCount && attempts < 400; attempts++) {
+    const bush = { x: rnd(wx0 + 5, wx0 + 52), z: rnd(-36, 42), s: rnd(.35, .9), r: rnd(0, Math.PI * 2) };
+    if (!inReservedSurface(bush.x, bush.z)) bushes.push(bush);
+  }
+  bushes.forEach(bush => addCollider(bush.x, bush.z, .65 * bush.s, .65 * bush.s));
+  instances(new THREE.DodecahedronGeometry(.75, 0), new THREE.MeshLambertMaterial({ color: 0x456936 }), bushes, (d, b) => {
+    d.position.set(b.x, .42 * b.s, b.z); d.rotation.set(0, b.r, 0); d.scale.set(1.3 * b.s, .75 * b.s, b.s);
+  });
+
+  const grass = [];
+  const grassCount = Math.round(120 * detail);
+  for (let attempts = 0; grass.length < grassCount && attempts < 600; attempts++) {
+    const tuft = { x: rnd(wx0 + 4.6, wx0 + 45), z: rnd(-28, 34), s: rnd(.55, 1.35), r: rnd(0, Math.PI * 2) };
+    if (!inReservedSurface(tuft.x, tuft.z)) grass.push(tuft);
+  }
+  instances(new THREE.ConeGeometry(.13, .55, 5), new THREE.MeshLambertMaterial({ color: 0x668044 }), grass, (d, g) => {
+    d.position.set(g.x, .23 * g.s, g.z); d.rotation.set(0, g.r, 0); d.scale.set(g.s, g.s, g.s);
+  });
+
+  // Small rubble clusters imply a larger abandoned area while keeping the scene non-explorable.
+  const rubble = [];
+  const rubbleCount = Math.round(42 * detail);
+  for (let attempts = 0; rubble.length < rubbleCount && attempts < 400; attempts++) {
+    const rock = { x: rnd(wx0 + 5.5, wx0 + 28), z: rnd(-24, 30), s: rnd(.18, .62), r: rnd(0, Math.PI * 2) };
+    if (!inReservedSurface(rock.x, rock.z)) rubble.push(rock);
+  }
+  rubble.forEach(rock => addCollider(rock.x, rock.z, .7 * rock.s, .7 * rock.s));
+  instances(new THREE.DodecahedronGeometry(.65, 0), new THREE.MeshLambertMaterial({ color: 0x6b675d }), rubble, (d, rock) => {
+    d.position.set(rock.x, rock.s * .24, rock.z); d.rotation.set(rock.r * .25, rock.r, rock.r * .12); d.scale.set(rock.s, rock.s * .65, rock.s * 1.15);
+  });
+
+  const carWheelMat = new THREE.MeshLambertMaterial({ color: 0x111312 });
+  const carGlassMat = new THREE.MeshLambertMaterial({ color: 0x172629, transparent: true, opacity: .82 });
+  const rustMat = new THREE.MeshLambertMaterial({ color: 0x713b24 });
+  const abandonedCar = (x, z, yaw, color) => {
+    const car = new THREE.Group(); car.position.set(x, 0, z); car.rotation.y = yaw; out.add(car);
+    const paint = new THREE.MeshLambertMaterial({ color });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.95, .54, 4.15), paint); body.position.y = .56; body.castShadow = true; car.add(body);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.68, .72, 1.82), paint); cabin.position.set(0, 1.08, -.16); cabin.castShadow = true; car.add(cabin);
+    for (const side of [-1, 1]) {
+      const window = new THREE.Mesh(new THREE.BoxGeometry(.02, .43, 1.38), carGlassMat); window.position.set(side * .846, 1.12, -.16); car.add(window);
+      for (const axle of [-1.35, 1.35]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(.36, .36, .2, 10), carWheelMat);
+        wheel.position.set(side * 1.0, .36, axle); wheel.rotation.z = Math.PI / 2; car.add(wheel);
+      }
+    }
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.45, .43, .025), carGlassMat); windshield.position.set(0, 1.12, .76); windshield.rotation.x = -.16; car.add(windshield);
+    const rust = new THREE.Mesh(new THREE.BoxGeometry(.52, .015, .85), rustMat); rust.position.set(.48, .838, 1.2); rust.rotation.y = .24; car.add(rust);
+    addRotCollider(x, z, 2.15, 4.35, yaw);
+    return car;
+  };
+  abandonedCar(wx0 + 12.8, WIN.z + .1, .13, 0x596b63);
+  abandonedCar(wx0 + 20.5, WIN.z + 7.4, -.24, 0x734a3f);
+  abandonedCar(wx0 + 16.7, WIN.z - 10.5, .32, 0x4c5a70);
+
   const fenceMat = new THREE.MeshLambertMaterial({ color: 0x6b4a30 });
-  for (let z = -16; z <= 22; z += 1.6) { const p = new THREE.Mesh(new THREE.BoxGeometry(.12, .9, .12), fenceMat); p.position.set(wx0 + 4.2, .45, z); out.add(p); }
-  for (const y of [.35, .7]) { const r = new THREE.Mesh(new THREE.BoxGeometry(.06, .08, 38), fenceMat); r.position.set(wx0 + 4.2, y, 3); out.add(r); }
-  const fenceSnow = new THREE.Mesh(new THREE.BoxGeometry(.14, .05, 38), snowMat); fenceSnow.position.set(wx0 + 4.2, .76, 3); out.add(fenceSnow);
+  const fenceSegments = [[-16, 12.4], [17.6, 22]]; // broad gate beside the house
+  for (let z = -16; z <= 22; z += 1.6) if (z < 12.4 || z > 17.6) {
+    const p = new THREE.Mesh(new THREE.BoxGeometry(.12, .9, .12), fenceMat); p.position.set(wx0 + 4.2, .45, z); out.add(p);
+  }
+  for (const gateZ of [12.4, 17.6]) { const p = new THREE.Mesh(new THREE.BoxGeometry(.17, 1.15, .17), fenceMat); p.position.set(wx0 + 4.2, .575, gateZ); out.add(p); }
+  for (const [z0, z1] of fenceSegments) {
+    const len = z1 - z0, center = (z0 + z1) / 2;
+    for (const y of [.35, .7]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(.06, .08, len), fenceMat); rail.position.set(wx0 + 4.2, y, center); out.add(rail); }
+    const snowCap = new THREE.Mesh(new THREE.BoxGeometry(.14, .05, len), snowMat); snowCap.position.set(wx0 + 4.2, .76, center); out.add(snowCap);
+    addCollider(wx0 + 4.2, center, .25, len);
+  }
   const post = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 3, 8), new THREE.MeshLambertMaterial({ color: 0x222222 })); post.position.set(wx0 + 5.5, 1.5, WIN.z + 1.2); out.add(post);
+  addCollider(wx0 + 5.5, WIN.z + 1.2, .25, .25);
   const lantern = new THREE.Mesh(new THREE.BoxGeometry(.3, .4, .3), new THREE.MeshBasicMaterial({ color: 0xffc070 })); lantern.position.set(wx0 + 5.5, 3.1, WIN.z + 1.2); out.add(lantern);
   const lanternLight = new THREE.PointLight(0xffb060, 3, 10, 1.5); lanternLight.position.set(wx0 + 5.5, 2.9, WIN.z + 1.2); out.add(lanternLight);
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot, color: 0xffb060, transparent: true, opacity: .5, depthWrite: false, blending: THREE.AdditiveBlending }));
@@ -186,7 +321,8 @@ export function buildWeather() {
 
     skyUni.top.value.copy(C.top); skyUni.bottom.value.copy(C.bot); skyUni.flash.value = flash;
     S.scene.fog.color.copy(C.bot);
-    S.scene.fog.near = 4 + (1 - cur.fog) * 40; S.scene.fog.far = 18 + Math.pow(1 - cur.fog, 2) * 220;
+    // Dense nearby fog with a long tail keeps the distant district visible as a silhouette.
+    S.scene.fog.near = 5 + (1 - cur.fog) * 30; S.scene.fog.far = 96 + Math.pow(1 - cur.fog, 2) * 160;
 
     sun.color.copy(C.sun).lerp(FLASH, clamp01(flash));
     sun.intensity = sunI * (1 - cover * .75) + flash * 6;
@@ -238,67 +374,6 @@ export function buildWeather() {
     audioT -= dt; if (audioT <= 0) { audioT = .2; audioFX.setWeather(cur); }
   });
 
-  /* ---------- panel UI ---------- */
-  const panel = $('weather'), presetsEl = $('presets'), timesEl = $('times'), lt = $('lightning');
-  for (const [k, p] of Object.entries(PRESETS)) {
-    const b = document.createElement('button'); b.dataset.k = k; b.textContent = `${p.icon} ${p.label}`;
-    b.onclick = () => { for (const key of KEYS) wx[key] = p[key]; wx.lightning = p.lightning; if (p.lightning) nextStrike = rnd(.8, 2.5); sync(); };
-    presetsEl.appendChild(b);
-  }
-  for (const [k, t] of Object.entries(TIMES)) {
-    const b = document.createElement('button'); b.dataset.k = k; b.textContent = `${t.icon} ${t.label}`;
-    b.onclick = () => { wx.time = k; sync(); };
-    timesEl.appendChild(b);
-  }
-  panel.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => { wx[r.dataset.k] = r.value / 100; sync(true); });
-  lt.onchange = () => { wx.lightning = lt.checked; if (wx.lightning) nextStrike = rnd(.8, 2.5); sync(); };
-  const presetKey = () => Object.keys(PRESETS).find(k => KEYS.every(key => Math.abs(PRESETS[k][key] - wx[key]) < .01) && PRESETS[k].lightning === wx.lightning);
-  const icon = () => {
-    const p = presetKey(); if (p) return PRESETS[p];
-    const icon = wx.lightning ? '⛈️' : wx.snow > .3 ? '❄️' : wx.rain > .3 ? '🌧️' : wx.fog > .6 ? '🌫️' : wx.clouds > .6 ? '☁️' : '✨';
-    return { icon, label: 'Custom' };
-  };
-  function drawPlaque() {
-    const g = R.wxCanvas.getContext('2d'), W = 256, H = 340, p = icon(), t = TIMES[wx.time];
-    g.fillStyle = '#2b1d14'; g.fillRect(0, 0, W, H);
-    g.fillStyle = '#3d2a1d'; g.beginPath(); g.roundRect(12, 12, W - 24, H - 24, 16); g.fill();
-    g.fillStyle = '#ffd9a6'; g.textAlign = 'center'; g.font = '600 30px Fraunces, serif'; g.fillText('WEATHER', W / 2, 54);
-    g.font = '84px serif'; g.fillText(p.icon, W / 2, 160);
-    g.fillStyle = '#f6ead7'; g.font = '600 30px Caveat, cursive'; g.fillText(p.label, W / 2, 210);
-    g.font = '600 26px Caveat, cursive'; g.fillStyle = '#d8c4a8'; g.fillText(`${t.icon} ${t.label}`, W / 2, 248);
-    g.fillStyle = '#c9782f'; g.beginPath(); g.roundRect(48, 272, W - 96, 40, 12); g.fill();
-    g.fillStyle = '#fff8ee'; g.font = '600 18px Inter, sans-serif'; g.fillText('global weather', W / 2, 298);
-    R.wxTex.needsUpdate = true;
-  }
-  function sync(fromSlider) {
-    if (!fromSlider) panel.querySelectorAll('input[type=range]').forEach(r => r.value = Math.round(wx[r.dataset.k] * 100));
-    lt.checked = wx.lightning;
-    const p = presetKey();
-    presetsEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === p));
-    timesEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === wx.time));
-    drawPlaque();
-    store.set({ wx: { ...wx } });
-  }
-  const open = value => {
-    const show = value ?? !panel.classList.contains('open');
-    panel.classList.toggle('hidden', !show);
-    panel.classList.toggle('open', show);
-  };
-  const panelZ = WIN.z + WIN.w / 2 + .9;
-  addInteractable(R.wxFace, {
-    verb: 'Adjust', name: 'weather', anchor: V(ROOM.w / 2 - .08, 0, panelZ), range: 1.8,
-    approach: () => V(ROOM.w / 2 - 1.15, 0, panelZ),
-    action: () => open(true),
-  });
-  if ($('wxBtn')) $('wxBtn').onclick = () => open();
-  $('wxClose').onclick = () => open(false);
-  addEventListener('keydown', e => { if (e.code === 'Escape' && S.mode === 'walk' && S.player?.state !== 'sit') open(false); });
-  globalWeatherSetter = state => {
-    const preset = PRESETS[state?.preset];
-    if (preset) { for (const key of KEYS) wx[key] = preset[key]; wx.lightning = preset.lightning; }
-    if (TIMES[state?.time]) wx.time = state.time;
-    sync();
-  };
-  sync();
-  return { redraw: drawPlaque };
+  /* Weather panel and wall-plaque interaction intentionally disabled for now. */
+  return {};
 }

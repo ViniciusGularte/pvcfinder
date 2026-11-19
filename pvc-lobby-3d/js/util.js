@@ -42,8 +42,11 @@ export function group(x, z, rot = 0, y = 0) {
 
 export const noRaycast = o => { o.raycast = () => {}; return o; };
 
-export function addCollider(cx, cz, sx, sz) {
-  const c = { minX: cx - sx / 2, maxX: cx + sx / 2, minZ: cz - sz / 2, maxZ: cz + sz / 2 };
+export function addCollider(cx, cz, sx, sz, opts = {}) {
+  const c = {
+    minX: cx - sx / 2, maxX: cx + sx / 2, minZ: cz - sz / 2, maxZ: cz + sz / 2,
+    minY: opts.minY ?? -.45, maxY: opts.maxY ?? Infinity, kind: opts.kind || 'solid',
+  };
   S.colliders.push(c); return c;
 }
 // rotated rectangle → its bounding box

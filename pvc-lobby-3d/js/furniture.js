@@ -451,14 +451,11 @@ function entrance() {
   for (const y of [.65, 1.7]) mesh(new THREE.BoxGeometry(.8, .7, .02), std({ color: 0x6f4228 }), [.57, y, -.04], { parent: hinge, cast: false });
   mesh(new THREE.SphereGeometry(.035, 10, 8), std({ color: 0xd8b98a, metalness: .8, roughness: .25 }), [1.0, 1.05, -.06], { parent: hinge });
   rug(T.rugCool, dx, z - .8, 1.6, 1.0);
-  let busy = false;
   addInteractable(hinge, {
-    verb: 'Open', name: 'the door', anchor: V(dx, 0, z - .3), range: 1.8,
+    verb: 'Try', name: 'the locked door', anchor: V(dx, 0, z - .3), range: 1.8,
     action: () => {
-      if (busy) return; busy = true; sfx.door();
-      const w = S.wx || {};
-      toast(w.lightning ? '⛈️ Whoa — thunder! Back inside, quick.' : w.snow > .3 ? '❄️ Brr! Way too cold. Back to the fireplace.' : w.rain > .3 ? '🌧️ It’s pouring out there. Better stay cozy inside.' : w.fog > .6 ? '🌫️ Can’t see a thing out there.' : '🌙 Nice out… but it’s cozier in here.', 3200);
-      animate(.8, k => hinge.rotation.y = k * 1.25, () => setTimeout(() => animate(.8, k => hinge.rotation.y = 1.25 * (1 - k), () => { sfx.thunk(); busy = false; }), 1800));
+      sfx.thunk();
+      toast('🔒 It’s locked.', 2200);
     },
   });
   // light switch
@@ -521,7 +518,7 @@ function readingNook() {
   rug(T.rugCool, 10.2, 3, 2.6, 3.4, Math.PI / 2);
   beanbag(10.4, 2.1, -Math.PI / 2 + .25, 0xc9a35a);
   beanbag(10.4, 4.0, -Math.PI / 2 - .25, 0x3d6b70);
-  // Leave a clear standing spot in front of the wall weather controls.
+  // Keep this corner open for a future exterior/weather interaction.
   floorLamp(10.8, 7.15);
   // small side crate with a book pile
   mesh(new THREE.BoxGeometry(.45, .4, .45), std({ map: T.wood, color: 0xa4764f }), [11.4, .2, 3.05]);

@@ -1,25 +1,49 @@
 // Player: movement, sitting, third/first-person camera, clicking and the E-to-interact prompt.
 import * as THREE from 'three';
 import { S } from './core.js';
-import { ROOM, SPAWN } from './config.js';
-import { $, V, angleLerp, damp } from './util.js';
+import { ROOM, SPAWN, SURFACE_AREA } from './config.js';
+import { $, V, angleLerp, damp, store } from './util.js';
 import { createAvatar, HIP } from './avatar.js';
+import { createFlashlightModel } from './flashlight.js';
 import { pick, nearestInteractable, labelOf } from './interact.js';
 
 export function createPlayer() {
   const av = createAvatar();
   S.scene.add(av.root);
+  const flashlightModel = createFlashlightModel(); av.attachToHand(flashlightModel, 'r');
+  const flashlightTarget = new THREE.Object3D(); S.scene.add(flashlightTarget);
+  const flashlight = new THREE.SpotLight(0xfff0cf, 85, 42, .34, .55, 1.25);
+  flashlight.target = flashlightTarget; flashlight.castShadow = !S.quality.lowPower;
+  flashlight.shadow.mapSize.set(S.quality.lowPower ? 256 : 512, S.quality.lowPower ? 256 : 512);
+  flashlight.shadow.bias = -.00035; flashlight.shadow.normalBias = .04; S.scene.add(flashlight);
+  const flashlightFill = new THREE.PointLight(0xffdba0, 1.1, 3.2, 2); S.scene.add(flashlightFill);
 
   const cam = S.cam = { yaw: 0, pitch: -.28, dist: 3.6, distT: 3.6 };
   const P = S.player = {
-    pos: V(SPAWN.x, 0, SPAWN.z), yaw: SPAWN.yaw, vy: 0, lift: 0,
+    pos: V(SPAWN.x, 0, SPAWN.z), yaw: SPAWN.yaw, vy: 0, groundY: 0, lift: 0,
     state: 'walk', seat: null, sitFrom: null, sitT: 0,
     walkTarget: null, onArrive: null, stuck: 0, speed: 0, avatar: av,
-    sit, stand, walkTo, interact,
+    sit, stand, walkTo, interact, flashlightOn: store.get().flashlight === true, toggleFlashlight,
   };
   const keys = {};
   const canvas = S.renderer.domElement;
   const tip = $('tip'), prompt = $('prompt'), seatbar = $('seatbar');
+  const flashSource = V(), flashDirection = V();
+
+  function syncFlashlightButton() {
+    const button = $('flashBtn'); if (!button) return;
+    button.textContent = P.flashlightOn ? '🔦 On' : '🔦 Off';
+    button.title = `Turn flashlight ${P.flashlightOn ? 'off' : 'on'} (F)`;
+    button.setAttribute('aria-pressed', String(P.flashlightOn));
+    button.classList.toggle('on', P.flashlightOn); button.classList.toggle('ghost', !P.flashlightOn);
+  }
+  function toggleFlashlight(value) {
+    P.flashlightOn = typeof value === 'boolean' ? value : !P.flashlightOn;
+    flashlightModel.visible = P.flashlightOn; flashlightModel.userData.setLit(P.flashlightOn);
+    flashlight.visible = flashlightFill.visible = P.flashlightOn && S.mode !== 'map';
+    store.set({ flashlight: P.flashlightOn }); syncFlashlightButton();
+  }
+  toggleFlashlight(P.flashlightOn);
 
   /* ---------- actions ---------- */
   function sit(seat) {
@@ -107,7 +131,8 @@ export function createPlayer() {
     if (e.code === 'KeyE') { if (P.state === 'sit') stand(); else interact(nearestInteractable(P.pos)); }
     if (e.code === 'Escape' && P.state === 'sit') stand();
     if (e.code === 'KeyV') toggleView();
-    if (e.code === 'Space' && P.state === 'walk' && P.pos.y <= 0) { P.vy = 5.2; e.preventDefault(); }
+    if (e.code === 'KeyF' && !e.repeat) toggleFlashlight();
+    if (e.code === 'Space' && P.state === 'walk' && P.pos.y <= P.groundY + .02) { P.vy = 5.2; e.preventDefault(); }
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
@@ -122,18 +147,23 @@ export function createPlayer() {
   syncViewButton();
 
   /* ---------- movement ---------- */
-  function blocked(x, z) {
-    const m = .3;
+  S.isBlocked = (x, z, radius = .3, y = S.player?.pos.y ?? 0) => {
     const inLobby = x >= -ROOM.w / 2 + .4 && x <= ROOM.w / 2 - .45 && z >= -ROOM.d / 2 + .4 && z <= ROOM.d / 2 - .4;
     const inBunker = x >= -10.7 && x <= -5.3 && z >= ROOM.d / 2 - .8 && z <= ROOM.d / 2 + 8.2;
-    if (!inLobby && !inBunker) return true;
-    return S.colliders.some(c => x > c.minX - m && x < c.maxX + m && z > c.minZ - m && z < c.maxZ + m);
-  }
+    const surfaceRadius = SURFACE_AREA.radius - radius;
+    const inSurfaceArea = Math.hypot(x - SURFACE_AREA.centerX, z - SURFACE_AREA.centerZ) <= surfaceRadius;
+    if (!inLobby && !inBunker && !inSurfaceArea) return true;
+    return S.colliders.some(c => y >= c.minY && y <= c.maxY && x > c.minX - radius && x < c.maxX + radius && z > c.minZ - radius && z < c.maxZ + radius);
+  };
+  const groundAt = (x, z, y = P.pos.y) => S.groundHeightAt?.(x, z, y) ?? 0;
+  function blocked(x, z) { const floor = groundAt(x, z); return S.isBlocked(x, z, .3, Math.min(P.pos.y, floor) + .05); }
   function tryMove(dx, dz) {
     const p = P.pos;
-    if (!blocked(p.x + dx, p.z + dz)) { p.x += dx; p.z += dz; return true; }
-    if (!blocked(p.x + dx, p.z)) { p.x += dx; return true; }
-    if (!blocked(p.x, p.z + dz)) { p.z += dz; return true; }
+    const grounded = Math.abs(p.y - P.groundY) < .08 && P.vy <= 0;
+    const commit = (x, z) => { p.x = x; p.z = z; P.groundY = groundAt(x, z); if (grounded) p.y = P.groundY; };
+    if (!blocked(p.x + dx, p.z + dz)) { commit(p.x + dx, p.z + dz); return true; }
+    if (!blocked(p.x + dx, p.z)) { commit(p.x + dx, p.z); return true; }
+    if (!blocked(p.x, p.z + dz)) { commit(p.x, p.z + dz); return true; }
     return false;
   }
 
@@ -142,6 +172,7 @@ export function createPlayer() {
 
   S.onFrame((dt, t) => {
     const x0 = P.pos.x, z0 = P.pos.z;
+    P.groundY = groundAt(P.pos.x, P.pos.z);
     const anyMove = keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight;
 
     if (S.mode === 'walk' && P.state === 'sit' && anyMove) stand();
@@ -169,7 +200,10 @@ export function createPlayer() {
         }
       }
       // jump
-      if (P.pos.y > 0 || P.vy > 0) { P.vy -= 15 * dt; P.pos.y = Math.max(0, P.pos.y + P.vy * dt); if (P.pos.y === 0) P.vy = 0; }
+      if (P.pos.y > P.groundY || P.vy > 0) {
+        P.vy -= 15 * dt; P.pos.y += P.vy * dt;
+        if (P.pos.y <= P.groundY) { P.pos.y = P.groundY; P.vy = 0; }
+      }
     }
     if (P.state === 'sit' && P.seat) {
       P.sitT = Math.min(1, P.sitT + dt * 3.5);
@@ -184,7 +218,7 @@ export function createPlayer() {
     // avatar
     av.root.position.set(P.pos.x, P.pos.y + P.lift, P.pos.z);
     av.root.rotation.y = P.yaw;
-    av.update(dt, { speed: P.speed, sitting: P.state === 'sit', typing: S.mode === 'pc' && t - (S.activePC?.lastKey ?? -9) < .4, airborne: P.pos.y > .05, t, emote: performance.now() < (S.localEmoteUntil || 0) ? S.localEmote : null });
+    av.update(dt, { speed: P.speed, sitting: P.state === 'sit', typing: S.mode === 'pc' && t - (S.activePC?.lastKey ?? -9) < .4, airborne: P.pos.y > P.groundY + .05, t, emote: performance.now() < (S.localEmoteUntil || 0) ? S.localEmote : null });
 
     // camera
     cam.dist += (cam.distT - cam.dist) * damp(dt, 10);
@@ -208,6 +242,17 @@ export function createPlayer() {
     S.camera.position.lerp(want, damp(dt, rate));
     S.camera.quaternion.slerp(wantQ, damp(dt, rate));
     av.root.visible = !(S.camOverride?.hideAvatar) && S.mode !== 'map' && S.camera.position.distanceTo(head) > .55;
+
+    const flashActive = P.flashlightOn && S.mode !== 'map';
+    flashlight.visible = flashlightFill.visible = flashActive;
+    if (flashActive) {
+      if (cam.dist < .3) flashSource.copy(S.camera.position);
+      else flashlightModel.userData.lens.getWorldPosition(flashSource);
+      S.camera.getWorldDirection(flashDirection);
+      flashlight.position.copy(flashSource); flashlightFill.position.copy(flashSource);
+      flashlightTarget.position.copy(flashSource).addScaledVector(flashDirection, 18);
+      flashlightTarget.updateMatrixWorld();
+    }
 
     // E prompt
     const near = S.mode === 'walk' && P.state === 'walk' && !P.walkTarget ? nearestInteractable(P.pos) : null;

@@ -79,6 +79,33 @@ const text = (value, max = 24) =>
     .slice(0, max);
 const finite = (value, fallback = 0) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
+const SURFACE = { x: 30, z: 10, radius: 82 };
+const NPC_PATROL = [
+  [31, -13], [48, -10], [69, 5], [62, 34], [35, 48], [4, 37], [-18, 24],
+];
+const npc = {
+  id: "slender", name: "Slender", skin: "Slender", x: 62, y: 0, z: -8,
+  yaw: Math.PI, moving: false, state: "wandering", targetId: null,
+  hiddenUntil: 0, nextShiftAt: Date.now() + 12_000, patrol: 0, revision: 0,
+  aggression: 1, beamCount: 0, preferredTargetId: null, ambushAt: 0, observedSince: 0,
+};
+const npcPublic = () => ({
+  id: npc.id, name: npc.name, skin: npc.skin, x: npc.x, y: npc.y, z: npc.z,
+  yaw: npc.yaw, moving: npc.moving, state: npc.state, targetId: npc.targetId,
+  hidden: Date.now() < npc.hiddenUntil, revision: npc.revision,
+  aggression: npc.aggression, beamCount: npc.beamCount,
+});
+const insideHouse = (x, z) => x > -13.5 && x < 13.5 && z > -13.5 && z < 13.5;
+const insideBunker = (x, z) => x > -11.5 && x < -4.5 && z > 10.5 && z < 21;
+const insideSewerOpening = (x, z) =>
+  (x > 16 && x < 25 && z > -23 && z < -17) ||
+  (x > 55 && x < 61 && z > 14.5 && z < 24);
+const npcPositionValid = (x, z) =>
+  Math.hypot(x - SURFACE.x, z - SURFACE.z) < SURFACE.radius - 5 &&
+  !insideHouse(x, z) && !insideBunker(x, z) && !insideSewerOpening(x, z);
+const sewerPosition = (x, z) =>
+  (x >= 17.5 && x <= 58.5 && z >= -21.5 && z <= -18.5) ||
+  (x >= 56.5 && x <= 59.5 && z >= -20.5 && z <= 22.5);
 const publicPlayer = (player) => ({
   id: player.id,
   name: player.name,
@@ -88,6 +115,7 @@ const publicPlayer = (player) => ({
   z: player.z,
   yaw: player.yaw,
   moving: player.moving,
+  flashlight: player.flashlight,
   seatId: player.seatId,
 });
 const movingPlayer = (player) => ({
@@ -97,6 +125,7 @@ const movingPlayer = (player) => ({
   z: player.z,
   yaw: player.yaw,
   moving: player.moving,
+  flashlight: player.flashlight,
   seatId: player.seatId,
 });
 
@@ -116,15 +145,18 @@ wss.on("connection", (socket) => {
     y: 0,
     z: 7,
     yaw: Math.PI,
+    lookYaw: 0,
+    lookPitch: 0,
     moving: false,
+    flashlight: false,
     seatId: null,
     joined: false,
     lastMove: 0,
     lastChat: 0,
     lastEmote: 0,
     lastBunker: 0,
-    lastOrbital: 0,
     lastJukebox: 0,
+    deadUntil: 0,
   };
   players.set(id, player);
 
@@ -137,6 +169,7 @@ wss.on("connection", (socket) => {
     seats: Object.fromEntries(seats),
     shared,
     chalkboard,
+    npc: npcPublic(),
     config: {
       maxPlayers: cfg.maxPlayers,
       mapUrl: cfg.mapUrl,
@@ -178,15 +211,28 @@ wss.on("connection", (socket) => {
       const now = Date.now();
       if (now - player.lastMove < 40 || player.seatId) return;
       player.lastMove = now;
-      const x = Math.max(-12.5, Math.min(12.5, finite(message.x, player.x)));
-      const z = Math.max(-11.6, Math.min(20.2, finite(message.z, player.z)));
+      const x = Math.max(-52.5, Math.min(112.5, finite(message.x, player.x)));
+      const z = Math.max(-72.5, Math.min(92.5, finite(message.z, player.z)));
       const inLobby = x >= -11.6 && x <= 11.55 && z >= -11.6 && z <= 11.6;
       const inBunker = x >= -10.7 && x <= -5.3 && z >= 11.2 && z <= 20.2;
-      if (inLobby || inBunker) { player.x = x; player.z = z; }
-      player.y = 0;
+      const inSurface = Math.hypot(x - SURFACE.x, z - SURFACE.z) <= SURFACE.radius;
+      if (inLobby || inBunker || inSurface) { player.x = x; player.z = z; }
+      const requestedY = Math.max(-3.6, Math.min(3.2, finite(message.y, player.y)));
+      player.y = requestedY < -.45 && !sewerPosition(player.x, player.z) ? 0 : requestedY;
       player.yaw = finite(message.yaw, player.yaw);
+      player.lookYaw = finite(message.lookYaw, player.lookYaw);
+      player.lookPitch = Math.max(-1.4, Math.min(1.2, finite(message.lookPitch, player.lookPitch)));
       player.moving = !!message.moving;
+      player.flashlight = !!message.flashlight;
       broadcast({ type: "player-move", player: movingPlayer(player) }, socket);
+      return;
+    }
+
+    if (message.type === "npc-respawn") {
+      player.x = 0; player.y = 0; player.z = 5; player.yaw = Math.PI;
+      player.moving = false; player.deadUntil = 0;
+      broadcast({ type: "player-move", player: movingPlayer(player) });
+      send(socket, { type: "npc-respawned", player: movingPlayer(player) });
       return;
     }
 
@@ -211,14 +257,6 @@ wss.on("connection", (socket) => {
       if (now - player.lastBunker < 1200) return;
       player.lastBunker = now;
       broadcast({ type: "bunker-open", name: player.name, until: now + 2500 });
-      return;
-    }
-
-    if (message.type === "orbital") {
-      const now = Date.now();
-      if (now - player.lastOrbital < 10_000) return;
-      player.lastOrbital = now;
-      broadcast({ type: "orbital", name: player.name, playerId: id, ts: now });
       return;
     }
 
@@ -331,6 +369,165 @@ wss.on("connection", (socket) => {
   });
 });
 
+const chooseShiftPoint = (target, minDistance = 13) => {
+  const candidates = NPC_PATROL
+    .map(([x, z]) => ({ x, z, distance: Math.hypot(x - target.x, z - target.z) }))
+    .filter((point) => point.distance >= minDistance && npcPositionValid(point.x, point.z))
+    .sort((a, b) => b.distance - a.distance);
+  return candidates[Math.floor(Math.random() * Math.max(1, Math.min(3, candidates.length)))] || { x: 62, z: -8 };
+};
+
+const viewDot = (player, x, z) => {
+  const dx = x - player.x, dz = z - player.z, distance = Math.hypot(dx, dz);
+  if (distance < .001) return 1;
+  return (-Math.sin(player.lookYaw) * dx - Math.cos(player.lookYaw) * dz) / distance;
+};
+const seesPoint = (player, x, z, threshold = .5, range = 46) =>
+  Math.hypot(x - player.x, z - player.z) < range && Math.abs(player.lookPitch) < .9 && viewDot(player, x, z) > threshold;
+const lightsNpc = (player) => player.flashlight && Math.abs(player.lookPitch) < .72 &&
+  Math.hypot(npc.x - player.x, npc.z - player.z) < 38 && viewDot(player, npc.x, npc.z) > .9;
+
+const chooseTarget = (eligible, excludeId = null) => {
+  const pool = eligible.filter((player) => player.id !== excludeId);
+  const candidates = pool.length ? pool : eligible;
+  return candidates.map((player) => {
+    const support = eligible.filter((other) => other.id !== player.id && Math.hypot(other.x - player.x, other.z - player.z) < 12).length;
+    const distance = Math.hypot(player.x - npc.x, player.z - npc.z);
+    return { player, score: support * 9 + distance * .08 + (seesPoint(player, npc.x, npc.z) ? 6 : 0) + Math.random() * 1.5 };
+  }).sort((a, b) => a.score - b.score)[0]?.player || null;
+};
+
+const chooseAmbushPoint = (target, observers, minDistance = 9, maxDistance = 15) => {
+  let best = null;
+  const start = Math.random() * Math.PI * 2;
+  for (let i = 0; i < 32; i++) {
+    const angle = start + i / 32 * Math.PI * 2;
+    const radius = minDistance + (maxDistance - minDistance) * (.25 + ((i * 17) % 23) / 30);
+    const point = { x: target.x + Math.cos(angle) * radius, z: target.z + Math.sin(angle) * radius };
+    if (!npcPositionValid(point.x, point.z)) continue;
+    const visibleCount = observers.filter((player) => seesPoint(player, point.x, point.z, .42, 50)).length;
+    const targetDot = viewDot(target, point.x, point.z);
+    const closestPlayer = Math.min(...observers.map((player) => Math.hypot(point.x - player.x, point.z - player.z)));
+    const score = visibleCount * 100 + Math.max(0, targetDot + .12) * 35 + Math.max(0, 4.5 - closestPlayer) * 12 + Math.random() * 2;
+    if (!best || score < best.score) best = { ...point, score };
+  }
+  return best || chooseShiftPoint(target, minDistance);
+};
+
+const teleportNpc = (point, target, now, hiddenMs, state) => {
+  npc.x = point.x; npc.z = point.z;
+  if (target) npc.yaw = Math.atan2(target.x - npc.x, target.z - npc.z);
+  npc.state = state; npc.hiddenUntil = now + hiddenMs; npc.moving = false; npc.revision += 1;
+};
+
+const moveNpc = (dx, dz, speed, dt) => {
+  const distance = Math.hypot(dx, dz);
+  if (distance < .001) { npc.moving = false; return; }
+  const nx = npc.x + dx / distance * speed * dt;
+  const nz = npc.z + dz / distance * speed * dt;
+  npc.yaw = Math.atan2(dx, dz);
+  npc.moving = speed > .05;
+  if (npcPositionValid(nx, nz)) { npc.x = nx; npc.z = nz; return; }
+  // Slide around protected structures instead of entering the lodge, bunker or sewer stairs.
+  const sideX = npc.x + dz / distance * speed * dt;
+  const sideZ = npc.z - dx / distance * speed * dt;
+  if (npcPositionValid(sideX, sideZ)) { npc.x = sideX; npc.z = sideZ; }
+  else npc.moving = false;
+};
+
+let npcLastTick = Date.now();
+setInterval(() => {
+  const now = Date.now(), dt = Math.min(.2, (now - npcLastTick) / 1000); npcLastTick = now;
+  const eligible = [...players.values()].filter((player) =>
+    player.joined && now >= player.deadUntil && player.y > -.45 &&
+    !insideHouse(player.x, player.z) && !insideBunker(player.x, player.z));
+  if (now < npc.hiddenUntil) { npc.moving = false; npc.state = "hidden"; return; }
+  if (!eligible.length) {
+    npc.targetId = null; npc.preferredTargetId = null; npc.ambushAt = 0; npc.beamCount = 0;
+    const [tx, tz] = NPC_PATROL[npc.patrol % NPC_PATROL.length];
+    if (Math.hypot(tx - npc.x, tz - npc.z) < 1.2) npc.patrol = (npc.patrol + 1) % NPC_PATROL.length;
+    const [nextX, nextZ] = NPC_PATROL[npc.patrol];
+    npc.state = "wandering"; moveNpc(nextX - npc.x, nextZ - npc.z, .72, dt); return;
+  }
+
+  let target = eligible.find((player) => player.id === npc.preferredTargetId) || chooseTarget(eligible);
+  npc.targetId = target?.id || null;
+  if (npc.ambushAt && now >= npc.ambushAt) {
+    target = eligible.find((player) => player.id === npc.preferredTargetId) || chooseTarget(eligible);
+    const point = chooseAmbushPoint(target, eligible, 7.5, 12);
+    teleportNpc(point, target, now, 750, "ambushing");
+    npc.targetId = target.id; npc.preferredTargetId = target.id; npc.ambushAt = 0;
+    npc.nextShiftAt = now + Math.max(3800, 8200 - npc.aggression * 800); return;
+  }
+
+  const illuminators = eligible.filter(lightsNpc);
+  npc.beamCount = illuminators.length;
+  if (illuminators.length) {
+    const source = illuminators[0];
+    if (illuminators.length >= 2) {
+      npc.aggression = Math.max(1, npc.aggression - 1.15);
+      const point = chooseShiftPoint(source, 34);
+      const nextTarget = chooseTarget(eligible, source.id) || source;
+      teleportNpc(point, nextTarget, now, 3000, "overloaded");
+      npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id;
+      npc.ambushAt = now + 7500; npc.nextShiftAt = now + 10_000;
+      broadcast({ type: "npc-event", event: "team-repel", aggression: npc.aggression, beamCount: illuminators.length });
+    } else {
+      npc.aggression = Math.min(5, npc.aggression + .55);
+      const nextTarget = chooseTarget(eligible, source.id);
+      if (nextTarget && nextTarget.id !== source.id) {
+        const point = chooseAmbushPoint(nextTarget, eligible, 9, 15);
+        teleportNpc(point, nextTarget, now, 1100, "switching");
+        npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id; npc.ambushAt = 0;
+        npc.nextShiftAt = now + Math.max(3600, 7800 - npc.aggression * 700);
+        broadcast({ type: "npc-event", event: "target-switch", fromId: source.id, targetId: nextTarget.id, aggression: npc.aggression });
+      } else {
+        const point = chooseShiftPoint(source, 28);
+        teleportNpc(point, source, now, 1500, "banished");
+        npc.preferredTargetId = source.id; npc.targetId = source.id;
+        npc.ambushAt = now + 3000 + Math.random() * 2200;
+      }
+    }
+    return;
+  }
+
+  const targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
+  const observers = eligible.filter((player) => seesPoint(player, npc.x, npc.z, .5, 42));
+  if (observers.length) {
+    if (!npc.observedSince) npc.observedSince = now;
+    npc.state = "watching"; npc.moving = false;
+    if (now - npc.observedSince > Math.max(850, 2100 - npc.aggression * 230)) {
+      const nextTarget = chooseTarget(eligible, observers[0].id) || target;
+      const point = chooseAmbushPoint(nextTarget, eligible, 7.5, 13);
+      teleportNpc(point, nextTarget, now, 650, "flanking");
+      npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id; npc.observedSince = 0;
+      npc.nextShiftAt = now + Math.max(3200, 7000 - npc.aggression * 650);
+    }
+    return;
+  }
+  npc.observedSince = 0;
+  if (now >= npc.nextShiftAt && targetDistance > 8) {
+    const point = chooseAmbushPoint(target, eligible, 7, 12.5);
+    teleportNpc(point, target, now, 650, "flanking");
+    npc.nextShiftAt = now + Math.max(3500, 8200 - npc.aggression * 750); return;
+  }
+  npc.state = "stalking";
+  const speed = targetDistance < 5 ? 2.05 + npc.aggression * .16 : 1.3 + npc.aggression * .13;
+  moveNpc(target.x - npc.x, target.z - npc.z, speed, dt);
+  if (Math.hypot(target.x - npc.x, target.z - npc.z) < .85) {
+    target.deadUntil = now + 10_000;
+    broadcast({ type: "npc-game-over", playerId: target.id, name: target.name, ts: now });
+    const point = chooseShiftPoint(target, 32);
+    teleportNpc(point, target, now, 4200, "fed");
+    npc.aggression = Math.max(1, npc.aggression - .45); npc.preferredTargetId = null;
+    npc.nextShiftAt = now + 9000; npc.targetId = null;
+  }
+}, 100).unref();
+
+setInterval(() => {
+  if (wss.clients.size) broadcast({ type: "npc-state", npc: npcPublic() });
+}, 200).unref();
+
 app.disable("x-powered-by");
 const proxyWiki = async (req, res) => {
   const suffix = req.params[0] ? `/${req.params[0]}` : WIKI_HOME;
@@ -392,6 +589,7 @@ app.get(route("/api/status"), (_req, res) => {
     players: [...players.values()].filter((entry) => entry.joined).length,
     maxPlayers: cfg.maxPlayers,
     shared,
+    npc: npcPublic(),
   });
 });
 const tileCache = new Map();

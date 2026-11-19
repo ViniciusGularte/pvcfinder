@@ -1,4 +1,4 @@
-// The radio plays a shared music file; ambience and small effects use the Web Audio API.
+// The radio playback is shared; each player has a local master volume for all lobby audio.
 import { $, rnd, store } from './util.js';
 import { S } from './core.js';
 
@@ -8,12 +8,17 @@ const TRACKS = [
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const saved = store.get();
 const MUSIC_LEVEL = .62;
+const clampVolume = value => Math.max(0, Math.min(1, Number(value) || 0));
 
-let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, rainG, patterG, windG, windF, wn, bn, wow;
+let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, slenderBus, rainG, patterG, windG, windF, wn, bn, wow;
 let radioAudio = null;
-// The radio/track is global. Ambience remains a local preference per browser.
-let playing = false, track = 0, ambOn = saved.amb === true;
+// The radio/track is global. Master volume and mute remain personal to this browser.
+let playing = false, track = 0;
+let masterVolume = Number.isFinite(Number(saved.masterVolume)) ? clampVolume(saved.masterVolume) : .85;
+let masterMuted = saved.masterMuted === true || masterVolume === 0;
+let lastAudibleVolume = masterVolume > 0 ? masterVolume : .85;
 let jukebox = { playing: false, track: 0, startedAt: null };
+let slenderThreat = 0;
 let step = 0, bar = 0, nextTime = 0;
 const lvlBuf = new Uint8Array(256);
 
@@ -45,7 +50,7 @@ function init() {
   if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
   const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
-  master = gain(.9); master.connect(comp); comp.connect(ctx.destination);
+  master = gain(masterMuted ? 0 : masterVolume); master.connect(comp); comp.connect(ctx.destination);
   wn = noiseBuffer(3, false); bn = noiseBuffer(4, true);
 
   // music chain
@@ -61,20 +66,21 @@ function init() {
   wow = ctx.createOscillator(); wow.frequency.value = .45; const wg = gain(7); wow.connect(wg); wow.start(); wow.out = wg;
   delay = ctx.createDelay(1.5); const fb = gain(.32), dl = filt('lowpass', 1800); delay.connect(dl); dl.connect(fb); fb.connect(delay);
   const dOut = gain(.3); dl.connect(dOut); dOut.connect(musicIn); epBus.connect(delay);
-  const crackle = gain(.22); loop(crackleBuffer(4, .0007, .5), crackle); crackle.connect(musicGain);
-  const hiss = gain(.006); loop(wn, hiss, 1); hiss.connect(musicGain);
-
   // ambience
-  ambBus = gain(ambOn ? 1 : 0); ambBus.connect(master);
+  ambBus = gain(1); ambBus.connect(master);
   rainG = gain(0); const rf = filt('lowpass', 1100); loop(bn, rf); rf.connect(rainG); rainG.connect(ambBus);
   patterG = gain(0); const pf = filt('bandpass', 2600, .6); loop(wn, pf, .5); pf.connect(patterG); patterG.connect(ambBus);
   windG = gain(0); windF = filt('bandpass', 500, 1.4); loop(wn, windF, 2); windF.connect(windG); windG.connect(ambBus);
   const wl = ctx.createOscillator(); wl.frequency.value = .08; const wlg = gain(260); wl.connect(wlg); wlg.connect(windF.frequency); wl.start();
-  const fireG = gain(.45); fireG.connect(ambBus);
-  const fc = filt('bandpass', 2400, .8); loop(crackleBuffer(5, .0009, .9), fc); const fcg = gain(.35); fc.connect(fcg); fcg.connect(fireG);
-  const fr = filt('lowpass', 220); loop(bn, fr, 1.3); const frg = gain(.12); fr.connect(frg); frg.connect(fireG);
+  const fireG = gain(.34); fireG.connect(ambBus);
+  const fc = filt('bandpass', 1350, 1.2); loop(crackleBuffer(6, .00012, .75), fc); const fcg = gain(.22); fc.connect(fcg); fcg.connect(fireG);
 
   sfxBus = gain(.8); sfxBus.connect(master);
+  // A low-frequency warning only; avoid white-noise/static effects around Slender.
+  slenderBus = gain(slenderThreat * .5); slenderBus.connect(master);
+  const slenderHum = ctx.createOscillator(); slenderHum.type = 'sawtooth'; slenderHum.frequency.value = 46;
+  const slenderHumFilter = filt('lowpass', 125, 1.8), slenderHumGain = gain(.045);
+  slenderHum.connect(slenderHumFilter); slenderHumFilter.connect(slenderHumGain); slenderHumGain.connect(slenderBus); slenderHum.start();
   setInterval(scheduler, 25);
   if (playing) beginPlayback(jukebox.startedAt);
   ui();
@@ -136,7 +142,21 @@ function scheduler() {
 }
 
 function ui() {
-  $('ambBtn').classList.toggle('on', ambOn); $('ambBtn').classList.toggle('ghost', !ambOn);
+  const muted = masterMuted || masterVolume === 0;
+  const button = $('masterMute'), slider = $('masterVolume'), value = $('masterVolumeValue');
+  if (button) {
+    button.textContent = muted ? '🔇' : masterVolume < .45 ? '🔈' : '🔊';
+    button.title = muted ? 'Unmute all lobby audio' : 'Mute all lobby audio';
+    button.setAttribute('aria-pressed', String(muted));
+  }
+  if (slider) slider.value = Math.round(masterVolume * 100);
+  if (value) value.textContent = muted ? 'MUTE' : `${Math.round(masterVolume * 100)}%`;
+}
+
+function applyMasterVolume() {
+  if (master) master.gain.setTargetAtTime(masterMuted ? 0 : masterVolume, ctx.currentTime, .04);
+  store.set({ masterVolume, masterMuted });
+  ui();
 }
 
 function beginPlayback(startedAt) {
@@ -196,7 +216,19 @@ export const audioFX = {
     }
     ui();
   },
-  toggleAmb() { init(); ambOn = !ambOn; store.set({ amb: ambOn }); ambBus.gain.setTargetAtTime(ambOn ? 1 : 0, ctx.currentTime, .3); ui(); },
+  setMasterVolume(value) {
+    masterVolume = clampVolume(value);
+    if (masterVolume > 0) { lastAudibleVolume = masterVolume; masterMuted = false; }
+    else masterMuted = true;
+    applyMasterVolume();
+  },
+  toggleMute() {
+    if (masterMuted || masterVolume === 0) {
+      masterMuted = false;
+      if (masterVolume === 0) masterVolume = lastAudibleVolume;
+    } else masterMuted = true;
+    applyMasterVolume();
+  },
   setWeather(c) {
     if (!ctx) return;
     const t = ctx.currentTime;
@@ -204,8 +236,15 @@ export const audioFX = {
     patterG.gain.setTargetAtTime(c.rain * .05, t, .5);
     windG.gain.setTargetAtTime(c.wind * .22 + c.rain * .03, t, .6);
   },
+  setSlenderThreat(value) {
+    slenderThreat = Math.max(0, Math.min(1, Number(value) || 0));
+    if (slenderBus) {
+      slenderBus.gain.cancelScheduledValues(ctx.currentTime);
+      slenderBus.gain.setTargetAtTime(slenderThreat * .52, ctx.currentTime, .08);
+    }
+  },
   thunder(delaySec, close) {
-    if (!ctx || !ambOn) return;
+    if (!ctx || masterMuted || masterVolume === 0) return;
     const t = ctx.currentTime + delaySec;
     const s = ctx.createBufferSource(); s.buffer = bn; s.playbackRate.value = rnd(.45, .7);
     const f = filt('lowpass', 300 + close * 500), g = gain(0);
@@ -242,7 +281,6 @@ export const sfx = {
   boot() { if (!ctx) return; const t = now(); tone(523, t, .5, .12); tone(784, t + .15, .6, .1); tone(1046, t + .3, .9, .08); },
   access(granted) { if (!ctx) return; const t = now(); if (granted) { tone(520, t, .13, .16, 'square'); tone(780, t + .14, .16, .16, 'square'); tone(1040, t + .29, .25, .13, 'square'); } else { tone(180, t, .22, .2, 'sawtooth', 110); tone(150, t + .24, .3, .18, 'sawtooth', 80); } },
   bunkerDoor(open) { if (!ctx) return; const t = now(); hit(t, 'bandpass', 420, 1.2, .28, .55, sfxBus); hit(t + .12, 'lowpass', 180, .8, .35, .5, sfxBus); tone(open ? 95 : 125, t, .55, .13, 'sawtooth', open ? 155 : 70); if (!open) tone(55, t + .48, .22, .32, 'sine', 35); },
-  orbital() { if (!ctx) return; const t = now(); tone(110, t, 1.6, .2, 'sawtooth', 42); tone(440, t + .08, .5, .11, 'square', 880); tone(660, t + .45, .7, .1, 'square', 1320); for (let i = 0; i < 5; i++) hit(t + .18 + i * .2, 'bandpass', 900 + i * 260, 2, .16, .12, sfxBus); },
   door() { if (!ctx) return; const t = now(); const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(110, t); o.frequency.linearRampToValueAtTime(160, t + .5); o.frequency.linearRampToValueAtTime(120, t + .9);
     const f = filt('bandpass', 900, 6), g = gain(0); env(g, t, .1, .08, .95); o.connect(f); f.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 1); },
   thunk() { if (!ctx) return; tone(90, now(), .18, .3, 'sine', 50); },
@@ -257,4 +295,8 @@ export const sfx = {
     s.connect(f); f.connect(am); am.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + dur + .5); lfo.start(t); lfo.stop(t + dur + .5); },
   meow() { if (!ctx) return; const t = now(); const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(600, t); o.frequency.linearRampToValueAtTime(900, t + .15); o.frequency.linearRampToValueAtTime(500, t + .45);
     const f = filt('bandpass', 1400, 3), g = gain(0); env(g, t, .05, .2, .5); o.connect(f); f.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + .55); },
+  slenderHit() {
+    init(); const t = now();
+    tone(86, t, 1.15, .42, 'sawtooth', 31); tone(920, t + .06, .42, .16, 'square', 120);
+  },
 };

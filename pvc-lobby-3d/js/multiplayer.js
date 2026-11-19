@@ -4,6 +4,7 @@ import { LOBBY_WS } from './config.js';
 import { createAvatar, defaultSkin, fetchSkin, HIP } from './avatar.js';
 import { setGlobalWeather } from './weather.js';
 import { audioFX } from './audio.js';
+import { createFlashlightModel } from './flashlight.js';
 import { $, glyphTex, spawnFloaters, V } from './util.js';
 
 const remotes = new Map();
@@ -22,6 +23,8 @@ async function addRemote(player) {
   if (!player?.id || player.id === S.netId || remotes.has(player.id)) return;
   const avatar = createAvatar({ shadows: false });
   avatar.setSkin(defaultSkin()); avatar.setName(player.name || 'Guest');
+  const flashlight = createFlashlightModel(); avatar.attachToHand(flashlight, 'r');
+  flashlight.visible = !!player.flashlight; flashlight.userData.setLit(!!player.flashlight);
   avatar.root.position.set(player.x || 0, player.y || 0, player.z || 0);
   S.scene.add(avatar.root);
   const row = {
@@ -31,6 +34,7 @@ async function addRemote(player) {
     targetYaw: player.yaw || 0,
     moving: !!player.moving,
     seated: !!player.seatId,
+    flashlight,
     emote: null,
     emoteUntil: 0,
   };
@@ -50,6 +54,7 @@ function applyPlayer(player) {
   row.target.set(player.x || 0, player.y || 0, player.z || 0);
   row.targetYaw = player.yaw || 0; row.moving = !!player.moving;
   row.seated = !!player.seatId;
+  row.flashlight.visible = !!player.flashlight; row.flashlight.userData.setLit(!!player.flashlight);
 }
 
 function applyShared(shared = {}) {
@@ -74,14 +79,18 @@ function handle(message) {
   if (message.type === 'welcome') {
     S.netId = message.id; S.netConfig = message.config || {};
     (message.players || []).forEach(addRemote); applyShared(message.shared);
+    S.npc?.apply(message.npc);
     S.board?.applySnapshot(message.chalkboard);
     if (joinedName) send({ type: 'join', name: joinedName, skin: joinedName });
   } else if (message.type === 'player-join') addRemote(message.player);
   else if (message.type === 'player-move' || message.type === 'seats') applyPlayer(message.player);
+  else if (message.type === 'npc-state') S.npc?.apply(message.npc);
+  else if (message.type === 'npc-game-over') S.npc?.onGameOver(message);
+  else if (message.type === 'npc-event') S.npc?.onEvent(message);
+  else if (message.type === 'npc-respawned') applyPlayer(message.player);
   else if (message.type === 'player-leave') removeRemote(message.id);
   else if (message.type === 'chat') S.chat?.receive(message.row);
   else if (message.type === 'bunker-open') S.bunker?.openDoor(message.until);
-  else if (message.type === 'orbital') S.bunker?.onOrbital(message);
   else if (message.type === 'shared') applyShared(message.shared);
   else if (message.type === 'emote') {
     const row = remotes.get(message.id);
@@ -126,11 +135,15 @@ export function initMultiplayer() {
     const now = performance.now();
     if (!joinedName || !S.player || now - lastMove < 100) return;
     lastMove = now;
-    const next = { x: S.player.pos.x, y: S.player.pos.y, z: S.player.pos.z, yaw: S.player.yaw, moving: S.player.speed > .08 };
+    const next = { x: S.player.pos.x, y: S.player.pos.y, z: S.player.pos.z, yaw: S.player.yaw, lookYaw: S.cam.yaw, lookPitch: S.cam.pitch, moving: S.player.speed > .08, flashlight: S.player.flashlightOn };
     const changed = !lastSentMove
       || Math.hypot(next.x - lastSentMove.x, next.z - lastSentMove.z) > .012
+      || Math.abs(next.y - lastSentMove.y) > .012
       || Math.abs(Math.atan2(Math.sin(next.yaw - lastSentMove.yaw), Math.cos(next.yaw - lastSentMove.yaw))) > .018
+      || Math.abs(Math.atan2(Math.sin(next.lookYaw - lastSentMove.lookYaw), Math.cos(next.lookYaw - lastSentMove.lookYaw))) > .018
+      || Math.abs(next.lookPitch - lastSentMove.lookPitch) > .018
       || next.moving !== lastSentMove.moving
+      || next.flashlight !== lastSentMove.flashlight
       || now - lastMoveSentAt > 2000;
     if (!changed) return;
     lastSentMove = next; lastMoveSentAt = now; send({ type: 'move', ...next });
@@ -148,8 +161,8 @@ export function initMultiplayer() {
     clearBoard() { send({ type: 'board-clear' }); },
     chat(message) { send({ type: 'chat', message }); },
     openBunker() { send({ type: 'bunker-open' }); },
-    activateOrbital() { send({ type: 'orbital' }); },
     setJukebox(state) { send({ type: 'jukebox', ...state }); },
+    respawnNPC() { send({ type: 'npc-respawn' }); },
   };
   return api;
 }

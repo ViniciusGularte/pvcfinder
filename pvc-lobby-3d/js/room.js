@@ -1,9 +1,8 @@
 // Floor, walls (with the window hole), ceiling, window, curtains, string lights, dust.
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { S } from './core.js';
 import { ROOM, WIN } from './config.js';
-import { rnd, std, mesh, noRaycast } from './util.js';
+import { rnd, std, mesh, noRaycast, addCollider } from './util.js';
 import { T } from './textures.js';
 
 export const R = { bulbs: [], lightsOn: true };   // shared room refs (used by weather.js, furniture.js)
@@ -41,7 +40,7 @@ export function buildRoom() {
       const hole = new THREE.Path(); hole.moveTo(z0, y0); hole.lineTo(z0, y1); hole.lineTo(z1, y1); hole.lineTo(z1, y0); hole.closePath();
       sh.holes.push(hole);
       const t = T.plaster.clone(); t.repeat.set(1 / 3, 1 / 1.275); t.needsUpdate = true;
-      uppers.push(mesh(new THREE.ShapeGeometry(sh), std({ map: t, roughness: .95 }), [0, 0, 0], { parent: grp }));
+      uppers.push(mesh(new THREE.ShapeGeometry(sh), std({ map: t, roughness: .95 }), [0, 0, 0], { parent: grp, cast: false, receive: false }));
     } else {
       uppers.push(mesh(new THREE.PlaneGeometry(RW, RH - 1.05), wallMat, [0, 1.05 + (RH - 1.05) / 2, 0], { parent: grp }));
     }
@@ -63,25 +62,73 @@ export function buildRoom() {
   for (let z = -RD / 2 + 1.4; z < RD / 2; z += 2.4)
     mesh(new THREE.BoxGeometry(RW, .22, .26), std({ map: T.wood, color: 0x9a7050 }), [0, RH - .11, z]);
 
+  buildExteriorShell(RW, RD, RH);
   buildWindow(RW);
   buildStringLights(RW, RD);
   buildDust(RW, RD, RH);
+}
+
+function buildExteriorShell(RW, RD, RH) {
+  const exterior = std({ color: 0x54483d, roughness: .96 });
+  const roofMat = std({ color: 0x201c1b, roughness: .92 });
+  const outdoor = object => { object.userData.outdoor = true; S.camBlockers.push(object); return object; };
+
+  // Solid outer facade keeps the one-sided interior wall planes from disappearing outside.
+  for (const [x0, x1] of [[-RW / 2, -9.25], [-6.75, RW / 2]]) {
+    outdoor(mesh(new THREE.BoxGeometry(x1 - x0, RH, .18), exterior, [(x0 + x1) / 2, RH / 2, RD / 2 + .2], { cast: false, receive: false }));
+    addCollider((x0 + x1) / 2, RD / 2 + .2, x1 - x0, .2);
+  }
+  outdoor(mesh(new THREE.BoxGeometry(2.5, RH - 2.9, .18), exterior, [-8, 2.9 + (RH - 2.9) / 2, RD / 2 + .2], { cast: false, receive: false }));
+  const leftX = -RW / 2 - .2, rightX = RW / 2 + .2;
+  outdoor(mesh(new THREE.BoxGeometry(.18, RH, RD + .18), exterior, [leftX, RH / 2, 0], { cast: false, receive: false }));
+  addCollider(leftX, 0, .2, RD);
+  const wz0 = WIN.z - WIN.w / 2, wz1 = WIN.z + WIN.w / 2, wy0 = WIN.y - WIN.h / 2, wy1 = WIN.y + WIN.h / 2;
+  for (const [z0, z1] of [[-RD / 2, wz0], [wz1, RD / 2]])
+    outdoor(mesh(new THREE.BoxGeometry(.18, RH, z1 - z0), exterior, [rightX, RH / 2, (z0 + z1) / 2], { cast: false, receive: false }));
+  outdoor(mesh(new THREE.BoxGeometry(.18, wy0, WIN.w), exterior, [rightX, wy0 / 2, WIN.z], { cast: false, receive: false }));
+  outdoor(mesh(new THREE.BoxGeometry(.18, RH - wy1, WIN.w), exterior, [rightX, wy1 + (RH - wy1) / 2, WIN.z], { cast: false, receive: false }));
+  addCollider(rightX, 0, .2, RD);
+  outdoor(mesh(new THREE.BoxGeometry(RW, RH, .18), exterior, [0, RH / 2, -RD / 2 - .2], { cast: false, receive: false }));
+  addCollider(0, -RD / 2 - .2, RW, .2);
+
+  const rise = 2.35, overhang = .65, run = RW / 2 + overhang, slope = Math.hypot(run, rise), angle = Math.atan2(rise, run);
+  for (const side of [-1, 1]) {
+    const roof = outdoor(mesh(new THREE.BoxGeometry(slope, .18, RD + overhang * 2), roofMat,
+      [side * run / 2, RH + rise / 2, 0], { cast: false, receive: false }));
+    roof.rotation.z = side * -angle;
+  }
+  const gableShape = new THREE.Shape();
+  gableShape.moveTo(-run, 0); gableShape.lineTo(0, rise); gableShape.lineTo(run, 0); gableShape.closePath();
+  for (const z of [-RD / 2 - .18, RD / 2 + .18]) {
+    const gable = outdoor(mesh(new THREE.ShapeGeometry(gableShape), std({ color: 0x403830, roughness: 1, side: THREE.DoubleSide }), [0, RH, z], { cast: false, receive: false }));
+    if (z < 0) gable.rotation.y = Math.PI;
+  }
 }
 
 function buildWindow(RW) {
   const wx0 = RW / 2;
   const wz0 = WIN.z - WIN.w / 2, wz1 = WIN.z + WIN.w / 2, wy0 = WIN.y - WIN.h / 2, wy1 = WIN.y + WIN.h / 2;
   const reveal = std({ color: 0xd9c4a3, roughness: .9 });
-  mesh(new THREE.BoxGeometry(.3, .04, WIN.w), reveal, [wx0 + .15, wy1 + .02, WIN.z]);
-  mesh(new THREE.BoxGeometry(.3, .04, WIN.w), reveal, [wx0 + .15, wy0 - .02, WIN.z]);
-  mesh(new THREE.BoxGeometry(.3, WIN.h, .04), reveal, [wx0 + .15, WIN.y, wz0 - .02]);
-  mesh(new THREE.BoxGeometry(.3, WIN.h, .04), reveal, [wx0 + .15, WIN.y, wz1 + .02]);
+  mesh(new THREE.BoxGeometry(.24, .035, WIN.w), reveal, [wx0 + .12, wy1 - .025, WIN.z], { cast: false, receive: false });
+  mesh(new THREE.BoxGeometry(.24, .035, WIN.w), reveal, [wx0 + .12, wy0 + .025, WIN.z], { cast: false, receive: false });
+  mesh(new THREE.BoxGeometry(.24, WIN.h - .1, .035), reveal, [wx0 + .12, WIN.y, wz0 + .025], { cast: false, receive: false });
+  mesh(new THREE.BoxGeometry(.24, WIN.h - .1, .035), reveal, [wx0 + .12, WIN.y, wz1 - .025], { cast: false, receive: false });
   const winWood = std({ color: 0xf2e8d6, roughness: .6 });
   for (const [sy, sz, py, pz] of [[.1, WIN.w + .2, wy1 + .05, WIN.z], [.1, WIN.w + .2, wy0 - .05, WIN.z], [WIN.h + .2, .1, WIN.y, wz0 - .05], [WIN.h + .2, .1, WIN.y, wz1 + .05]])
-    mesh(new THREE.BoxGeometry(.08, sy, sz), winWood, [wx0 - .03, py, pz]);
+    mesh(new THREE.BoxGeometry(.06, sy, sz), winWood, [wx0 - .045, py, pz], { cast: false, receive: false });
   for (const [sy, sz, py, pz] of [[WIN.h, .05, WIN.y, WIN.z], [.05, WIN.w, WIN.y + .2, WIN.z]])
-    mesh(new THREE.BoxGeometry(.05, sy, sz), winWood, [wx0 + .2, py, pz]);
-  mesh(new THREE.BoxGeometry(.38, .06, WIN.w + .4), std({ map: T.wood, color: 0xb08460 }), [wx0 - .12, wy0 - .08, WIN.z]);
+    mesh(new THREE.BoxGeometry(.045, sy, sz), winWood, [wx0 - .072, py, pz], { cast: false, receive: false });
+  mesh(new THREE.BoxGeometry(.3, .06, WIN.w + .4), std({ map: T.wood, color: 0xb08460 }), [wx0 - .15, wy0 - .08, WIN.z], { cast: false, receive: false });
+
+  // Exterior trim is separate so the window reads correctly from the explorable grounds.
+  const outerWood = std({ color: 0x36291f, roughness: .82 });
+  const exteriorPart = part => { part.userData.outdoor = true; return part; };
+  const outerX = wx0 + .37;
+  for (const [sy, sz, py, pz] of [[.13, WIN.w + .34, wy1 + .07, WIN.z], [.13, WIN.w + .34, wy0 - .07, WIN.z], [WIN.h + .28, .13, WIN.y, wz0 - .07], [WIN.h + .28, .13, WIN.y, wz1 + .07]])
+    exteriorPart(mesh(new THREE.BoxGeometry(.075, sy, sz), outerWood, [outerX, py, pz], { cast: false, receive: false }));
+  exteriorPart(mesh(new THREE.BoxGeometry(.07, WIN.h, .055), outerWood, [outerX + .002, WIN.y, WIN.z], { cast: false, receive: false }));
+  exteriorPart(mesh(new THREE.BoxGeometry(.07, .055, WIN.w), outerWood, [outerX + .002, WIN.y + .2, WIN.z], { cast: false, receive: false }));
+  exteriorPart(mesh(new THREE.BoxGeometry(.24, .08, WIN.w + .48), std({ color: 0x4a3829, roughness: .9 }), [wx0 + .4, wy0 - .12, WIN.z], { cast: false, receive: false }));
 
   // candle + little plant on the sill
   mesh(new THREE.CylinderGeometry(.04, .04, .12, 12), std({ color: 0xf3e6cf, emissive: 0xffb060, emissiveIntensity: .3 }), [wx0 - .14, wy0 - .01, wz0 + .35]);
@@ -92,7 +139,7 @@ function buildWindow(RW) {
   for (let i = 0; i < 5; i++) { const l = mesh(new THREE.IcosahedronGeometry(.06, 0), std({ color: 0x5f8f4a, flatShading: true }), [wx0 - .14 + rnd(-.04, .04), wy0 + .1 + rnd(0, .08), wz1 - .35 + rnd(-.04, .04)]); l.scale.y = 1.6; }
 
   // glass with raindrops (opacity driven by weather)
-  R.glassMat = new THREE.MeshBasicMaterial({ map: T.rainGlass, color: 0xdfe8ff, transparent: true, opacity: .1, depthWrite: false });
+  R.glassMat = new THREE.MeshBasicMaterial({ map: T.rainGlass, color: 0xdfe8ff, transparent: true, opacity: .1, depthWrite: false, side: THREE.DoubleSide });
   R.glass = mesh(new THREE.PlaneGeometry(WIN.w, WIN.h), R.glassMat, [wx0 + .18, WIN.y, WIN.z], { cast: false, receive: false, name: 'window' });
   R.glass.rotation.y = -Math.PI / 2;
   S.camBlockers.push(R.glass);   // keep the 3rd-person camera from slipping outside
@@ -107,14 +154,7 @@ function buildWindow(RW) {
   curtain(wz0 - .15, false); curtain(wz1 + .15, true);
   mesh(new THREE.CylinderGeometry(.015, .015, WIN.w + 1.4, 8), std({ color: 0x7a5530, metalness: .5, roughness: .4 }), [wx0 - .14, 3.62, WIN.z]).rotation.x = Math.PI / 2;
 
-  // weather control plaque next to the window (its face is drawn by weather.js)
-  R.wxCanvas = document.createElement('canvas'); R.wxCanvas.width = 256; R.wxCanvas.height = 340;
-  R.wxTex = new THREE.CanvasTexture(R.wxCanvas); R.wxTex.colorSpace = THREE.SRGBColorSpace;
-  const pz = wz1 + .9;
-  mesh(new RoundedBoxGeometry(.06, .7, .54, 2, .02), std({ map: T.wood, color: 0x8a5d3b }), [wx0 - .03, 1.6, pz]);
-  R.wxFace = mesh(new THREE.PlaneGeometry(.46, .62), new THREE.MeshStandardMaterial({ map: R.wxTex, emissive: 0xffffff, emissiveMap: R.wxTex, emissiveIntensity: .35, roughness: .6 }),
-    [wx0 - .065, 1.6, pz], { cast: false, name: 'wxpanel' });
-  R.wxFace.rotation.y = -Math.PI / 2;
+  /* Weather control plaque temporarily disabled. Restore it here when climate controls return. */
 }
 
 function buildStringLights(RW, RD) {

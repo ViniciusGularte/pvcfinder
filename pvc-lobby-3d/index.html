@@ -31,9 +31,14 @@
 <div id="toast" class="hud card"></div>
 <div id="seatbar" class="hud card"><span id="seatText">Sitting</span><button>Stand up</button></div>
 
-<!-- local ambience + camera + lobby status -->
+<!-- personal audio + camera + lobby status -->
 <div id="player" class="hud card">
-  <button class="ghost" id="ambBtn" title="Ambient sounds (rain, fire, wind)">🌧️ Ambience</button>
+  <div class="master-volume" title="Personal volume for all lobby audio">
+    <button class="ghost" id="masterMute" type="button" aria-label="Mute all audio" aria-pressed="false">🔊</button>
+    <input id="masterVolume" type="range" min="0" max="100" step="1" value="85" aria-label="Master volume">
+    <output id="masterVolumeValue" for="masterVolume">85%</output>
+  </div>
+  <button class="ghost" id="flashBtn" type="button" title="Turn flashlight on (F)" aria-pressed="false">🔦 Off</button>
   <button class="ghost" id="viewBtn" title="Switch to first person (V)" aria-pressed="false">👁 Third Person</button>
   <span id="onlineCount" class="online-count">0/20 online</span>
 </div>
@@ -57,7 +62,7 @@
   </section>
 </div>
 
-<!-- weather panel -->
+<!-- Weather controls are intentionally disabled while the exterior uses fixed fog/night.
 <div id="weather" class="hud card hidden">
   <div class="wx-head"><b>🪟 Weather outside</b><button class="ghost" id="wxClose">✕</button></div>
   <div class="sub">Presets</div>
@@ -72,6 +77,7 @@
   <label class="sl">🍃 Wind <input type="range" min="0" max="100" data-k="wind"></label>
   <label class="chk"><input type="checkbox" id="lightning"> ⚡ Lightning &amp; thunder</label>
 </div>
+-->
 
 <!-- live map controls -->
 <div id="mapbar" class="hud card">
@@ -134,19 +140,28 @@
   </div>
 </div>
 
-<div id="terminalOverlay" class="app-overlay terminal-overlay" aria-label="Orbital cannon terminal">
-  <div class="terminal-shell">
-    <div class="terminal-top"><span>██ PVC ORBITAL DEFENSE NETWORK</span><button id="terminalClose" type="button">ESC / CLOSE</button></div>
-    <div class="terminal-body">
-      <aside><small>PLATFORM</small><b>ODN-07</b><small>ORBIT</small><b>410 KM</b><small>LINK</small><b class="green">SECURE</b></aside>
-      <main><div class="terminal-reticle"><i></i><i></i><i></i></div><h2>ORBITAL CANNON</h2><p id="terminalLog">AWAITING AUTHORIZED COMMAND</p><button id="orbitalActivate" type="button">ACTIVATE ORBITAL CANNON</button></main>
+<div id="terminalOverlay" class="app-overlay terminal-overlay" aria-label="Secure computer authentication">
+  <div class="keypad-shell terminal-auth-shell">
+    <div class="keypad-head"><span>PVC SECURE COMPUTER</span><b>AUTHENTICATION REQUIRED</b></div>
+    <div id="terminalDisplay" class="keypad-display terminal-auth-display">○○○○○○</div>
+    <div class="keypad-grid">
+      <button data-terminal-digit="1">1</button><button data-terminal-digit="2">2</button><button data-terminal-digit="3">3</button>
+      <button data-terminal-digit="4">4</button><button data-terminal-digit="5">5</button><button data-terminal-digit="6">6</button>
+      <button data-terminal-digit="7">7</button><button data-terminal-digit="8">8</button><button data-terminal-digit="9">9</button>
+      <button id="terminalClear" class="keypad-alt">CLR</button><button data-terminal-digit="0">0</button><button id="terminalExit" class="keypad-alt">EXIT</button>
     </div>
-    <div class="terminal-ticker">WARNING: COMMAND EVENT WILL BE BROADCAST TO ALL CONNECTED PVC OPERATORS</div>
+    <div class="keypad-state"><i></i><span id="terminalState">ENTER SIX-DIGIT PASSCODE</span></div>
   </div>
 </div>
 
-<div id="orbitalAlert" role="alert">
-  <div class="orbital-mark">◉</div><div><small>GLOBAL DEFENSE EVENT</small><b>ORBITAL CANNON ACTIVATED</b><span id="orbitalBy">PVC DEFENSE NETWORK</span></div>
+<div id="slenderFX" aria-hidden="true"></div>
+<div id="gameOver" class="game-over" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+  <div class="game-over-card">
+    <small>ENTITY CONTACT // SIGNAL LOST</small>
+    <h1 id="gameOverTitle">GAME OVER</h1>
+    <p>The forest took you. Keep the flashlight trained on Slender to force him back.</p>
+    <button id="respawnBtn" type="button">Wake up at the lodge</button>
+  </div>
 </div>
 
 <!-- join screen -->

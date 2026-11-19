@@ -102,6 +102,7 @@ function nameTag(text) {
 export function createAvatar({ shadows = true } = {}) {
   const root = new THREE.Group();
   let model = null, tag = null, P = {};
+  const handAttachments = { r: [], l: [] };
   let phase = 0;
 
   function disposeModel() {
@@ -109,6 +110,7 @@ export function createAvatar({ shadows = true } = {}) {
     root.remove(model);
     const geometries = new Set(), materials = new Set(), textures = new Set();
     model.traverse(o => {
+      if (o.userData.avatarAttachment) return;
       if (o.geometry) geometries.add(o.geometry);
       for (const material of [].concat(o.material || [])) if (material) {
         materials.add(material); if (material.map) textures.add(material.map);
@@ -143,13 +145,30 @@ export function createAvatar({ shadows = true } = {}) {
     P.lArm = pivot(4 + aw / 2, 22); part(P.lArm, aw, 12, 4, 32, 48, 48, 48, -4);
     P.rLeg = pivot(-2, 12); part(P.rLeg, 4, 12, 4, 0, 16, 0, 32, -6);
     P.lLeg = pivot(2, 12); part(P.lLeg, 4, 12, 4, 16, 48, 0, 48, -6);
+    handAttachments.r.forEach(object => P.rArm.add(object));
+    handAttachments.l.forEach(object => P.lArm.add(object));
     if (!shadows) model.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
   }
   function setName(name) {
     disposeTag();
     tag = nameTag(name); tag.position.y = 2.12; root.add(tag);
   }
-  function dispose() { disposeModel(); disposeTag(); }
+  function dispose() {
+    disposeModel(); disposeTag();
+    const geometries = new Set(), materials = new Set();
+    [...handAttachments.r, ...handAttachments.l].forEach(object => object.traverse(o => {
+      if (o.geometry) geometries.add(o.geometry);
+      for (const material of [].concat(o.material || [])) if (material) materials.add(material);
+    }));
+    geometries.forEach(geometry => geometry.dispose()); materials.forEach(material => material.dispose());
+  }
+  function attachToHand(object, side = 'r') {
+    const key = side === 'l' ? 'l' : 'r';
+    object.traverse(child => { child.userData.avatarAttachment = true; });
+    if (!handAttachments[key].includes(object)) handAttachments[key].push(object);
+    P[key === 'r' ? 'rArm' : 'lArm']?.add(object);
+    return object;
+  }
 
   // state: { speed, sitting, typing, airborne, t }
   function update(dt, st) {
@@ -203,7 +222,7 @@ export function createAvatar({ shadows = true } = {}) {
     }
   }
 
-  return { root, setSkin, setName, update, dispose };
+  return { root, setSkin, setName, update, dispose, attachToHand };
 }
 
 // Draws the face (with hat layer) of a skin onto a small canvas — for the HUD.
