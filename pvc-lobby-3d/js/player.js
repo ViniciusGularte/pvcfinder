@@ -1,0 +1,219 @@
+// Player: movement, sitting, third/first-person camera, clicking and the E-to-interact prompt.
+import * as THREE from 'three';
+import { S } from './core.js';
+import { ROOM, SPAWN } from './config.js';
+import { $, V, angleLerp, damp } from './util.js';
+import { createAvatar, HIP } from './avatar.js';
+import { pick, nearestInteractable, labelOf } from './interact.js';
+
+export function createPlayer() {
+  const av = createAvatar();
+  S.scene.add(av.root);
+
+  const cam = S.cam = { yaw: 0, pitch: -.28, dist: 3.6, distT: 3.6 };
+  const P = S.player = {
+    pos: V(SPAWN.x, 0, SPAWN.z), yaw: SPAWN.yaw, vy: 0, lift: 0,
+    state: 'walk', seat: null, sitFrom: null, sitT: 0,
+    walkTarget: null, onArrive: null, stuck: 0, speed: 0, avatar: av,
+    sit, stand, walkTo, interact,
+  };
+  const keys = {};
+  const canvas = S.renderer.domElement;
+  const tip = $('tip'), prompt = $('prompt'), seatbar = $('seatbar');
+
+  /* ---------- actions ---------- */
+  function sit(seat) {
+    if (P.seat) stand(true);
+    P.state = 'sit'; P.seat = seat; P.walkTarget = null; P.sitFrom = P.pos.clone(); P.sitT = 0;
+    $('seatText').textContent = 'Sitting · move or press E to stand up';
+    seatbar.classList.add('show');
+    S.multiplayer?.sit(seat);
+  }
+  function stand(silent) {
+    const s = P.seat; if (!s) return;
+    const exit = P.sitFrom || s.approach;
+    P.state = 'walk'; P.seat = null; P.lift = 0;
+    P.pos.set(exit.x, 0, exit.z); P.sitFrom = null;
+    S.multiplayer?.stand(P.pos, P.yaw);
+    seatbar.classList.remove('show');
+    s.onLeave && s.onLeave(); s.onLeave = null;
+    void silent;
+  }
+  function walkTo(target, onArrive) {
+    if (P.state === 'sit') stand();
+    P.walkTarget = V(target.x, 0, target.z); P.onArrive = onArrive || null; P.stuck = 0;
+  }
+  function interact(it) {
+    if (!it || S.mode !== 'walk') return;
+    const a = it.anchor, d = Math.hypot(P.pos.x - a.x, P.pos.z - a.z);
+    if (d <= it.range) { if (P.state === 'sit' && it.verb !== 'Sit on') stand(); it.action(); return; }
+    let ap = it.approach && it.approach();
+    if (!ap) { const dir = V(P.pos.x - a.x, 0, P.pos.z - a.z).normalize(); ap = a.clone().addScaledVector(dir, it.range * .6); }
+    walkTo(ap, () => it.action());
+  }
+  seatbar.querySelector('button').onclick = () => stand();
+
+  /* ---------- pointer ---------- */
+  let down = null;
+  canvas.addEventListener('pointerdown', e => {
+    if (S.mode === 'map') return;
+    down = { x: e.clientX, y: e.clientY, yaw: cam.yaw, pitch: cam.pitch, moved: false };
+    tip.classList.remove('show'); canvas.classList.remove('hover');
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (down) {
+      const dx = e.clientX - down.x, dy = e.clientY - down.y;
+      if (Math.hypot(dx, dy) > 5) { down.moved = true; canvas.classList.add('dragging'); }
+      if (down.moved && S.mode === 'walk') {
+        cam.yaw = down.yaw - dx * .005;
+        cam.pitch = THREE.MathUtils.clamp(down.pitch - dy * .005, -1.25, .9);
+      }
+      return;
+    }
+    if (S.mode !== 'walk') return;
+    const { inter } = pick(e.clientX, e.clientY);
+    canvas.classList.toggle('hover', !!inter);
+    tip.textContent = inter ? labelOf(inter) : '';
+    tip.classList.toggle('show', !!inter);
+  });
+  canvas.addEventListener('pointerup', e => {
+    canvas.classList.remove('dragging');
+    if (down && !down.moved && S.mode === 'walk') {
+      const { hit, inter } = pick(e.clientX, e.clientY);
+      if (inter) interact(inter);
+      else if (hit && hit.point.y < .06) {
+        const inLobby = Math.abs(hit.point.x) < ROOM.w / 2 && Math.abs(hit.point.z) < ROOM.d / 2;
+        const inBunker = hit.point.x > -10.8 && hit.point.x < -5.2 && hit.point.z > ROOM.d / 2 - .2 && hit.point.z < ROOM.d / 2 + 8.1;
+        if (inLobby || inBunker) walkTo(hit.point);
+      }
+    }
+    down = null;
+  });
+  canvas.addEventListener('wheel', e => {
+    if (S.mode !== 'walk') return;
+    let d = cam.distT + e.deltaY * .004;
+    if (cam.distT === 0 && e.deltaY > 0) d = 1.2;
+    cam.distT = d < .7 ? 0 : Math.min(d, 7);
+    syncViewButton();
+  }, { passive: true });
+
+  /* ---------- keys ---------- */
+  addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (S.mode === 'pc') { if (e.code === 'Escape') stand(); return; }
+    keys[e.code] = true;
+    if (S.mode !== 'walk') return;
+    if (e.code === 'KeyE') { if (P.state === 'sit') stand(); else interact(nearestInteractable(P.pos)); }
+    if (e.code === 'Escape' && P.state === 'sit') stand();
+    if (e.code === 'KeyV') toggleView();
+    if (e.code === 'Space' && P.state === 'walk' && P.pos.y <= 0) { P.vy = 5.2; e.preventDefault(); }
+  });
+  addEventListener('keyup', e => { keys[e.code] = false; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+  function syncViewButton() {
+    const firstPerson = cam.distT === 0, button = $('viewBtn');
+    button.textContent = firstPerson ? '👁 First Person' : '👁 Third Person';
+    button.title = `Switch to ${firstPerson ? 'third' : 'first'} person (V)`;
+    button.setAttribute('aria-pressed', String(firstPerson));
+  }
+  function toggleView() { cam.distT = cam.distT === 0 ? 3.6 : 0; syncViewButton(); }
+  P.toggleView = toggleView;
+  syncViewButton();
+
+  /* ---------- movement ---------- */
+  function blocked(x, z) {
+    const m = .3;
+    const inLobby = x >= -ROOM.w / 2 + .4 && x <= ROOM.w / 2 - .45 && z >= -ROOM.d / 2 + .4 && z <= ROOM.d / 2 - .4;
+    const inBunker = x >= -10.7 && x <= -5.3 && z >= ROOM.d / 2 - .8 && z <= ROOM.d / 2 + 8.2;
+    if (!inLobby && !inBunker) return true;
+    return S.colliders.some(c => x > c.minX - m && x < c.maxX + m && z > c.minZ - m && z < c.maxZ + m);
+  }
+  function tryMove(dx, dz) {
+    const p = P.pos;
+    if (!blocked(p.x + dx, p.z + dz)) { p.x += dx; p.z += dz; return true; }
+    if (!blocked(p.x + dx, p.z)) { p.x += dx; return true; }
+    if (!blocked(p.x, p.z + dz)) { p.z += dz; return true; }
+    return false;
+  }
+
+  /* ---------- camera ---------- */
+  const ray = new THREE.Raycaster(), head = V(), dir = V(), rayDir = V(), want = V(), wantQ = new THREE.Quaternion(), m4 = new THREE.Matrix4(), eul = new THREE.Euler(0, 0, 0, 'YXZ');
+
+  S.onFrame((dt, t) => {
+    const x0 = P.pos.x, z0 = P.pos.z;
+    const anyMove = keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight;
+
+    if (S.mode === 'walk' && P.state === 'sit' && anyMove) stand();
+    if (S.mode === 'walk' && P.state === 'walk') {
+      let f = 0, s = 0;
+      if (keys.KeyW || keys.ArrowUp) f++; if (keys.KeyS || keys.ArrowDown) f--;
+      if (keys.KeyD || keys.ArrowRight) s++; if (keys.KeyA || keys.ArrowLeft) s--;
+      const sp = (keys.ShiftLeft || keys.ShiftRight ? 4.6 : 2.6) * dt;
+      if (f || s) {
+        P.walkTarget = null;
+        const cy = cam.yaw;
+        let mx = -Math.sin(cy) * f + Math.cos(cy) * s, mz = -Math.cos(cy) * f - Math.sin(cy) * s;
+        const l = Math.hypot(mx, mz); mx /= l; mz /= l;
+        P.yaw = angleLerp(P.yaw, Math.atan2(mx, mz), damp(dt, 14));
+        tryMove(mx * sp, mz * sp);
+      } else if (P.walkTarget) {
+        const dx = P.walkTarget.x - P.pos.x, dz = P.walkTarget.z - P.pos.z, d = Math.hypot(dx, dz);
+        if (d < .12) { P.walkTarget = null; const cb = P.onArrive; P.onArrive = null; cb && cb(); }
+        else {
+          P.yaw = angleLerp(P.yaw, Math.atan2(dx, dz), damp(dt, 12));
+          const moved = tryMove(dx / d * Math.min(sp, d), dz / d * Math.min(sp, d));
+          const prog = Math.hypot(P.pos.x - x0, P.pos.z - z0);
+          P.stuck = (!moved || prog < sp * .3) ? P.stuck + dt : 0;
+          if (P.stuck > .5) { const cb = P.onArrive; P.walkTarget = null; P.onArrive = null; if (cb && d < 2.2) cb(); }
+        }
+      }
+      // jump
+      if (P.pos.y > 0 || P.vy > 0) { P.vy -= 15 * dt; P.pos.y = Math.max(0, P.pos.y + P.vy * dt); if (P.pos.y === 0) P.vy = 0; }
+    }
+    if (P.state === 'sit' && P.seat) {
+      P.sitT = Math.min(1, P.sitT + dt * 3.5);
+      const k = P.sitT * P.sitT * (3 - 2 * P.sitT);
+      P.pos.x = P.sitFrom.x + (P.seat.pos.x - P.sitFrom.x) * k;
+      P.pos.z = P.sitFrom.z + (P.seat.pos.z - P.sitFrom.z) * k;
+      P.lift = (P.seat.pos.y - HIP) * k;
+      P.yaw = angleLerp(P.yaw, P.seat.yaw, damp(dt, 10));
+    }
+    P.speed = P.state === 'walk' ? Math.hypot(P.pos.x - x0, P.pos.z - z0) / Math.max(dt, 1e-3) : 0;
+
+    // avatar
+    av.root.position.set(P.pos.x, P.pos.y + P.lift, P.pos.z);
+    av.root.rotation.y = P.yaw;
+    av.update(dt, { speed: P.speed, sitting: P.state === 'sit', typing: S.mode === 'pc' && t - (S.activePC?.lastKey ?? -9) < .4, airborne: P.pos.y > .05, t, emote: performance.now() < (S.localEmoteUntil || 0) ? S.localEmote : null });
+
+    // camera
+    cam.dist += (cam.distT - cam.dist) * damp(dt, 10);
+    head.set(P.pos.x, av.root.position.y + 1.5, P.pos.z);
+    if (S.camOverride) {
+      want.copy(S.camOverride.pos);
+      m4.lookAt(S.camOverride.pos, S.camOverride.look, S.camera.up); wantQ.setFromRotationMatrix(m4);
+    } else {
+      eul.set(cam.pitch, cam.yaw, 0); wantQ.setFromEuler(eul);
+      dir.set(-Math.sin(cam.yaw) * Math.cos(cam.pitch), Math.sin(cam.pitch), -Math.cos(cam.yaw) * Math.cos(cam.pitch));
+      let d = cam.dist;
+      if (d > .05) {
+        ray.set(head, rayDir.copy(dir).negate()); ray.far = d + .3;
+        const h = ray.intersectObjects(S.camBlockers, false)[0];
+        if (h) d = Math.max(.2, h.distance - .3);
+      }
+      want.copy(head).addScaledVector(dir, -d);
+      if (cam.dist < .3) want.copy(head).addScaledVector(dir, .12);
+    }
+    const rate = t - S.camChangeT < 1.4 ? 4.5 : 28;
+    S.camera.position.lerp(want, damp(dt, rate));
+    S.camera.quaternion.slerp(wantQ, damp(dt, rate));
+    av.root.visible = !(S.camOverride?.hideAvatar) && S.mode !== 'map' && S.camera.position.distanceTo(head) > .55;
+
+    // E prompt
+    const near = S.mode === 'walk' && P.state === 'walk' && !P.walkTarget ? nearestInteractable(P.pos) : null;
+    if (near) { prompt.querySelector('span').textContent = labelOf(near); prompt.classList.add('show'); }
+    else prompt.classList.remove('show');
+  });
+
+  return P;
+}

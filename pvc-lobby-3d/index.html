@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PVC Lobby 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="css"></div>
+<div id="gl"></div>
+
+<!-- you -->
+<div id="me" class="hud card hidden">
+  <canvas id="meHead" width="32" height="32"></canvas>
+  <b id="meName"></b>
+  <button class="ghost" id="meChange">Change</button>
+</div>
+
+<div id="tip" class="hud card"></div>
+<div id="prompt" class="hud card"><kbd>E</kbd> <span></span></div>
+<div id="toast" class="hud card"></div>
+<div id="seatbar" class="hud card"><span id="seatText">Sitting</span><button>Stand up</button></div>
+
+<!-- local ambience + camera + lobby status -->
+<div id="player" class="hud card">
+  <button class="ghost" id="ambBtn" title="Ambient sounds (rain, fire, wind)">🌧️ Ambience</button>
+  <button class="ghost" id="viewBtn" title="Switch to first person (V)" aria-pressed="false">👁 Third Person</button>
+  <span id="onlineCount" class="online-count">0/20 online</span>
+</div>
+
+<div id="emotes" class="hud card" aria-label="Emotes">
+  <button class="ghost" data-emote="wave" title="Wave">👋</button>
+  <button class="ghost" data-emote="heart" title="Heart">❤️</button>
+  <button class="ghost" data-emote="celebrate" title="Celebrate">🎉</button>
+  <button class="ghost" data-emote="dance" title="Dance">🕺</button>
+  <button class="ghost" data-emote="clap" title="Clap">👏</button>
+  <button class="ghost" data-emote="laugh" title="Laugh">😂</button>
+  <button class="ghost" data-emote="overcharge" title="Overcharge">⚡</button>
+</div>
+
+<div id="chatDock" class="hud">
+  <button id="chatToggle" class="chat-toggle" type="button"><span>⌁</span> CHAT <i id="chatUnread"></i></button>
+  <section id="chatPanel" class="chat-panel card" aria-label="Lobby chat">
+    <header><div><small>PVC CHANNEL 01</small><b>LOBBY COMMS</b></div><button id="chatClose" class="ghost" type="button">×</button></header>
+    <div id="chatFeed" class="chat-feed" aria-live="polite"><p>Live channel connected. Messages are not saved.</p></div>
+    <form id="chatForm"><input id="chatInput" maxlength="180" autocomplete="off" placeholder="Message everyone…"><button type="submit">Send</button></form>
+  </section>
+</div>
+
+<!-- weather panel -->
+<div id="weather" class="hud card hidden">
+  <div class="wx-head"><b>🪟 Weather outside</b><button class="ghost" id="wxClose">✕</button></div>
+  <div class="sub">Presets</div>
+  <div class="grid" id="presets"></div>
+  <div class="sub">Time of day</div>
+  <div class="times" id="times"></div>
+  <div class="sub">Fine tune</div>
+  <label class="sl">🌧️ Rain <input type="range" min="0" max="100" data-k="rain"></label>
+  <label class="sl">❄️ Snow <input type="range" min="0" max="100" data-k="snow"></label>
+  <label class="sl">☁️ Clouds <input type="range" min="0" max="100" data-k="clouds"></label>
+  <label class="sl">🌫️ Fog <input type="range" min="0" max="100" data-k="fog"></label>
+  <label class="sl">🍃 Wind <input type="range" min="0" max="100" data-k="wind"></label>
+  <label class="chk"><input type="checkbox" id="lightning"> ⚡ Lightning &amp; thunder</label>
+</div>
+
+<!-- live map controls -->
+<div id="mapbar" class="hud card">
+  <button id="back">← Back to lobby</button>
+  <form id="goto">
+    <input class="num" id="gx" placeholder="X" inputmode="numeric">
+    <input class="num" id="gz" placeholder="Z" inputmode="numeric">
+    <button class="ghost">Go</button>
+  </form>
+  <div id="searchWrap">
+    <form id="search"><input id="q" placeholder="Search places…" autocomplete="off" size="16"><button class="ghost">🔍</button></form>
+    <div id="results" class="card"></div>
+  </div>
+  <button class="ghost" id="spawn">Spawn</button>
+</div>
+
+<div id="chalkEditor" class="app-overlay chalk-overlay">
+  <div class="chalk-window card">
+    <div class="chalk-head">
+      <div><span>COMMUNITY BOARD</span><b>Leave a mark in the guild hall</b></div>
+      <div class="chalk-tools" aria-label="Chalk tools">
+        <button class="chalk white on" data-chalk="#f2efe4" data-width="8" title="White chalk"></button>
+        <button class="chalk gold" data-chalk="#ffd27a" data-width="8" title="Gold chalk"></button>
+        <button class="chalk green" data-chalk="#a8f0b4" data-width="8" title="Green chalk"></button>
+        <button class="chalk blue" data-chalk="#8fd3ff" data-width="8" title="Blue chalk"></button>
+        <button class="chalk red" data-chalk="#ff9b9b" data-width="8" title="Red chalk"></button>
+        <button class="eraser" data-chalk="#23372c" data-width="34" title="Eraser">Eraser</button>
+        <button class="ghost" id="chalkClear">Clear board</button>
+        <button id="chalkClose">Done</button>
+      </div>
+    </div>
+    <canvas id="chalkCanvas" aria-label="Shared drawing canvas"></canvas>
+  </div>
+</div>
+
+<div id="wikiOverlay" class="app-overlay wiki-overlay" aria-label="PVC Wiki reader">
+  <section class="wiki-window">
+    <header class="wiki-toolbar">
+      <div><span>PVC ARCHIVES</span><b>Peaceful Vanilla Club Wiki</b></div>
+      <button id="wikiClose" type="button">Close ×</button>
+    </header>
+    <div id="wikiViewport" class="wiki-viewport">
+      <div class="wiki-loading"><i>✦</i><b>Opening the archives…</b><span>Loading the official PVC Wiki</span></div>
+      <iframe id="wikiFrame" title="Peaceful Vanilla Club Wiki" sandbox="allow-scripts allow-forms allow-popups" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </section>
+</div>
+
+<div id="keypadOverlay" class="app-overlay security-overlay" aria-label="Bunker access keypad">
+  <div class="keypad-shell">
+    <div class="keypad-head"><span>SECURE ACCESS</span><b>VAULT B-07</b></div>
+    <div id="keypadDisplay" class="keypad-display">••••</div>
+    <div class="keypad-grid">
+      <button data-digit="1">1</button><button data-digit="2">2</button><button data-digit="3">3</button>
+      <button data-digit="4">4</button><button data-digit="5">5</button><button data-digit="6">6</button>
+      <button data-digit="7">7</button><button data-digit="8">8</button><button data-digit="9">9</button>
+      <button id="keypadClear" class="keypad-alt">CLR</button><button data-digit="0">0</button><button id="keypadClose" class="keypad-alt">EXIT</button>
+    </div>
+    <div class="keypad-state"><i></i><span>ENTER FOUR-DIGIT CLEARANCE</span></div>
+  </div>
+</div>
+
+<div id="terminalOverlay" class="app-overlay terminal-overlay" aria-label="Orbital cannon terminal">
+  <div class="terminal-shell">
+    <div class="terminal-top"><span>██ PVC ORBITAL DEFENSE NETWORK</span><button id="terminalClose" type="button">ESC / CLOSE</button></div>
+    <div class="terminal-body">
+      <aside><small>PLATFORM</small><b>ODN-07</b><small>ORBIT</small><b>410 KM</b><small>LINK</small><b class="green">SECURE</b></aside>
+      <main><div class="terminal-reticle"><i></i><i></i><i></i></div><h2>ORBITAL CANNON</h2><p id="terminalLog">AWAITING AUTHORIZED COMMAND</p><button id="orbitalActivate" type="button">ACTIVATE ORBITAL CANNON</button></main>
+    </div>
+    <div class="terminal-ticker">WARNING: COMMAND EVENT WILL BE BROADCAST TO ALL CONNECTED PVC OPERATORS</div>
+  </div>
+</div>
+
+<div id="orbitalAlert" role="alert">
+  <div class="orbital-mark">◉</div><div><small>GLOBAL DEFENSE EVENT</small><b>ORBITAL CANNON ACTIVATED</b><span id="orbitalBy">PVC DEFENSE NETWORK</span></div>
+</div>
+
+<!-- join screen -->
+<div id="login" class="overlay">
+  <div class="card login-card">
+    <canvas id="loginHead" width="64" height="64"></canvas>
+    <p class="hub-kicker">PVC HUB · MULTIPLAYER LOBBY</p>
+    <h2>Enter the guild hall</h2>
+    <form id="loginForm">
+      <input id="nick" placeholder="Minecraft nickname" maxlength="16" autocomplete="off" spellcheck="false" autofocus>
+      <button>Join</button>
+    </form>
+    <button class="link" id="guest">Play as guest</button>
+    <a class="legacy-link" href="../legacy.html">Legacy shop interface →</a>
+    <small id="netStatus">Connecting to PVC Hub…</small>
+    <small id="loginMsg"></small>
+  </div>
+</div>
+
+<div id="loading"><div class="hub-loader"><b>PVC HUB</b><span>opening the guild hall</span><i></i></div></div>
+<script>
+  if (location.protocol === 'file:') document.getElementById('loading').textContent = 'Open this through a web server — see README.md';
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
