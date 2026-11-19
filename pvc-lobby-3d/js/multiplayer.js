@@ -57,6 +57,10 @@ function applyShared(shared = {}) {
   if (shared.weather) setGlobalWeather(shared.weather);
   if (shared.mapView) S.mapScreen?.applyShared(shared.mapView);
   if (shared.jukebox) audioFX.applyJukebox(shared.jukebox);
+  else if (typeof shared.jukeboxPlaying === 'boolean') {
+    // Compatibility with the previous VPS protocol until every node is upgraded.
+    audioFX.applyJukebox({ playing: shared.jukeboxPlaying, track: 0, startedAt: Date.now() });
+  }
 }
 
 function updateCount() {
