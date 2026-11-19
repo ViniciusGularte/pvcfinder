@@ -1,18 +1,16 @@
-// All sound is generated live with the Web Audio API: lo-fi music, ambience and small effects.
+// The radio plays a shared music file; ambience and small effects use the Web Audio API.
 import { $, rnd, store } from './util.js';
 import { S } from './core.js';
 
 const TRACKS = [
-  { name: 'Fireside',     bpm: 74, chords: [{ b: 38, n: [53, 57, 60, 64] }, { b: 43, n: [53, 59, 64, 69] }, { b: 36, n: [52, 55, 59, 62] }, { b: 45, n: [55, 60, 64, 71] }], scale: [62, 64, 65, 67, 69, 72, 74, 76, 77, 79] },
-  { name: 'Rain Outside', bpm: 68, chords: [{ b: 41, n: [57, 60, 64, 67] }, { b: 40, n: [55, 59, 62, 66] }, { b: 38, n: [53, 57, 60, 64] }, { b: 36, n: [52, 55, 59, 62] }], scale: [64, 67, 69, 71, 72, 74, 76, 79, 81, 83] },
-  { name: 'Starry Night', bpm: 64, chords: [{ b: 39, n: [55, 58, 62, 65] }, { b: 36, n: [51, 55, 58, 62] }, { b: 44, n: [58, 60, 63, 67] }, { b: 46, n: [56, 62, 67, 70] }], scale: [63, 65, 67, 70, 72, 75, 77, 79, 82, 84] },
-  { name: 'Library',      bpm: 70, chords: [{ b: 45, n: [55, 60, 64, 67] }, { b: 41, n: [57, 60, 64, 67] }, { b: 43, n: [55, 59, 62, 65] }, { b: 40, n: [55, 59, 62, 67] }], scale: [64, 67, 69, 72, 74, 76, 79, 81, 84, 86] },
+  { name: 'Best Morning', url: '/assets/Upbeat%20Rock%20Positive%20by%20Infraction%20%5BNo%20Copyright%20Music%5D%20%20Best%20Morning.mp3' },
 ];
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const saved = store.get();
 const MUSIC_LEVEL = .62;
 
 let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, rainG, patterG, windG, windF, wn, bn, wow;
+let radioAudio = null;
 // The radio/track is global. Ambience remains a local preference per browser.
 let playing = false, track = 0, ambOn = saved.amb === true;
 let jukebox = { playing: false, track: 0, startedAt: null };
@@ -53,6 +51,8 @@ function init() {
   // music chain
   musicGain = gain(0); musicGain.connect(master);
   analyser = ctx.createAnalyser(); analyser.fftSize = 256; musicGain.connect(analyser);
+  radioAudio = new Audio(TRACKS[0].url); radioAudio.preload = 'auto'; radioAudio.loop = true;
+  ctx.createMediaElementSource(radioAudio).connect(musicGain);
   const lofi = filt('lowpass', 3200, .5); lofi.connect(musicGain);
   musicIn = gain(1); musicIn.connect(lofi);
   const trem = gain(.9); trem.connect(musicIn);
@@ -127,6 +127,7 @@ function scheduleStep(st, t) {
 function scheduler() {
   if (!ctx || !playing) return;
   const tr = TRACKS[track];
+  if (tr.url) return;
   while (nextTime < ctx.currentTime + .15) {
     scheduleStep(step, nextTime);
     nextTime += 60 / tr.bpm / 4;
@@ -140,8 +141,20 @@ function ui() {
 
 function beginPlayback(startedAt) {
   if (!ctx) return;
-  const spb = 60 / TRACKS[track].bpm / 4;
+  const tr = TRACKS[track];
   const elapsed = Math.max(0, (Date.now() - (Number(startedAt) || Date.now())) / 1000);
+  if (tr.url && radioAudio) {
+    if (radioAudio.src !== new URL(tr.url, location.href).href) radioAudio.src = tr.url;
+    const startMedia = () => {
+      if (Number.isFinite(radioAudio.duration) && radioAudio.duration > 0) radioAudio.currentTime = elapsed % radioAudio.duration;
+      radioAudio.play().catch(() => {});
+    };
+    if (radioAudio.readyState >= 1) startMedia();
+    else radioAudio.addEventListener('loadedmetadata', startMedia, { once: true });
+    musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(MUSIC_LEVEL, ctx.currentTime, .35);
+    return;
+  }
+  const spb = 60 / TRACKS[track].bpm / 4;
   const totalSteps = Math.floor(elapsed / spb);
   step = totalSteps % 16; bar = Math.floor(totalSteps / 16);
   nextTime = ctx.currentTime + Math.max(.025, spb - elapsed % spb);
@@ -151,6 +164,7 @@ function beginPlayback(startedAt) {
 
 function stopPlayback() {
   if (!ctx) return;
+  radioAudio?.pause();
   musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(0, ctx.currentTime, .25);
 }
 
