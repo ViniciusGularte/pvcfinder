@@ -6,10 +6,16 @@ const TRACKS = [
   { name: "Day · No, I'm Not a Human", url: '/assets/Day%20-%20No%2C%20I%27m%20Not%20a%20Human%20OST%20-%20megaOmega.mp3' },
 ];
 const SLENDER_ROAR_URL = '/assets/SCP-682%20Roar%20-%20SCP-682.mp3';
+const SLENDER_ROAR_RANGE = 48;
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const saved = store.get();
 const MUSIC_LEVEL = .62;
 const clampVolume = value => Math.max(0, Math.min(1, Number(value) || 0));
+const slenderRoarLevel = (distance, indoors) => {
+  if (!Number.isFinite(distance) || distance >= SLENDER_ROAR_RANGE) return 0;
+  const proximity = Math.max(0, Math.min(1, (SLENDER_ROAR_RANGE - distance) / (SLENDER_ROAR_RANGE - 4)));
+  return Math.pow(proximity, 1.65) * .9 * (indoors ? .28 : 1);
+};
 
 let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, rainG, patterG, windG, windF, wn, bn, wow;
 let radioAudio = null, slenderRoarAudio = null, slenderRoarGain = null;
@@ -262,12 +268,18 @@ export const audioFX = {
   },
   playSlenderRoar(distance, indoors = false) {
     if (!ctx || !slenderRoarAudio || masterMuted || masterVolume === 0) return;
-    const proximity = Number.isFinite(distance) ? Math.max(0, Math.min(1, (72 - distance) / 64)) : 0;
-    const level = indoors ? .16 : .28 + proximity * .62;
+    const level = slenderRoarLevel(distance, indoors);
+    if (level <= 0) return;
     slenderRoarGain.gain.cancelScheduledValues(ctx.currentTime);
     slenderRoarGain.gain.setValueAtTime(level, ctx.currentTime);
     slenderRoarAudio.pause(); slenderRoarAudio.currentTime = 0;
     slenderRoarAudio.play().catch(() => {});
+  },
+  updateSlenderRoar(distance, indoors = false) {
+    if (!ctx || !slenderRoarAudio || slenderRoarAudio.paused) return;
+    const level = slenderRoarLevel(distance, indoors);
+    slenderRoarGain.gain.value = level;
+    if (level <= 0) { slenderRoarAudio.pause(); slenderRoarAudio.currentTime = 0; }
   },
   thunder(delaySec, close) {
     if (!ctx || masterMuted || masterVolume === 0) return;

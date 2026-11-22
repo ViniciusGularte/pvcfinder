@@ -172,6 +172,7 @@ export function initNPC() {
       (player.pos.x > HOME.minX && player.pos.x < HOME.maxX && player.pos.z > HOME.minZ && player.pos.z < HOME.maxZ);
     const distance = player ? Math.hypot(player.pos.x - avatar.root.position.x, player.pos.z - avatar.root.position.z) : 99;
     audioFX.updateSlenderFootsteps(distance, !indoors && avatar.root.visible && state.moving);
+    audioFX.updateSlenderRoar(distance, indoors);
   });
 
   S.npc = { apply, onGameOver, onRoar, avatar, state };
