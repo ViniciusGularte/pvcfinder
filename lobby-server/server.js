@@ -544,6 +544,7 @@ app.get(route("/skin/:name"), async (req, res) => {
     res.set({
       "Content-Type": "image/png",
       "Cache-Control": "public, max-age=1800, stale-while-revalidate=21600",
+      "Access-Control-Allow-Origin": "*",
       "X-Skin-Source": skin.source,
     });
     return res.send(skin.buf);

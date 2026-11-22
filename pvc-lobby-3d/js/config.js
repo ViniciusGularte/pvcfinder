@@ -12,16 +12,18 @@ export const SCREEN = { x: -5, y: 2.2, w: 5.6, h: 3.15, px: 1600 };  // live map
 export const WIN = { z: 3, y: 2.35, w: 3.4, h: 2.2 };                // window on the right wall (x = +12)
 export const SPAWN = { x: 0, z: 5, yaw: Math.PI };
 
+const LOCAL_LOBBY = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
+export const LOBBY_WS = LOCAL_LOBBY
+  ? 'ws://127.0.0.1:8081/lobby/ws'
+  : 'wss://api.theyasked.co/lobby/ws';
+export const LOBBY_HTTP = LOBBY_WS.replace(/^ws/, 'http').replace(/\/ws$/, '');
+export const WIKI_READER = `${LOBBY_HTTP}/wiki`;
+
 // Skin sources, tried in order. All of them send CORS headers so the image can be used as a texture.
 export const SKIN_SOURCES = [
-  (nick, uuid) => uuid ? `https://crafatar.com/skins/${uuid}` : null,
+  (nick) => `${LOBBY_HTTP}/skin/${encodeURIComponent(nick)}`,
   (nick) => `https://mc-heads.net/skin/${encodeURIComponent(nick)}`,
   (nick) => `https://minotar.net/skin/${encodeURIComponent(nick)}`,
 ];
 
 export const BOARD_REFRESH_MS = 60_000;   // server status board: once a minute is plenty
-
-export const LOBBY_WS = location.hostname === '127.0.0.1' || location.hostname === 'localhost'
-  ? 'ws://127.0.0.1:8081/lobby/ws'
-  : 'wss://api.theyasked.co/lobby/ws';
-export const WIKI_READER = `${LOBBY_WS.replace(/^ws/, 'http').replace(/\/ws$/, '')}/wiki`;

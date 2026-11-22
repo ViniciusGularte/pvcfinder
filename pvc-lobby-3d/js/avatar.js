@@ -1,6 +1,6 @@
 // Minecraft-style player model built from a 64×64 skin (classic or slim arms, with overlay layers).
 import * as THREE from 'three';
-import { API, SKIN_SOURCES } from './config.js';
+import { SKIN_SOURCES } from './config.js';
 
 export const PX = 1.8 / 32;   // one skin pixel in metres (player is 32px = 1.8m tall)
 export const HIP = 12 * PX;
@@ -52,13 +52,8 @@ export function prepareSkin(img) {
 }
 
 async function fetchSkinUncached(nick) {
-  let uuid = null;
-  try {
-    const r = await fetch(`${API}/api/v1/uuidFromName/${encodeURIComponent(nick)}`);
-    if (r.ok) uuid = (await r.json())?.uuid?.replace(/-/g, '') || null;
-  } catch {}
   for (const src of SKIN_SOURCES) {
-    const url = src(nick, uuid); if (!url) continue;
+    const url = src(nick); if (!url) continue;
     try {
       const img = await loadImage(url);
       if (img.width === 64 && (img.height === 64 || img.height === 32)) return { ...prepareSkin(img), source: new URL(url).hostname };
