@@ -1,7 +1,6 @@
-import * as THREE from 'three';
 import { S } from './core.js';
 import { createAvatar, defaultSkin, fetchSkin } from './avatar.js';
-import { audioFX, sfx } from './audio.js';
+import { audioFX } from './audio.js';
 import { $, toast, V } from './util.js';
 
 const HOME = { minX: -13.5, maxX: 13.5, minZ: -13.5, maxZ: 13.5 };
@@ -14,8 +13,7 @@ export function initNPC() {
   avatar.root.visible = false; S.scene.add(avatar.root);
   const target = V(62, 0, -8);
   const state = { target, yaw: Math.PI, targetYaw: Math.PI, moving: false, mode: 'hidden', revision: -1, ready: false };
-  const fx = $('slenderFX'), gameOver = $('gameOver'), respawn = $('respawnBtn');
-  let threat = 0, sentThreat = -1, nextAudioUpdate = 0;
+  const gameOver = $('gameOver'), respawn = $('respawnBtn');
 
   fetchSkin('Slender').then(skin => { if (skin) avatar.setSkin(skin); });
 
@@ -36,12 +34,13 @@ export function initNPC() {
   function onGameOver(message) {
     if (message.playerId !== S.netId) return;
     S.mode = 'gameover'; gameOver?.classList.add('open');
-    fx?.classList.add('impact'); sfx.slenderHit();
-    setTimeout(() => fx?.classList.remove('impact'), 700);
   }
 
   function onEvent(message) {
-    if (message.event === 'team-repel') {
+    if (message.event === 'repelled') {
+      if (message.sourceId === S.netId) toast('🔦 Slender vanished into the forest. Stay together — he will return.', 3800);
+      else toast('🔦 Someone drove Slender back. He will return from another direction.', 3400);
+    } else if (message.event === 'team-repel') {
       toast('⚡ Crossfire! Your team drove Slender away for a few seconds.', 3600);
     } else if (message.event === 'target-switch') {
       if (message.targetId === S.netId) toast('⚠ Something moved behind you — your team must cover you!', 3800);
@@ -69,15 +68,7 @@ export function initNPC() {
     const indoors = !player || player.pos.y < -.45 ||
       (player.pos.x > HOME.minX && player.pos.x < HOME.maxX && player.pos.z > HOME.minZ && player.pos.z < HOME.maxZ);
     const distance = player ? Math.hypot(player.pos.x - avatar.root.position.x, player.pos.z - avatar.root.position.z) : 99;
-    const wanted = !indoors && avatar.root.visible ? THREE.MathUtils.clamp((32 - distance) / 27, 0, 1) : 0;
-    threat += (wanted - threat) * (1 - Math.exp(-dt * (wanted > threat ? 7 : 3)));
-    if (fx) {
-      fx.style.setProperty('--threat', threat.toFixed(3));
-      fx.classList.toggle('near', threat > .38);
-    }
-    if (t >= nextAudioUpdate || Math.abs(threat - sentThreat) > .08) {
-      audioFX.setSlenderThreat(threat); sentThreat = threat; nextAudioUpdate = t + .1;
-    }
+    audioFX.updateSlenderFootsteps(distance, !indoors && avatar.root.visible && state.moving);
   });
 
   S.npc = { apply, onGameOver, onEvent, avatar, state };

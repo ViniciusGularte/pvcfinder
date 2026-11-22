@@ -21,7 +21,7 @@ const cfg = {
   mapUrl: env.MAP_URL || "https://web.peacefulvanilla.club/maps/",
   skinUrl: env.SKIN_URL || `${cleanBase ? `/${cleanBase}` : ""}/skin/`,
   shopUrl: env.SHOP_URL || "https://pvcstorefinder.vercel.app/",
-  frontendUrl: env.FRONTEND_URL || "https://pvcstorefinder.vercel.app/lobby/",
+  frontendUrl: env.FRONTEND_URL || "https://pvcstorefinder.vercel.app/pvc-lobby-3d/",
   boardFile: path.resolve(env.BOARD_FILE || "./data/chalkboard.json"),
   squaremapUrl: String(env.SQUAREMAP_URL || "https://web.peacefulvanilla.club/maps/").replace(/\/+$/, ""),
   publicMapApi: env.PUBLIC_MAP_API || "https://api.theyasked.co/lobby/api/map",
@@ -451,68 +451,36 @@ setInterval(() => {
   }
 
   let target = eligible.find((player) => player.id === npc.preferredTargetId) || chooseTarget(eligible);
-  npc.targetId = target?.id || null;
-  if (npc.ambushAt && now >= npc.ambushAt) {
-    target = eligible.find((player) => player.id === npc.preferredTargetId) || chooseTarget(eligible);
-    const point = chooseAmbushPoint(target, eligible, 7.5, 12);
-    teleportNpc(point, target, now, 750, "ambushing");
-    npc.targetId = target.id; npc.preferredTargetId = target.id; npc.ambushAt = 0;
-    npc.nextShiftAt = now + Math.max(3800, 8200 - npc.aggression * 800); return;
+  if (!target) return;
+  const targetChanged = target.id !== npc.targetId;
+  npc.targetId = target.id; npc.preferredTargetId = target.id;
+  let targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
+
+  // Every hunt starts out in the forest, outside the group's view. From there Slender
+  // stays visible and runs instead of repeatedly teleporting while being watched.
+  if (targetChanged) {
+    const point = chooseAmbushPoint(target, eligible, 25, 38);
+    teleportNpc(point, target, now, 900, "spawning");
+    npc.targetId = target.id; npc.preferredTargetId = target.id;
+    return;
   }
 
   const illuminators = eligible.filter(lightsNpc);
   npc.beamCount = illuminators.length;
   if (illuminators.length) {
     const source = illuminators[0];
-    if (illuminators.length >= 2) {
-      npc.aggression = Math.max(1, npc.aggression - 1.15);
-      const point = chooseShiftPoint(source, 34);
-      const nextTarget = chooseTarget(eligible, source.id) || source;
-      teleportNpc(point, nextTarget, now, 3000, "overloaded");
-      npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id;
-      npc.ambushAt = now + 7500; npc.nextShiftAt = now + 10_000;
-      broadcast({ type: "npc-event", event: "team-repel", aggression: npc.aggression, beamCount: illuminators.length });
-    } else {
-      npc.aggression = Math.min(5, npc.aggression + .55);
-      const nextTarget = chooseTarget(eligible, source.id);
-      if (nextTarget && nextTarget.id !== source.id) {
-        const point = chooseAmbushPoint(nextTarget, eligible, 9, 15);
-        teleportNpc(point, nextTarget, now, 1100, "switching");
-        npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id; npc.ambushAt = 0;
-        npc.nextShiftAt = now + Math.max(3600, 7800 - npc.aggression * 700);
-        broadcast({ type: "npc-event", event: "target-switch", fromId: source.id, targetId: nextTarget.id, aggression: npc.aggression });
-      } else {
-        const point = chooseShiftPoint(source, 28);
-        teleportNpc(point, source, now, 1500, "banished");
-        npc.preferredTargetId = source.id; npc.targetId = source.id;
-        npc.ambushAt = now + 3000 + Math.random() * 2200;
-      }
-    }
+    const nextTarget = chooseTarget(eligible, source.id) || source;
+    const point = chooseAmbushPoint(nextTarget, eligible, 28, 41);
+    npc.aggression = Math.min(5, npc.aggression + (illuminators.length >= 2 ? .15 : .35));
+    teleportNpc(point, nextTarget, now, illuminators.length >= 2 ? 5200 : 3800, "banished");
+    npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id;
+    broadcast({ type: "npc-event", event: "repelled", sourceId: source.id, targetId: nextTarget.id, aggression: npc.aggression });
     return;
   }
 
-  const targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
-  const observers = eligible.filter((player) => seesPoint(player, npc.x, npc.z, .5, 42));
-  if (observers.length) {
-    if (!npc.observedSince) npc.observedSince = now;
-    npc.state = "watching"; npc.moving = false;
-    if (now - npc.observedSince > Math.max(850, 2100 - npc.aggression * 230)) {
-      const nextTarget = chooseTarget(eligible, observers[0].id) || target;
-      const point = chooseAmbushPoint(nextTarget, eligible, 7.5, 13);
-      teleportNpc(point, nextTarget, now, 650, "flanking");
-      npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id; npc.observedSince = 0;
-      npc.nextShiftAt = now + Math.max(3200, 7000 - npc.aggression * 650);
-    }
-    return;
-  }
-  npc.observedSince = 0;
-  if (now >= npc.nextShiftAt && targetDistance > 8) {
-    const point = chooseAmbushPoint(target, eligible, 7, 12.5);
-    teleportNpc(point, target, now, 650, "flanking");
-    npc.nextShiftAt = now + Math.max(3500, 8200 - npc.aggression * 750); return;
-  }
-  npc.state = "stalking";
-  const speed = targetDistance < 5 ? 2.05 + npc.aggression * .16 : 1.3 + npc.aggression * .13;
+  targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
+  npc.state = "hunting";
+  const speed = targetDistance < 7 ? 4.15 + npc.aggression * .1 : 3.35 + npc.aggression * .16;
   moveNpc(target.x - npc.x, target.z - npc.z, speed, dt);
   if (Math.hypot(target.x - npc.x, target.z - npc.z) < .85) {
     target.deadUntil = now + 10_000;

@@ -10,7 +10,7 @@ const saved = store.get();
 const MUSIC_LEVEL = .62;
 const clampVolume = value => Math.max(0, Math.min(1, Number(value) || 0));
 
-let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, slenderBus, rainG, patterG, windG, windF, wn, bn, wow;
+let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, rainG, patterG, windG, windF, wn, bn, wow;
 let radioAudio = null;
 // The radio/track is global. Master volume and mute remain personal to this browser.
 let playing = false, track = 0;
@@ -18,8 +18,8 @@ let masterVolume = Number.isFinite(Number(saved.masterVolume)) ? clampVolume(sav
 let masterMuted = saved.masterMuted === true || masterVolume === 0;
 let lastAudibleVolume = masterVolume > 0 ? masterVolume : .85;
 let jukebox = { playing: false, track: 0, startedAt: null };
-let slenderThreat = 0;
 let step = 0, bar = 0, nextTime = 0;
+let nextSlenderStep = 0, slenderFoot = 0;
 const lvlBuf = new Uint8Array(256);
 
 addEventListener('visibilitychange', () => {
@@ -76,12 +76,9 @@ function init() {
   const fc = filt('bandpass', 1350, 1.2); loop(crackleBuffer(6, .00012, .75), fc); const fcg = gain(.22); fc.connect(fcg); fcg.connect(fireG);
 
   sfxBus = gain(.8); sfxBus.connect(master);
-  // A low-frequency warning only; avoid white-noise/static effects around Slender.
-  slenderBus = gain(slenderThreat * .5); slenderBus.connect(master);
-  const slenderHum = ctx.createOscillator(); slenderHum.type = 'sawtooth'; slenderHum.frequency.value = 46;
-  const slenderHumFilter = filt('lowpass', 125, 1.8), slenderHumGain = gain(.045);
-  slenderHum.connect(slenderHumFilter); slenderHumFilter.connect(slenderHumGain); slenderHumGain.connect(slenderBus); slenderHum.start();
-  setInterval(scheduler, 25);
+  // The current radio uses a media file. Do not keep a 40 Hz synthesizer timer alive
+  // unless a future track actually needs the procedural scheduler.
+  if (TRACKS.some(track => !track.url)) setInterval(scheduler, 25);
   if (playing) beginPlayback(jukebox.startedAt);
   ui();
 }
@@ -236,12 +233,34 @@ export const audioFX = {
     patterG.gain.setTargetAtTime(c.rain * .05, t, .5);
     windG.gain.setTargetAtTime(c.wind * .22 + c.rain * .03, t, .6);
   },
-  setSlenderThreat(value) {
-    slenderThreat = Math.max(0, Math.min(1, Number(value) || 0));
-    if (slenderBus) {
-      slenderBus.gain.cancelScheduledValues(ctx.currentTime);
-      slenderBus.gain.setTargetAtTime(slenderThreat * .52, ctx.currentTime, .08);
+  updateSlenderFootsteps(distance, moving) {
+    if (!ctx || !moving || masterMuted || masterVolume === 0 || !Number.isFinite(distance) || distance > 36) {
+      nextSlenderStep = 0;
+      return;
     }
+    const t = ctx.currentTime;
+    if (nextSlenderStep && t < nextSlenderStep) return;
+    const proximity = Math.max(0, Math.min(1, (36 - distance) / 32));
+    const peak = .035 + proximity * proximity * .42;
+    const cadence = .48 - proximity * .16;
+    const foot = slenderFoot++ % 2;
+    const thud = ctx.createOscillator(), thudGain = gain(0);
+    thud.type = 'triangle';
+    thud.frequency.setValueAtTime(78 + foot * 7, t);
+    thud.frequency.exponentialRampToValueAtTime(38, t + .16);
+    env(thudGain, t, .004, peak, .21);
+    thud.connect(thudGain); thudGain.connect(sfxBus);
+    thud.onended = () => { thud.disconnect(); thudGain.disconnect(); };
+    thud.start(t); thud.stop(t + .24);
+    // A quieter heel impact makes the step readable without static or continuous noise.
+    const heel = ctx.createOscillator(), heelGain = gain(0);
+    heel.type = 'sine'; heel.frequency.setValueAtTime(118, t + .055);
+    heel.frequency.exponentialRampToValueAtTime(62, t + .13);
+    env(heelGain, t + .055, .003, peak * .38, .12);
+    heel.connect(heelGain); heelGain.connect(sfxBus);
+    heel.onended = () => { heel.disconnect(); heelGain.disconnect(); };
+    heel.start(t + .055); heel.stop(t + .19);
+    nextSlenderStep = t + cadence;
   },
   thunder(delaySec, close) {
     if (!ctx || masterMuted || masterVolume === 0) return;
@@ -295,8 +314,4 @@ export const sfx = {
     s.connect(f); f.connect(am); am.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + dur + .5); lfo.start(t); lfo.stop(t + dur + .5); },
   meow() { if (!ctx) return; const t = now(); const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(600, t); o.frequency.linearRampToValueAtTime(900, t + .15); o.frequency.linearRampToValueAtTime(500, t + .45);
     const f = filt('bandpass', 1400, 3), g = gain(0); env(g, t, .05, .2, .5); o.connect(f); f.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + .55); },
-  slenderHit() {
-    init(); const t = now();
-    tone(86, t, 1.15, .42, 'sawtooth', 31); tone(920, t + .06, .42, .16, 'square', 120);
-  },
 };

@@ -9,11 +9,30 @@ export const HIP = 12 * PX;
 function loadImage(url, ms = 8000) {
   return new Promise((res, rej) => {
     const img = new Image(); img.crossOrigin = 'anonymous';
-    const timer = setTimeout(() => rej(new Error('timeout')), ms);
-    img.onload = () => { clearTimeout(timer); res(img); };
-    img.onerror = () => { clearTimeout(timer); rej(new Error('load failed')); };
+    let settled = false;
+    const finish = (error) => {
+      if (settled) return;
+      settled = true; clearTimeout(timer); img.onload = null; img.onerror = null;
+      if (error) rej(error); else res(img);
+    };
+    const timer = setTimeout(() => finish(new Error('timeout')), ms);
+    img.onload = () => finish();
+    img.onerror = () => finish(new Error('load failed'));
     img.src = url;
   });
+}
+
+// Multiplayer reconnects used to download and decode the same skin each time. Keep a
+// small bounded cache and share concurrent requests; avatar textures themselves remain
+// independent and are disposed when a player leaves.
+const SKIN_CACHE_LIMIT = 24;
+const skinCache = new Map();
+const skinRequests = new Map();
+function rememberSkin(key, skin) {
+  if (skinCache.has(key)) skinCache.delete(key);
+  skinCache.set(key, skin);
+  while (skinCache.size > SKIN_CACHE_LIMIT) skinCache.delete(skinCache.keys().next().value);
+  return skin;
 }
 
 // Normalises any skin image into a 64×64 canvas and detects slim (Alex) arms.
@@ -32,7 +51,7 @@ export function prepareSkin(img) {
   return { canvas: c, slim };
 }
 
-export async function fetchSkin(nick) {
+async function fetchSkinUncached(nick) {
   let uuid = null;
   try {
     const r = await fetch(`${API}/api/v1/uuidFromName/${encodeURIComponent(nick)}`);
@@ -46,6 +65,21 @@ export async function fetchSkin(nick) {
     } catch {}
   }
   return null;
+}
+
+export function fetchSkin(nick) {
+  const key = String(nick || '').trim().toLowerCase();
+  if (skinCache.has(key)) {
+    const skin = skinCache.get(key);
+    skinCache.delete(key); skinCache.set(key, skin);
+    return Promise.resolve(skin);
+  }
+  if (skinRequests.has(key)) return skinRequests.get(key);
+  const request = fetchSkinUncached(nick)
+    .then(skin => rememberSkin(key, skin))
+    .finally(() => skinRequests.delete(key));
+  skinRequests.set(key, request);
+  return request;
 }
 
 // An original default look (hoodie + jeans) for guests or when no skin is found.

@@ -208,13 +208,6 @@ form { display: flex; gap: 6px; align-items: center; margin: 0; }
 .terminal-overlay.denied .keypad-display { color: #ff4559; border-color: #ff4559; }
 .terminal-overlay.denied .keypad-state span { color: #ff6678; }
 
-/* Local-only threat feedback. The NPC state itself comes from the lobby server. */
-#slenderFX { --threat: 0; position: fixed; inset: 0; z-index: 18; pointer-events: none; opacity: calc(var(--threat) * .62); background: radial-gradient(circle at center, transparent 24%, rgba(0,0,0,.5) 72%, #000 100%), repeating-linear-gradient(0deg, transparent 0 3px, rgba(230,240,255,.13) 3px 4px); mix-blend-mode: screen; }
-#slenderFX::after { content: ''; position: absolute; inset: -8%; opacity: calc(var(--threat) * .62); background: repeating-radial-gradient(ellipse at 53% 47%, rgba(255,255,255,.13) 0 1px, transparent 1px 4px); filter: contrast(2.4); }
-#slenderFX.near::after { animation: slenderStatic .15s steps(2,end) infinite; }
-#slenderFX.impact { opacity: .95; animation: slenderImpact .7s steps(4,end) both; }
-@keyframes slenderStatic { 50% { transform: translate(1.2%,-.8%) scale(1.03); } }
-@keyframes slenderImpact { 0%,35% { filter: invert(1) contrast(4); transform: scale(1.04); } 65% { filter: contrast(3); } 100% { opacity: 0; } }
 .game-over { position: fixed; inset: 0; z-index: 75; display: none; place-items: center; padding: 24px; background: rgba(0,0,0,.92); color: #eee; }
 .game-over.open { display: grid; }
 .game-over-card { width: min(560px,100%); padding: 42px 30px; border: 1px solid #8d1f27; background: #080606; text-align: center; box-shadow: 0 0 80px rgba(165,20,32,.22), inset 0 0 70px rgba(120,10,20,.08); font-family: ui-monospace, monospace; }
@@ -223,10 +216,6 @@ form { display: flex; gap: 6px; align-items: center; margin: 0; }
 .game-over-card p { max-width: 430px; margin: 20px auto 28px; color: #a9a3a3; line-height: 1.6; }
 .game-over-card button { border: 1px solid #a42a34; border-radius: 0; background: transparent; color: #eee; letter-spacing: .08em; }
 .game-over-card button:hover { background: #8e1822; }
-
-@media (prefers-reduced-motion: reduce) {
-  #slenderFX.near::after, #slenderFX.impact { animation: none; }
-}
 
 .chalk-overlay { padding: 22px; }
 .chalk-window { width: min(1400px, 100%); height: min(900px, 100%); margin: auto; padding: 12px; display: grid; grid-template-rows: auto minmax(0, 1fr); background: rgba(30,18,11,.94); }

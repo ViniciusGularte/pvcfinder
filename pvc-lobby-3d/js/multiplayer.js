@@ -19,7 +19,7 @@ const send = message => {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
 };
 
-async function addRemote(player) {
+function addRemote(player) {
   if (!player?.id || player.id === S.netId || remotes.has(player.id)) return;
   const avatar = createAvatar({ shadows: false });
   avatar.setSkin(defaultSkin()); avatar.setName(player.name || 'Guest');
@@ -37,14 +37,21 @@ async function addRemote(player) {
     flashlight,
     emote: null,
     emoteUntil: 0,
+    skinTimer: null,
   };
   remotes.set(player.id, row);
-  const skin = await fetchSkin(player.skin || player.name);
-  if (skin && remotes.has(player.id)) avatar.setSkin(skin);
+  // Avoid launching expensive skin downloads for brief reconnects. This also caps
+  // transient Image/canvas allocations when a weak client sees connection churn.
+  row.skinTimer = setTimeout(async () => {
+    row.skinTimer = null;
+    const skin = await fetchSkin(player.skin || player.name);
+    if (skin && remotes.get(player.id) === row) avatar.setSkin(skin);
+  }, 800);
 }
 
 function removeRemote(id) {
   const row = remotes.get(id); if (!row) return;
+  clearTimeout(row.skinTimer);
   S.scene.remove(row.avatar.root); row.avatar.dispose(); remotes.delete(id);
 }
 
