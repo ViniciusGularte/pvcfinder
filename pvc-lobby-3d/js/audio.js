@@ -34,13 +34,6 @@ function noiseBuffer(sec, brown) {
   for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; if (brown) { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w; }
   return b;
 }
-function crackleBuffer(sec, rate, amp) {
-  const b = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate), d = b.getChannelData(0);
-  for (let i = 0; i < d.length; i++) {
-    if (Math.random() < rate) { const a = rnd(.3, 1) * amp * (Math.random() < .5 ? -1 : 1), len = Math.floor(rnd(8, 60)); for (let j = 0; j < len && i + j < d.length; j++) d[i + j] += a * Math.exp(-j / (len / 4)) * (Math.random() * 2 - 1); }
-  }
-  return b;
-}
 const loop = (buf, dest, offset = 0) => { const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.connect(dest); s.start(0, offset); return s; };
 const filt = (type, f, q = .7) => { const n = ctx.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; return n; };
 const gain = v => { const g = ctx.createGain(); g.gain.value = v; return g; };
@@ -72,8 +65,9 @@ function init() {
   patterG = gain(0); const pf = filt('bandpass', 2600, .6); loop(wn, pf, .5); pf.connect(patterG); patterG.connect(ambBus);
   windG = gain(0); windF = filt('bandpass', 500, 1.4); loop(wn, windF, 2); windF.connect(windG); windG.connect(ambBus);
   const wl = ctx.createOscillator(); wl.frequency.value = .08; const wlg = gain(260); wl.connect(wlg); wlg.connect(windF.frequency); wl.start();
-  const fireG = gain(.34); fireG.connect(ambBus);
-  const fc = filt('bandpass', 1350, 1.2); loop(crackleBuffer(6, .00012, .75), fc); const fcg = gain(.22); fc.connect(fcg); fcg.connect(fireG);
+  // Do not keep a noise buffer running for the fireplace. Even sparse synthetic
+  // crackles leave a low hiss after the first user gesture, regardless of distance.
+  // The fire still has its explicit stoke/whoosh interaction without idle noise.
 
   sfxBus = gain(.8); sfxBus.connect(master);
   // The current radio uses a media file. Do not keep a 40 Hz synthesizer timer alive
@@ -308,6 +302,12 @@ export const sfx = {
   whoosh() { if (!ctx) return; const t = now(); const s = ctx.createBufferSource(); s.buffer = wn; const f = filt('bandpass', 300, 1), g = gain(0);
     f.frequency.exponentialRampToValueAtTime(2500, t + .5); env(g, t, .15, .3, .8); s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + .9);
     for (let i = 0; i < 10; i++) hit(t + .2 + rnd(0, .8), 'highpass', 2000, .7, rnd(.1, .3), .03, sfxBus); },
+  // Short tonal collapse for Slender's banishment: eerie, but with no static/noise bed.
+  slenderVanish() { if (!ctx) return; const t = now();
+    tone(920, t, .36, .13, 'sine', 230);
+    tone(510, t + .035, .58, .16, 'triangle', 72);
+    tone(260, t + .08, .72, .18, 'sine', 42);
+    tone(1180, t + .02, .16, .07, 'sine', 680); },
   purr(dur = 2.5) { if (!ctx) return; const t = now(); const s = ctx.createBufferSource(); s.buffer = bn; const f = filt('lowpass', 380), g = gain(0), am = gain(0);
     const lfo = ctx.createOscillator(); lfo.frequency.value = 24; const lg = gain(.5); lfo.connect(lg); lg.connect(am.gain);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.7, t + .3); g.gain.setTargetAtTime(0, t + dur - .4, .2);

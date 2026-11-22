@@ -83,6 +83,17 @@ const SURFACE = { x: 30, z: 10, radius: 82 };
 const NPC_PATROL = [
   [31, -13], [48, -10], [69, 5], [62, 34], [35, 48], [4, 37], [-18, 24],
 ];
+const NPC_SPEED = {
+  far: 4.65,
+  close: 5.25,
+  aggressionFar: .14,
+  aggressionClose: .12,
+};
+const NPC_COOLDOWN = {
+  repelled: 10_000,
+  teamRepelled: 14_000,
+  fed: 8_000,
+};
 const npc = {
   id: "slender", name: "Slender", skin: "Slender", x: 62, y: 0, z: -8,
   yaw: Math.PI, moving: false, state: "wandering", targetId: null,
@@ -472,21 +483,29 @@ setInterval(() => {
     const nextTarget = chooseTarget(eligible, source.id) || source;
     const point = chooseAmbushPoint(nextTarget, eligible, 28, 41);
     npc.aggression = Math.min(5, npc.aggression + (illuminators.length >= 2 ? .15 : .35));
-    teleportNpc(point, nextTarget, now, illuminators.length >= 2 ? 5200 : 3800, "banished");
+    teleportNpc(point, nextTarget, now, illuminators.length >= 2 ? NPC_COOLDOWN.teamRepelled : NPC_COOLDOWN.repelled, "banished");
     npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id;
-    broadcast({ type: "npc-event", event: "repelled", sourceId: source.id, targetId: nextTarget.id, aggression: npc.aggression });
+    broadcast({
+      type: "npc-event",
+      event: illuminators.length >= 2 ? "team-repel" : "repelled",
+      sourceId: source.id,
+      targetId: nextTarget.id,
+      aggression: npc.aggression,
+    });
     return;
   }
 
   targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
   npc.state = "hunting";
-  const speed = targetDistance < 7 ? 4.15 + npc.aggression * .1 : 3.35 + npc.aggression * .16;
+  const speed = targetDistance < 7
+    ? NPC_SPEED.close + npc.aggression * NPC_SPEED.aggressionClose
+    : NPC_SPEED.far + npc.aggression * NPC_SPEED.aggressionFar;
   moveNpc(target.x - npc.x, target.z - npc.z, speed, dt);
   if (Math.hypot(target.x - npc.x, target.z - npc.z) < .85) {
     target.deadUntil = now + 10_000;
     broadcast({ type: "npc-game-over", playerId: target.id, name: target.name, ts: now });
     const point = chooseShiftPoint(target, 32);
-    teleportNpc(point, target, now, 4200, "fed");
+    teleportNpc(point, target, now, NPC_COOLDOWN.fed, "fed");
     npc.aggression = Math.max(1, npc.aggression - .45); npc.preferredTargetId = null;
     npc.nextShiftAt = now + 9000; npc.targetId = null;
   }

@@ -27,7 +27,7 @@ const PAL = {
 };
 
 export function buildWeather() {
-  const wx = S.wx = { ...PRESETS.fog, clouds: .78, fog: .96, wind: 0, lightning: false, time: 'night' };
+  const wx = S.wx = { ...PRESETS.fog, clouds: .9, fog: 1, wind: 0, lightning: false, time: 'night' };
   const cur = { rain: wx.rain, snow: wx.snow, clouds: wx.clouds, fog: wx.fog, wind: wx.wind, lightning: wx.lightning ? 1 : 0,
     night: wx.time === 'night' ? 1 : 0, sunset: wx.time === 'sunset' ? 1 : 0, day: wx.time === 'day' ? 1 : 0, wet: wx.rain, snowAcc: wx.snow * .8 };
   const wx0 = ROOM.w / 2, wy0 = WIN.y - WIN.h / 2;
@@ -321,8 +321,8 @@ export function buildWeather() {
 
     skyUni.top.value.copy(C.top); skyUni.bottom.value.copy(C.bot); skyUni.flash.value = flash;
     S.scene.fog.color.copy(C.bot);
-    // Dense nearby fog with a long tail keeps the distant district visible as a silhouette.
-    S.scene.fog.near = 5 + (1 - cur.fog) * 30; S.scene.fog.far = 96 + Math.pow(1 - cur.fog, 2) * 160;
+    // Thick native scene fog hides the forest quickly without adding particles or draw calls.
+    S.scene.fog.near = 3 + (1 - cur.fog) * 24; S.scene.fog.far = 72 + Math.pow(1 - cur.fog, 2) * 150;
 
     sun.color.copy(C.sun).lerp(FLASH, clamp01(flash));
     sun.intensity = sunI * (1 - cover * .75) + flash * 6;

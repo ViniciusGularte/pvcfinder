@@ -1,6 +1,6 @@
 import { S } from './core.js';
 import { createAvatar, defaultSkin, fetchSkin } from './avatar.js';
-import { audioFX } from './audio.js';
+import { audioFX, sfx } from './audio.js';
 import { $, toast, V } from './util.js';
 
 const HOME = { minX: -13.5, maxX: 13.5, minZ: -13.5, maxZ: 13.5 };
@@ -33,15 +33,33 @@ export function initNPC() {
 
   function onGameOver(message) {
     if (message.playerId !== S.netId) return;
-    S.mode = 'gameover'; gameOver?.classList.add('open');
+    S.mode = 'gameover';
+    returnToLodge();
+    gameOver?.classList.add('open');
+    requestAnimationFrame(() => respawn?.focus());
+  }
+
+  function returnToLodge() {
+    S.player?.stand?.();
+    if (S.player) {
+      S.player.pos.set(0, 0, 5); S.player.groundY = 0; S.player.vy = 0;
+      S.player.walkTarget = null; S.player.onArrive = null; S.player.state = 'walk';
+    }
+    // Clear the server-side death timer and publish the safe lodge position now,
+    // so other players never see the caught avatar standing beside Slender.
+    S.multiplayer?.respawnNPC();
   }
 
   function onEvent(message) {
+    const player = S.player;
+    const outside = player && player.pos.y >= -.45 &&
+      !(player.pos.x > HOME.minX && player.pos.x < HOME.maxX && player.pos.z > HOME.minZ && player.pos.z < HOME.maxZ);
+    if (outside && (message.event === 'repelled' || message.event === 'team-repel')) sfx.slenderVanish();
     if (message.event === 'repelled') {
-      if (message.sourceId === S.netId) toast('🔦 Slender vanished into the forest. Stay together — he will return.', 3800);
-      else toast('🔦 Someone drove Slender back. He will return from another direction.', 3400);
+      if (message.sourceId === S.netId) toast('🔦 Slender vanished into the forest. You bought the team some time.', 3800);
+      else toast('🔦 Someone drove Slender back. Watch another direction when he returns.', 3400);
     } else if (message.event === 'team-repel') {
-      toast('⚡ Crossfire! Your team drove Slender away for a few seconds.', 3600);
+      toast('⚡ Crossfire! Your team banished Slender for longer.', 3600);
     } else if (message.event === 'target-switch') {
       if (message.targetId === S.netId) toast('⚠ Something moved behind you — your team must cover you!', 3800);
       else if (message.fromId === S.netId) toast('🔦 Slender fled your light and switched targets.', 3200);
@@ -49,12 +67,7 @@ export function initNPC() {
   }
 
   respawn?.addEventListener('click', () => {
-    S.player?.stand?.();
-    if (S.player) {
-      S.player.pos.set(0, 0, 5); S.player.groundY = 0; S.player.vy = 0;
-      S.player.walkTarget = null; S.player.state = 'walk';
-    }
-    gameOver?.classList.remove('open'); S.mode = 'walk'; S.multiplayer?.respawnNPC();
+    gameOver?.classList.remove('open'); S.mode = 'walk';
   });
 
   S.onFrame((dt, t) => {
@@ -62,7 +75,7 @@ export function initNPC() {
       avatar.root.position.lerp(target, 1 - Math.exp(-dt * 7));
       state.yaw += Math.atan2(Math.sin(state.targetYaw - state.yaw), Math.cos(state.targetYaw - state.yaw)) * (1 - Math.exp(-dt * 8));
       avatar.root.rotation.y = state.yaw;
-      avatar.update(dt, { speed: state.moving ? (state.mode === 'repelled' ? 4.2 : 1.2) : 0, sitting: false, typing: false, airborne: false, t, emote: null });
+      avatar.update(dt, { speed: state.moving ? (state.mode === 'hunting' ? 5.4 : 1.2) : 0, sitting: false, typing: false, airborne: false, t, emote: null });
     }
     const player = S.player;
     const indoors = !player || player.pos.y < -.45 ||
