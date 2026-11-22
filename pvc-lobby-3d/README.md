@@ -17,8 +17,8 @@ No build step and no install. three.js loads from a CDN.
 | | |
 |---|---|
 | Move | `W A S D` / arrows · `Shift` to run · `Space` to jump · or click the floor |
-| Look | drag with the mouse / finger · scroll to zoom |
-| Camera | `V` or 👁 View toggles first / third person |
+| Look | drag with the mouse / finger |
+| Camera | First person is permanent; emotes briefly switch to third person |
 | Interact | click an object, or walk up to it and press `E` |
 | Stand up | `E`, move, or the *Stand up* button (`Esc` at a computer) |
 | Music | click the radio, ▶ in the bar, or `M` |
@@ -56,7 +56,7 @@ js/
   weather.js        outdoor scene, sky, rain/snow/lightning, weather panel
   audio.js          Web Audio music, ambience and sound effects
   avatar.js         skin fetching + Minecraft-style player model and animations
-  player.js         movement, sitting, third/first-person camera, E prompt
+  player.js         movement, sitting, first-person camera, emote view, E prompt
   ui.js             login, player chip, radio bar
 ```
 

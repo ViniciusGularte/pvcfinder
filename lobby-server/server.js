@@ -89,21 +89,15 @@ const NPC_SPEED = {
   aggressionFar: .14,
   aggressionClose: .12,
 };
-const NPC_COOLDOWN = {
-  repelled: 10_000,
-  teamRepelled: 14_000,
-  fed: 8_000,
-};
 const npc = {
   id: "slender", name: "Slender", skin: "Slender", x: 62, y: 0, z: -8,
   yaw: Math.PI, moving: false, state: "wandering", targetId: null,
-  hiddenUntil: 0, nextShiftAt: Date.now() + 12_000, patrol: 0, revision: 0,
-  aggression: 1, beamCount: 0, preferredTargetId: null, ambushAt: 0, observedSince: 0,
+  patrol: 0, revision: 0, aggression: 1, beamCount: 0, preferredTargetId: null,
 };
 const npcPublic = () => ({
   id: npc.id, name: npc.name, skin: npc.skin, x: npc.x, y: npc.y, z: npc.z,
   yaw: npc.yaw, moving: npc.moving, state: npc.state, targetId: npc.targetId,
-  hidden: Date.now() < npc.hiddenUntil, revision: npc.revision,
+  hidden: false, revision: npc.revision,
   aggression: npc.aggression, beamCount: npc.beamCount,
 });
 const insideHouse = (x, z) => x > -13.5 && x < 13.5 && z > -13.5 && z < 13.5;
@@ -380,56 +374,12 @@ wss.on("connection", (socket) => {
   });
 });
 
-const chooseShiftPoint = (target, minDistance = 13) => {
-  const candidates = NPC_PATROL
-    .map(([x, z]) => ({ x, z, distance: Math.hypot(x - target.x, z - target.z) }))
-    .filter((point) => point.distance >= minDistance && npcPositionValid(point.x, point.z))
-    .sort((a, b) => b.distance - a.distance);
-  return candidates[Math.floor(Math.random() * Math.max(1, Math.min(3, candidates.length)))] || { x: 62, z: -8 };
-};
-
-const viewDot = (player, x, z) => {
-  const dx = x - player.x, dz = z - player.z, distance = Math.hypot(dx, dz);
-  if (distance < .001) return 1;
-  return (-Math.sin(player.lookYaw) * dx - Math.cos(player.lookYaw) * dz) / distance;
-};
-const seesPoint = (player, x, z, threshold = .5, range = 46) =>
-  Math.hypot(x - player.x, z - player.z) < range && Math.abs(player.lookPitch) < .9 && viewDot(player, x, z) > threshold;
-const lightsNpc = (player) => player.flashlight && Math.abs(player.lookPitch) < .72 &&
-  Math.hypot(npc.x - player.x, npc.z - player.z) < 38 && viewDot(player, npc.x, npc.z) > .9;
-
-const chooseTarget = (eligible, excludeId = null) => {
-  const pool = eligible.filter((player) => player.id !== excludeId);
-  const candidates = pool.length ? pool : eligible;
-  return candidates.map((player) => {
+const chooseTarget = (eligible) =>
+  eligible.map((player) => {
     const support = eligible.filter((other) => other.id !== player.id && Math.hypot(other.x - player.x, other.z - player.z) < 12).length;
     const distance = Math.hypot(player.x - npc.x, player.z - npc.z);
-    return { player, score: support * 9 + distance * .08 + (seesPoint(player, npc.x, npc.z) ? 6 : 0) + Math.random() * 1.5 };
+    return { player, score: support * 9 + distance * .08 + Math.random() * 1.5 };
   }).sort((a, b) => a.score - b.score)[0]?.player || null;
-};
-
-const chooseAmbushPoint = (target, observers, minDistance = 9, maxDistance = 15) => {
-  let best = null;
-  const start = Math.random() * Math.PI * 2;
-  for (let i = 0; i < 32; i++) {
-    const angle = start + i / 32 * Math.PI * 2;
-    const radius = minDistance + (maxDistance - minDistance) * (.25 + ((i * 17) % 23) / 30);
-    const point = { x: target.x + Math.cos(angle) * radius, z: target.z + Math.sin(angle) * radius };
-    if (!npcPositionValid(point.x, point.z)) continue;
-    const visibleCount = observers.filter((player) => seesPoint(player, point.x, point.z, .42, 50)).length;
-    const targetDot = viewDot(target, point.x, point.z);
-    const closestPlayer = Math.min(...observers.map((player) => Math.hypot(point.x - player.x, point.z - player.z)));
-    const score = visibleCount * 100 + Math.max(0, targetDot + .12) * 35 + Math.max(0, 4.5 - closestPlayer) * 12 + Math.random() * 2;
-    if (!best || score < best.score) best = { ...point, score };
-  }
-  return best || chooseShiftPoint(target, minDistance);
-};
-
-const teleportNpc = (point, target, now, hiddenMs, state) => {
-  npc.x = point.x; npc.z = point.z;
-  if (target) npc.yaw = Math.atan2(target.x - npc.x, target.z - npc.z);
-  npc.state = state; npc.hiddenUntil = now + hiddenMs; npc.moving = false; npc.revision += 1;
-};
 
 const moveNpc = (dx, dz, speed, dt) => {
   const distance = Math.hypot(dx, dz);
@@ -452,9 +402,8 @@ setInterval(() => {
   const eligible = [...players.values()].filter((player) =>
     player.joined && now >= player.deadUntil && player.y > -.45 &&
     !insideHouse(player.x, player.z) && !insideBunker(player.x, player.z));
-  if (now < npc.hiddenUntil) { npc.moving = false; npc.state = "hidden"; return; }
   if (!eligible.length) {
-    npc.targetId = null; npc.preferredTargetId = null; npc.ambushAt = 0; npc.beamCount = 0;
+    npc.targetId = null; npc.preferredTargetId = null; npc.beamCount = 0;
     const [tx, tz] = NPC_PATROL[npc.patrol % NPC_PATROL.length];
     if (Math.hypot(tx - npc.x, tz - npc.z) < 1.2) npc.patrol = (npc.patrol + 1) % NPC_PATROL.length;
     const [nextX, nextZ] = NPC_PATROL[npc.patrol];
@@ -463,38 +412,9 @@ setInterval(() => {
 
   let target = eligible.find((player) => player.id === npc.preferredTargetId) || chooseTarget(eligible);
   if (!target) return;
-  const targetChanged = target.id !== npc.targetId;
   npc.targetId = target.id; npc.preferredTargetId = target.id;
   let targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
-
-  // Every hunt starts out in the forest, outside the group's view. From there Slender
-  // stays visible and runs instead of repeatedly teleporting while being watched.
-  if (targetChanged) {
-    const point = chooseAmbushPoint(target, eligible, 25, 38);
-    teleportNpc(point, target, now, 900, "spawning");
-    npc.targetId = target.id; npc.preferredTargetId = target.id;
-    return;
-  }
-
-  const illuminators = eligible.filter(lightsNpc);
-  npc.beamCount = illuminators.length;
-  if (illuminators.length) {
-    const source = illuminators[0];
-    const nextTarget = chooseTarget(eligible, source.id) || source;
-    const point = chooseAmbushPoint(nextTarget, eligible, 28, 41);
-    npc.aggression = Math.min(5, npc.aggression + (illuminators.length >= 2 ? .15 : .35));
-    teleportNpc(point, nextTarget, now, illuminators.length >= 2 ? NPC_COOLDOWN.teamRepelled : NPC_COOLDOWN.repelled, "banished");
-    npc.preferredTargetId = nextTarget.id; npc.targetId = nextTarget.id;
-    broadcast({
-      type: "npc-event",
-      event: illuminators.length >= 2 ? "team-repel" : "repelled",
-      sourceId: source.id,
-      targetId: nextTarget.id,
-      aggression: npc.aggression,
-    });
-    return;
-  }
-
+  npc.beamCount = 0;
   targetDistance = Math.hypot(target.x - npc.x, target.z - npc.z);
   npc.state = "hunting";
   const speed = targetDistance < 7
@@ -504,16 +424,24 @@ setInterval(() => {
   if (Math.hypot(target.x - npc.x, target.z - npc.z) < .85) {
     target.deadUntil = now + 10_000;
     broadcast({ type: "npc-game-over", playerId: target.id, name: target.name, ts: now });
-    const point = chooseShiftPoint(target, 32);
-    teleportNpc(point, target, now, NPC_COOLDOWN.fed, "fed");
     npc.aggression = Math.max(1, npc.aggression - .45); npc.preferredTargetId = null;
-    npc.nextShiftAt = now + 9000; npc.targetId = null;
+    npc.targetId = null; npc.state = "wandering";
   }
 }, 100).unref();
 
 setInterval(() => {
   if (wss.clients.size) broadcast({ type: "npc-state", npc: npcPublic() });
 }, 200).unref();
+
+// One shared roar event keeps every connected client on the same 20–30 second cadence.
+const scheduleNpcRoar = () => {
+  const timer = setTimeout(() => {
+    if (wss.clients.size) broadcast({ type: "npc-roar", x: npc.x, z: npc.z, ts: Date.now() });
+    scheduleNpcRoar();
+  }, 20_000 + Math.random() * 10_000);
+  timer.unref();
+};
+scheduleNpcRoar();
 
 app.disable("x-powered-by");
 const proxyWiki = async (req, res) => {

@@ -1,4 +1,4 @@
-// Player: movement, sitting, third/first-person camera, clicking and the E-to-interact prompt.
+// Player: first-person movement, temporary emote camera, clicking and interaction prompt.
 import * as THREE from 'three';
 import { S } from './core.js';
 import { ROOM, SPAWN, SURFACE_AREA } from './config.js';
@@ -10,7 +10,8 @@ import { pick, nearestInteractable, labelOf } from './interact.js';
 export function createPlayer() {
   const av = createAvatar();
   S.scene.add(av.root);
-  const flashlightModel = createFlashlightModel(); av.attachToHand(flashlightModel, 'r');
+  const flashlightModel = createFlashlightModel(); flashlightModel.name = 'PlayerFlashlightThirdPerson'; av.attachToHand(flashlightModel, 'r');
+  const fpFlashlight = createFlashlightModel(); fpFlashlight.name = 'PlayerFlashlightFirstPerson'; fpFlashlight.scale.setScalar(.78); fpFlashlight.visible = false; S.scene.add(fpFlashlight);
   const flashlightTarget = new THREE.Object3D(); S.scene.add(flashlightTarget);
   const flashlight = new THREE.SpotLight(0xfff0cf, 85, 42, .34, .55, 1.25);
   flashlight.target = flashlightTarget; flashlight.castShadow = !S.quality.lowPower;
@@ -18,17 +19,19 @@ export function createPlayer() {
   flashlight.shadow.bias = -.00035; flashlight.shadow.normalBias = .04; S.scene.add(flashlight);
   const flashlightFill = new THREE.PointLight(0xffdba0, 1.1, 3.2, 2); S.scene.add(flashlightFill);
 
-  const cam = S.cam = { yaw: 0, pitch: -.28, dist: 3.6, distT: 3.6 };
+  const cam = S.cam = { yaw: 0, pitch: -.18, dist: 0, distT: 0 };
   const P = S.player = {
     pos: V(SPAWN.x, 0, SPAWN.z), yaw: SPAWN.yaw, vy: 0, groundY: 0, lift: 0,
     state: 'walk', seat: null, sitFrom: null, sitT: 0,
     walkTarget: null, onArrive: null, stuck: 0, speed: 0, avatar: av,
-    sit, stand, walkTo, interact, flashlightOn: store.get().flashlight === true, toggleFlashlight,
+    sit, stand, walkTo, interact, flashlightOn: store.get().flashlight === true, toggleFlashlight, showEmoteView,
   };
   const keys = {};
   const canvas = S.renderer.domElement;
   const tip = $('tip'), prompt = $('prompt'), seatbar = $('seatbar');
-  const flashSource = V(), flashDirection = V();
+  const flashSource = V(), flashDirection = V(), fpRight = V(), fpUp = V();
+  const fpCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+  let emoteViewUntil = 0;
 
   function syncFlashlightButton() {
     const button = $('flashBtn'); if (!button) return;
@@ -40,10 +43,16 @@ export function createPlayer() {
   function toggleFlashlight(value) {
     P.flashlightOn = typeof value === 'boolean' ? value : !P.flashlightOn;
     flashlightModel.visible = P.flashlightOn; flashlightModel.userData.setLit(P.flashlightOn);
+    fpFlashlight.userData.setLit(P.flashlightOn);
     flashlight.visible = flashlightFill.visible = P.flashlightOn && S.mode !== 'map';
     store.set({ flashlight: P.flashlightOn }); syncFlashlightButton();
   }
   toggleFlashlight(P.flashlightOn);
+
+  function showEmoteView(duration = 1800) {
+    emoteViewUntil = Math.max(emoteViewUntil, performance.now() + duration);
+    cam.distT = 3.6; S.camChangeT = S.clock.elapsedTime;
+  }
 
   /* ---------- actions ---------- */
   function sit(seat) {
@@ -114,14 +123,6 @@ export function createPlayer() {
     }
     down = null;
   });
-  canvas.addEventListener('wheel', e => {
-    if (S.mode !== 'walk') return;
-    let d = cam.distT + e.deltaY * .004;
-    if (cam.distT === 0 && e.deltaY > 0) d = 1.2;
-    cam.distT = d < .7 ? 0 : Math.min(d, 7);
-    syncViewButton();
-  }, { passive: true });
-
   /* ---------- keys ---------- */
   addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
@@ -130,22 +131,11 @@ export function createPlayer() {
     if (S.mode !== 'walk') return;
     if (e.code === 'KeyE') { if (P.state === 'sit') stand(); else interact(nearestInteractable(P.pos)); }
     if (e.code === 'Escape' && P.state === 'sit') stand();
-    if (e.code === 'KeyV') toggleView();
     if (e.code === 'KeyF' && !e.repeat) toggleFlashlight();
     if (e.code === 'Space' && P.state === 'walk' && P.pos.y <= P.groundY + .02) { P.vy = 5.2; e.preventDefault(); }
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
-  function syncViewButton() {
-    const firstPerson = cam.distT === 0, button = $('viewBtn');
-    button.textContent = firstPerson ? '👁 First Person' : '👁 Third Person';
-    button.title = `Switch to ${firstPerson ? 'third' : 'first'} person (V)`;
-    button.setAttribute('aria-pressed', String(firstPerson));
-  }
-  function toggleView() { cam.distT = cam.distT === 0 ? 3.6 : 0; syncViewButton(); }
-  P.toggleView = toggleView;
-  syncViewButton();
-
   /* ---------- movement ---------- */
   S.isBlocked = (x, z, radius = .3, y = S.player?.pos.y ?? 0) => {
     const inLobby = x >= -ROOM.w / 2 + .4 && x <= ROOM.w / 2 - .45 && z >= -ROOM.d / 2 + .4 && z <= ROOM.d / 2 - .4;
@@ -220,7 +210,15 @@ export function createPlayer() {
     av.root.rotation.y = P.yaw;
     av.update(dt, { speed: P.speed, sitting: P.state === 'sit', typing: S.mode === 'pc' && t - (S.activePC?.lastKey ?? -9) < .4, airborne: P.pos.y > P.groundY + .05, t, emote: performance.now() < (S.localEmoteUntil || 0) ? S.localEmote : null });
 
-    // camera
+    // First person is permanent; emotes briefly pull the camera back to show the animation.
+    const emoteView = performance.now() < emoteViewUntil;
+    const desiredCameraDistance = emoteView ? 3.6 : 0;
+    const returningFromEmote = !emoteView && cam.distT !== 0;
+    if (cam.distT !== desiredCameraDistance) {
+      cam.distT = desiredCameraDistance; S.camChangeT = t;
+      // A low frame rate must not leave the avatar or hand model between camera modes.
+      if (returningFromEmote) cam.dist = 0;
+    }
     cam.dist += (cam.distT - cam.dist) * damp(dt, 10);
     head.set(P.pos.x, av.root.position.y + 1.5, P.pos.z);
     if (S.camOverride) {
@@ -238,15 +236,32 @@ export function createPlayer() {
       want.copy(head).addScaledVector(dir, -d);
       if (cam.dist < .3) want.copy(head).addScaledVector(dir, .12);
     }
-    const rate = t - S.camChangeT < 1.4 ? 4.5 : 28;
-    S.camera.position.lerp(want, damp(dt, rate));
-    S.camera.quaternion.slerp(wantQ, damp(dt, rate));
+    const rate = !S.camOverride && cam.distT === 0 ? 16 : t - S.camChangeT < 1.4 ? 4.5 : 28;
+    if (returningFromEmote) {
+      S.camera.position.copy(want); S.camera.quaternion.copy(wantQ);
+    } else {
+      S.camera.position.lerp(want, damp(dt, rate));
+      S.camera.quaternion.slerp(wantQ, damp(dt, rate));
+    }
     av.root.visible = !(S.camOverride?.hideAvatar) && S.mode !== 'map' && S.camera.position.distanceTo(head) > .55;
+
+    const firstPerson = !S.camOverride && cam.dist < .45;
+    flashlightModel.visible = P.flashlightOn && !firstPerson;
+    fpFlashlight.visible = P.flashlightOn && firstPerson && S.mode !== 'map';
+    if (fpFlashlight.visible) {
+      S.camera.getWorldDirection(flashDirection);
+      fpRight.set(1, 0, 0).applyQuaternion(S.camera.quaternion);
+      fpUp.set(0, 1, 0).applyQuaternion(S.camera.quaternion);
+      fpFlashlight.position.copy(S.camera.position)
+        .addScaledVector(fpRight, .24).addScaledVector(fpUp, -.2).addScaledVector(flashDirection, .38);
+      fpFlashlight.quaternion.copy(S.camera.quaternion).multiply(fpCorrection);
+      fpFlashlight.updateMatrixWorld(true);
+    }
 
     const flashActive = P.flashlightOn && S.mode !== 'map';
     flashlight.visible = flashlightFill.visible = flashActive;
     if (flashActive) {
-      if (cam.dist < .3) flashSource.copy(S.camera.position);
+      if (firstPerson) fpFlashlight.userData.lens.getWorldPosition(flashSource);
       else flashlightModel.userData.lens.getWorldPosition(flashSource);
       S.camera.getWorldDirection(flashDirection);
       flashlight.position.copy(flashSource); flashlightFill.position.copy(flashSource);

@@ -1,4 +1,4 @@
-// HUD wiring: login (nickname + skin), player chip, personal audio and view toggle.
+// HUD wiring: login (nickname + skin), player chip, personal audio and flashlight.
 import { S } from './core.js';
 import { $, store, toast } from './util.js';
 import { audioFX } from './audio.js';
@@ -12,7 +12,6 @@ export function initUI() {
   $('masterVolume').oninput = event => audioFX.setMasterVolume(event.currentTarget.value / 100);
   $('masterMute').onclick = () => audioFX.toggleMute();
   $('flashBtn').onclick = () => S.player.toggleFlashlight();
-  $('viewBtn').onclick = () => S.player.toggleView();
   audioFX.ui();
 
   // login

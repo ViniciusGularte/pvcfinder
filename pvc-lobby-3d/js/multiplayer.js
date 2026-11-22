@@ -93,7 +93,7 @@ function handle(message) {
   else if (message.type === 'player-move' || message.type === 'seats') applyPlayer(message.player);
   else if (message.type === 'npc-state') S.npc?.apply(message.npc);
   else if (message.type === 'npc-game-over') S.npc?.onGameOver(message);
-  else if (message.type === 'npc-event') S.npc?.onEvent(message);
+  else if (message.type === 'npc-roar') S.npc?.onRoar(message);
   else if (message.type === 'npc-respawned') applyPlayer(message.player);
   else if (message.type === 'player-leave') removeRemote(message.id);
   else if (message.type === 'chat') S.chat?.receive(message.row);
@@ -158,7 +158,9 @@ export function initMultiplayer() {
   const api = S.multiplayer = {
     join(name) { joinedName = name; lastSentMove = null; send({ type: 'join', name, skin: name }); updateCount(); },
     emote(emote) {
-      S.localEmote = emote; S.localEmoteUntil = performance.now() + emoteDuration(emote);
+      const duration = emoteDuration(emote);
+      S.localEmote = emote; S.localEmoteUntil = performance.now() + duration;
+      S.player?.showEmoteView(duration);
       showEmote(S.player.avatar.root, emote); send({ type: 'emote', emote });
     },
     setMapView(view) { send({ type: 'map-view', ...view }); },

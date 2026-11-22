@@ -3,15 +3,16 @@ import { $, rnd, store } from './util.js';
 import { S } from './core.js';
 
 const TRACKS = [
-  { name: 'Best Morning', url: '/assets/Upbeat%20Rock%20Positive%20by%20Infraction%20%5BNo%20Copyright%20Music%5D%20%20Best%20Morning.mp3' },
+  { name: "Day · No, I'm Not a Human", url: '/assets/Day%20-%20No%2C%20I%27m%20Not%20a%20Human%20OST%20-%20megaOmega.mp3' },
 ];
+const SLENDER_ROAR_URL = '/assets/SCP-682%20Roar%20-%20SCP-682.mp3';
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 const saved = store.get();
 const MUSIC_LEVEL = .62;
 const clampVolume = value => Math.max(0, Math.min(1, Number(value) || 0));
 
 let ctx, master, musicGain, musicIn, epBus, delay, analyser, ambBus, sfxBus, rainG, patterG, windG, windF, wn, bn, wow;
-let radioAudio = null;
+let radioAudio = null, slenderRoarAudio = null, slenderRoarGain = null;
 // The radio/track is global. Master volume and mute remain personal to this browser.
 let playing = false, track = 0;
 let masterVolume = Number.isFinite(Number(saved.masterVolume)) ? clampVolume(saved.masterVolume) : .85;
@@ -70,6 +71,9 @@ function init() {
   // The fire still has its explicit stoke/whoosh interaction without idle noise.
 
   sfxBus = gain(.8); sfxBus.connect(master);
+  slenderRoarGain = gain(0); slenderRoarGain.connect(sfxBus);
+  slenderRoarAudio = new Audio(SLENDER_ROAR_URL); slenderRoarAudio.preload = 'auto';
+  ctx.createMediaElementSource(slenderRoarAudio).connect(slenderRoarGain);
   // The current radio uses a media file. Do not keep a 40 Hz synthesizer timer alive
   // unless a future track actually needs the procedural scheduler.
   if (TRACKS.some(track => !track.url)) setInterval(scheduler, 25);
@@ -256,6 +260,15 @@ export const audioFX = {
     heel.start(t + .055); heel.stop(t + .19);
     nextSlenderStep = t + cadence;
   },
+  playSlenderRoar(distance, indoors = false) {
+    if (!ctx || !slenderRoarAudio || masterMuted || masterVolume === 0) return;
+    const proximity = Number.isFinite(distance) ? Math.max(0, Math.min(1, (72 - distance) / 64)) : 0;
+    const level = indoors ? .16 : .28 + proximity * .62;
+    slenderRoarGain.gain.cancelScheduledValues(ctx.currentTime);
+    slenderRoarGain.gain.setValueAtTime(level, ctx.currentTime);
+    slenderRoarAudio.pause(); slenderRoarAudio.currentTime = 0;
+    slenderRoarAudio.play().catch(() => {});
+  },
   thunder(delaySec, close) {
     if (!ctx || masterMuted || masterVolume === 0) return;
     const t = ctx.currentTime + delaySec;
@@ -302,12 +315,6 @@ export const sfx = {
   whoosh() { if (!ctx) return; const t = now(); const s = ctx.createBufferSource(); s.buffer = wn; const f = filt('bandpass', 300, 1), g = gain(0);
     f.frequency.exponentialRampToValueAtTime(2500, t + .5); env(g, t, .15, .3, .8); s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + .9);
     for (let i = 0; i < 10; i++) hit(t + .2 + rnd(0, .8), 'highpass', 2000, .7, rnd(.1, .3), .03, sfxBus); },
-  // Short tonal collapse for Slender's banishment: eerie, but with no static/noise bed.
-  slenderVanish() { if (!ctx) return; const t = now();
-    tone(920, t, .36, .13, 'sine', 230);
-    tone(510, t + .035, .58, .16, 'triangle', 72);
-    tone(260, t + .08, .72, .18, 'sine', 42);
-    tone(1180, t + .02, .16, .07, 'sine', 680); },
   purr(dur = 2.5) { if (!ctx) return; const t = now(); const s = ctx.createBufferSource(); s.buffer = bn; const f = filt('lowpass', 380), g = gain(0), am = gain(0);
     const lfo = ctx.createOscillator(); lfo.frequency.value = 24; const lg = gain(.5); lfo.connect(lg); lg.connect(am.gain);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.7, t + .3); g.gain.setTargetAtTime(0, t + dur - .4, .2);
