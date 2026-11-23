@@ -87,7 +87,7 @@ function safePathname(requestUrl) {
   const normalizedPath = path.normalize(pathname).replace(/^(\.\.[/\\])+/, "");
 
   if (normalizedPath === "/" || normalizedPath === ".") {
-    return "index.html";
+    return "legacy.html";
   }
 
   if (normalizedPath === "/mods" || normalizedPath === "/mods/") {

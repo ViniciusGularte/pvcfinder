@@ -3,6 +3,10 @@
   "trailingSlash": true,
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/legacy.html"
+    },
+    {
       "source": "/lobby/skin/:name.png",
       "destination": "https://api.theyasked.co/lobby/skin/:name.png"
     }

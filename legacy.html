@@ -8,12 +8,12 @@
       name="description"
       content="Search items, compare prices, and find sellers across Peaceful Vanilla Club."
     />
-    <link rel="icon" type="image/png" href="assets/pvc-logo.png" />
-    <link rel="apple-touch-icon" href="assets/pvc-logo.png" />
+    <link rel="icon" type="image/png" href="/assets/pvc-logo.png" />
+    <link rel="apple-touch-icon" href="/assets/pvc-logo.png" />
     <link
       rel="preload"
       as="image"
-      href="assets/merchant-guild-loader.webp"
+      href="/assets/merchant-guild-loader.webp"
       type="image/webp"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -3442,7 +3442,7 @@
         <div class="loading-sigil" aria-hidden="true">
           <img
             class="loading-mark"
-            src="assets/merchant-guild-loader.webp"
+            src="/assets/merchant-guild-loader.webp"
             alt=""
             fetchpriority="high"
           />
@@ -3474,7 +3474,7 @@
       <header class="site-header">
         <div class="site-header-inner page-width">
           <div class="brand">
-            <img class="brand-logo" src="assets/pvc-logo.png" alt="PVC" />
+            <img class="brand-logo" src="/assets/pvc-logo.png" alt="PVC" />
             <span class="brand-separator">|</span>
             <span class="brand-label pixel-font">SHOP BROWSER</span>
           </div>
@@ -4906,7 +4906,7 @@
           subtitle: "Temporarily unavailable while this feature gets rebuilt.",
           bodyHtml:
             '<div class="market-hold">' +
-            '  <img class="market-hold-art" src="assets/dbage.webp" alt="dbage" loading="eager" />' +
+            '  <img class="market-hold-art" src="/assets/dbage.webp" alt="dbage" loading="eager" />' +
             '  <div class="market-hold-copy">' +
             "    <p><strong>I am improving and building this market history panel right now.</strong></p>" +
             "    <p>It will come back cleaner, faster, and more useful. For now, the live market search stays available while this part gets polished.</p>" +
@@ -6291,8 +6291,8 @@
 
         if (listing.isAdminShop) {
           listing.sellerVisualPending = false;
-          listing.poseUrl = "assets/pvc-logo.png";
-          listing.poseFallbacks = ["assets/pvc-logo.png"];
+          listing.poseUrl = "/assets/pvc-logo.png";
+          listing.poseFallbacks = ["/assets/pvc-logo.png"];
           return;
         }
 
@@ -7856,9 +7856,9 @@
               sellerUuid: null,
               sellerVisualPending: false,
               poseUrl: isAdminShop
-                ? "assets/pvc-logo.png"
+                ? "/assets/pvc-logo.png"
                 : SELLER_POSE_PLACEHOLDER,
-              poseFallbacks: isAdminShop ? ["assets/pvc-logo.png"] : [],
+              poseFallbacks: isAdminShop ? ["/assets/pvc-logo.png"] : [],
               isAdminShop,
               offerStock,
               stock: grossStockUnits,
