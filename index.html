@@ -3,17 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PVC Hub</title>
-    <meta name="description" content="The multiplayer hub for Peaceful Vanilla Club." />
+    <title>PVC Shop Browser</title>
+    <meta
+      name="description"
+      content="Search items, compare prices, and find sellers across Peaceful Vanilla Club."
+    />
     <link rel="icon" type="image/png" href="assets/pvc-logo.png" />
-    <meta http-equiv="refresh" content="0; url=/pvc-lobby-3d/index.html" />
+    <meta http-equiv="refresh" content="0; url=/legacy.html" />
     <style>
       html,body{height:100%;margin:0;background:#1a110b;color:#ffd9a6;display:grid;place-items:center;font:600 20px Georgia,serif}
       a{color:inherit}
     </style>
   </head>
   <body>
-    <a href="/pvc-lobby-3d/index.html">Enter PVC Hub</a>
-    <script>location.replace('/pvc-lobby-3d/index.html')</script>
+    <a href="/legacy.html">Open PVC Shop Browser</a>
+    <script>
+      location.replace('/legacy.html' + location.search + location.hash)
+    </script>
   </body>
 </html>
