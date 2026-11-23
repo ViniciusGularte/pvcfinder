@@ -121,7 +121,9 @@ export function buildWeather() {
     (x > -7 && x < 55 && z > 11 && z < 31) ||
     (x > 5 && x < 75 && z > 28 && z < 46) ||
     (x > 15 && x < 61 && z > -23 && z < -17) ||
-    (x > 55 && x < 61 && z > -23 && z < 25);
+    (x > 55 && x < 61 && z > -23 && z < 25) ||
+    (x > 19 && x < 45 && z > -54 && z < -40) || // east cabin and its trail
+    (x > -38 && x < -25 && z > 29 && z < 42);   // north cabin clearing
   for (let attempts = 0; trees.length < 74 && attempts < 500; attempts++) {
     const tree = { x: rnd(wx0 + 14, wx0 + 100), z: rnd(-90, 90), s: rnd(.9, 2.2) };
     if (!inReservedSurface(tree.x, tree.z)) trees.push(tree);

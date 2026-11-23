@@ -40,7 +40,7 @@ const weatherTimes = new Set(["night", "sunset", "day"]);
 const shared = {
   jukebox: { playing: false, track: 0, startedAt: null },
   cabinOpen: false,
-  cabinDoors: { west: false, east: false },
+  cabinDoors: { west: false, east: false, north: false },
   mapWorld: "overworld",
   mapView: { x: 256, z: 256, zoom: 1 },
   weather: {
@@ -113,7 +113,8 @@ const insideHouse = (x, z) => x > -13.5 && x < 13.5 && z > -13.5 && z < 13.5;
 const insideBunker = (x, z) => x > -11.5 && x < -4.5 && z > 10.5 && z < 21;
 const insideWestCabin = (x, z) => x > -26.6 && x < -19.4 && z > -36.9 && z < -31.1;
 const insideEastCabin = (x, z) => x > 34.6 && x < 41.4 && z > -50.75 && z < -45.25;
-const insideCabin = (x, z) => insideWestCabin(x, z) || insideEastCabin(x, z);
+const insideNorthCabin = (x, z) => x > -35.25 && x < -28.75 && z > 32.3 && z < 37.7;
+const insideCabin = (x, z) => insideWestCabin(x, z) || insideEastCabin(x, z) || insideNorthCabin(x, z);
 const insideNpcHouseClearance = (x, z) =>
   x > -13.5 - NPC_CLEARANCE && x < 13.5 + NPC_CLEARANCE &&
   z > -13.5 - NPC_CLEARANCE && z < 13.5 + NPC_CLEARANCE;
@@ -124,7 +125,9 @@ const insideNpcCabinClearance = (x, z) =>
   (x > -26.6 - NPC_CLEARANCE && x < -19.4 + NPC_CLEARANCE &&
     z > -36.9 - NPC_CLEARANCE && z < -31.1 + NPC_CLEARANCE) ||
   (x > 34.6 - NPC_CLEARANCE && x < 41.4 + NPC_CLEARANCE &&
-    z > -50.75 - NPC_CLEARANCE && z < -45.25 + NPC_CLEARANCE);
+    z > -50.75 - NPC_CLEARANCE && z < -45.25 + NPC_CLEARANCE) ||
+  (x > -35.25 - NPC_CLEARANCE && x < -28.75 + NPC_CLEARANCE &&
+    z > 32.3 - NPC_CLEARANCE && z < 37.7 + NPC_CLEARANCE);
 const insideNpcSewerClearance = (x, z) =>
   (x > 16 - NPC_CLEARANCE && x < 25 + NPC_CLEARANCE && z > -23 - NPC_CLEARANCE && z < -17 + NPC_CLEARANCE) ||
   (x > 55 - NPC_CLEARANCE && x < 61 + NPC_CLEARANCE && z > 14.5 - NPC_CLEARANCE && z < 24 + NPC_CLEARANCE);
@@ -294,7 +297,7 @@ wss.on("connection", (socket) => {
       const now = Date.now();
       if (now - player.lastCabinDoor < 500) return;
       player.lastCabinDoor = now;
-      const cabinId = message.cabinId === "east" ? "east" : "west";
+      const cabinId = ["west", "east", "north"].includes(message.cabinId) ? message.cabinId : "west";
       shared.cabinDoors[cabinId] = !!message.open;
       if (cabinId === "west") shared.cabinOpen = shared.cabinDoors.west;
       broadcast({ type: "cabin-door", cabinId, open: shared.cabinDoors[cabinId], playerId: id });

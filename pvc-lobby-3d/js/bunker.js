@@ -3,12 +3,17 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { S } from './core.js';
 import { ROOM, SURFACE_AREA } from './config.js';
-import { $, V, rnd, animate, addCollider, canvasTex, mesh, std } from './util.js';
+import { $, V, rnd, animate, addCollider, addRotCollider, canvasTex, mesh, std } from './util.js';
 import { addInteractable } from './interact.js';
 import { sfx } from './audio.js';
 
 const BX = -8, ENTRANCE_Z = ROOM.d / 2, BW = 5.6, BD = 8;
 const SURFACE_DOOR_Z = ENTRANCE_Z + 3.35, SURFACE_DOOR_W = 1.58, SURFACE_DOOR_H = 2.55;
+const FOREST_CABINS = {
+  west: { id: 'west', x: -23, z: -34, w: 7.2, d: 5.8, h: 3.05, doorW: 1.5 },
+  east: { id: 'east', x: 38, z: -48, w: 6.8, d: 5.5, h: 2.95, doorW: 1.45 },
+  north: { id: 'north', x: -32, z: 35, w: 6.5, d: 5.4, h: 3, doorW: 1.45 },
+};
 let door, doorCollider, doorTimer, doorRun = 0, terminalCanvas, terminalTexture;
 let keypadCode = '', terminalCode = '';
 let surfaceDoor, surfaceDoorCollider, surfaceDoorOpen = false, surfaceDoorBusy = false;
@@ -223,8 +228,11 @@ function buildAbandonedExterior() {
     const scale = rnd(.25, .8), rx = x0 + rnd(1.4, 56), rz = rnd(SURFACE_AREA.minZ + .7, SURFACE_AREA.maxZ - .7);
     const inHouseClearance = rx > -18 && rx < 20 && rz > -18 && rz < 22;
     const inMainRoutes = (rx < 56 && rz > 12 && rz < 20) || (rx > 5 && rx < 75 && rz > 29 && rz < 40) ||
-      (rx > 15 && rx < 61 && rz > -23 && rz < -17) || (rx > 55 && rx < 61 && rz > -23 && rz < 25);
-    if (inHouseClearance || inMainRoutes || Math.hypot(rx - SURFACE_AREA.centerX, rz - SURFACE_AREA.centerZ) > SURFACE_AREA.radius - 10) continue;
+      (rx > 15 && rx < 61 && rz > -23 && rz < -17) || (rx > 55 && rx < 61 && rz > -23 && rz < 25) ||
+      (rx > 4 && rx < 45 && rz > -53 && rz < -36);
+    const inCabin = Object.values(FOREST_CABINS).some(cabin =>
+      Math.abs(rx - cabin.x) < cabin.w / 2 + 1.2 && Math.abs(rz - cabin.z) < cabin.d / 2 + 1.2);
+    if (inHouseClearance || inMainRoutes || inCabin || Math.hypot(rx - SURFACE_AREA.centerX, rz - SURFACE_AREA.centerZ) > SURFACE_AREA.radius - 10) continue;
     dummy.position.set(rx, scale * .14, rz); addCollider(rx, rz, scale * .8, scale * .8);
     dummy.rotation.set(rnd(0, .7), rnd(0, 6.28), rnd(0, .5)); dummy.scale.set(scale, scale * .65, scale * 1.2); dummy.updateMatrix(); rubble.setMatrixAt(rubblePlaced++, dummy.matrix);
   }
@@ -255,13 +263,12 @@ function buildAbandonedExterior() {
   S.onFrame((_dt, t) => { workLight.intensity = 1.65 + Math.sin(t * 7.7) * .22 + Math.sin(t * 19.3) * .12; });
 
   buildBackwoods(omesh, outdoor);
-  buildDistantDistrict(omesh, oldConcrete, rust);
+  buildDistantDistrict(omesh, outdoor, oldConcrete, rust);
   buildMountainBarrier();
 }
 
 function buildBackwoods(omesh, outdoor) {
-  const CABIN = { id: 'west', x: -23, z: -34, w: 7.2, d: 5.8, h: 3.05, doorW: 1.5 };
-  const EAST_CABIN = { id: 'east', x: 38, z: -48, w: 6.8, d: 5.5, h: 2.95, doorW: 1.45 };
+  const { west: CABIN, east: EAST_CABIN, north: NORTH_CABIN } = FOREST_CABINS;
   const dirt = std({ color: 0x604a32, roughness: 1 });
   const placeTrail = (x0, z0, x1, z1, width) => {
     const dx = x1 - x0, dz = z1 - z0, length = Math.hypot(dx, dz);
@@ -276,6 +283,10 @@ function buildBackwoods(omesh, outdoor) {
     [8, -39, 22, -45, 2.15],
     [22, -45, EAST_CABIN.x, EAST_CABIN.z + EAST_CABIN.d / 2 + 1.1, 2.45],
     [8, -39, -5, -52, 1.85],
+    [-10, -22, -28, -8, 2.35],
+    [-28, -8, -38, 13, 2.2],
+    [-38, 13, NORTH_CABIN.x, NORTH_CABIN.z + NORTH_CABIN.d / 2 + 1.1, 2.5],
+    [NORTH_CABIN.x, NORTH_CABIN.z + NORTH_CABIN.d / 2 + 1.1, -15, 23, 2.05],
   ];
   trails.forEach(args => placeTrail(...args));
 
@@ -303,7 +314,7 @@ function buildBackwoods(omesh, outdoor) {
       const z = -59 + row * 4.75 + Math.cos(seed * 1.19) * 1.25;
       if (Math.hypot(x - SURFACE_AREA.centerX, z - SURFACE_AREA.centerZ) > SURFACE_AREA.radius - 7) continue;
       if (trails.some(segment => distanceToSegment(x, z, segment) < 1.65)) continue;
-      if (nearCabin(x, z, CABIN) || nearCabin(x, z, EAST_CABIN)) continue;
+      if (Object.values(FOREST_CABINS).some(cabin => nearCabin(x, z, cabin))) continue;
       if (x > 15 && x < 26 && z > -24 && z < -16) continue; // first sewer entrance
       if (S.quality.lowPower && (row + col) % 3 === 0) continue;
       generatedTrees.push({
@@ -313,7 +324,23 @@ function buildBackwoods(omesh, outdoor) {
       });
     }
   }
-  const trees = anchorTrees.concat(generatedTrees);
+  const northTrees = [];
+  const wantedNorthTrees = S.quality.lowPower ? 34 : 62;
+  for (let row = 0; row < 14 && northTrees.length < wantedNorthTrees; row++) {
+    for (let col = 0; col < 14 && northTrees.length < wantedNorthTrees; col++) {
+      const seed = 700 + row * 37 + col * 23;
+      const x = -49 + col * 4.45 + Math.sin(seed * 1.31) * 1.25;
+      const z = -7 + row * 4.65 + Math.cos(seed * 1.67) * 1.2;
+      const nearHouse = x > -18 && x < 18 && z > -18 && z < 25;
+      const inCityRoad = x > 4 && x < 95 && z > 28 && z < 41;
+      if (nearHouse || inCityRoad || Math.hypot(x - SURFACE_AREA.centerX, z - SURFACE_AREA.centerZ) > SURFACE_AREA.radius - 7) continue;
+      if (trails.some(segment => distanceToSegment(x, z, segment) < 1.65)) continue;
+      if (Object.values(FOREST_CABINS).some(cabin => nearCabin(x, z, cabin))) continue;
+      if (S.quality.lowPower && (row + col) % 3 === 0) continue;
+      northTrees.push({ x, z, s: .86 + ((seed * 11) % 52) / 100, type: (row + col * 2) % 6 === 0 ? 1 : 0 });
+    }
+  }
+  const trees = anchorTrees.concat(generatedTrees, northTrees);
   const pineTrees = trees.filter(tree => tree.type === 0), broadTrees = trees.filter(tree => tree.type === 1);
   const trunkMat = std({ color: 0x49301f, roughness: 1 });
   const pineMat = std({ color: 0x213d2a, roughness: 1 });
@@ -345,12 +372,19 @@ function buildBackwoods(omesh, outdoor) {
     [12, -39, .7], [14, -31, .9], [9, -25, .6], [1, -24, .75], [-8, -27, .55],
     [-31, -27, .65], [-30, -34, .5], [-16, -39, .7], [-9, -35, .6], [7, -34, .8],
   ].map(([x, z, s]) => ({ x, z, s }));
+  for (let i = 0; i < (S.quality.lowPower ? 18 : 34); i++) {
+    const x = -47 + (i * 17 % 54), z = -3 + (i * 29 % 58), s = .48 + (i % 6) * .08;
+    if (trails.some(segment => distanceToSegment(x, z, segment) < 1.1)) continue;
+    if (Object.values(FOREST_CABINS).some(cabin => nearCabin(x, z, cabin))) continue;
+    undergrowth.push({ x, z, s });
+  }
   batch(new THREE.DodecahedronGeometry(.7, 0), std({ color: 0x426437, roughness: 1 }), undergrowth, (d, bush) => {
     d.position.set(bush.x, .38 * bush.s, bush.z); d.rotation.set(0, bush.x + bush.z, 0); d.scale.set(1.3 * bush.s, .7 * bush.s, bush.s);
   });
 
   buildForestCabin(CABIN, omesh, outdoor);
   buildForestCabin(EAST_CABIN, omesh, outdoor);
+  buildForestCabin(NORTH_CABIN, omesh, outdoor);
 }
 
 function buildForestCabin(cabin, omesh, outdoor) {
@@ -469,11 +503,14 @@ function buildForestCabin(cabin, omesh, outdoor) {
   addCollider(x + 1.8, z - 1.25, 1.15, .9);
 }
 
-function buildDistantDistrict(omesh, concrete, rust) {
+function buildDistantDistrict(omesh, outdoor, concrete, rust) {
   const roadZ = 34.5, roadMat = std({ color: 0x171b1a, roughness: 1 });
-  const road = omesh(new THREE.PlaneGeometry(65, 8.5), roadMat, [39.5, -.012, roadZ], { cast: false }); road.rotation.x = -Math.PI / 2;
-  for (const z of [roadZ - 4.35, roadZ + 4.35]) omesh(new THREE.BoxGeometry(65, .16, .36), concrete, [39.5, .08, z]);
-  for (let x = 10; x < 71; x += 6) omesh(new THREE.BoxGeometry(2.8, .025, .13), std({ color: 0x8c805d, roughness: 1 }), [x, .018, roadZ]);
+  const road = omesh(new THREE.PlaneGeometry(88, 8.5), roadMat, [50, -.012, roadZ], { cast: false }); road.rotation.x = -Math.PI / 2;
+  for (const z of [roadZ - 4.35, roadZ + 4.35]) omesh(new THREE.BoxGeometry(88, .16, .36), concrete, [50, .08, z]);
+  const laneMat = std({ color: 0x8c805d, roughness: 1 });
+  for (let x = 9; x < 94; x += 6) omesh(new THREE.BoxGeometry(2.8, .025, .13), laneMat, [x, .018, roadZ]);
+  const crossRoad = omesh(new THREE.PlaneGeometry(8.5, 34), roadMat, [77, -.01, 51], { cast: false }); crossRoad.rotation.x = -Math.PI / 2;
+  for (let z = 40; z < 66; z += 6) omesh(new THREE.BoxGeometry(.13, .025, 2.8), laneMat, [77, .018, z]);
 
   const buildings = [
     { x: 27, z: 41, w: 7.5, d: 5.2, h: 10.5, c: 0x252b2e },
@@ -481,20 +518,54 @@ function buildDistantDistrict(omesh, concrete, rust) {
     { x: 52, z: 40.5, w: 10, d: 6, h: 20, c: 0x1b2327 },
     { x: 65, z: 40, w: 8.5, d: 6.5, h: 16, c: 0x22272b },
     { x: 69, z: 27.5, w: 5.5, d: 6, h: 12, c: 0x272b2c },
+    { x: 17, z: 24.5, w: 7, d: 6.2, h: 9.5, c: 0x293034 },
+    { x: 34, z: 24, w: 8.5, d: 6.5, h: 13, c: 0x222a2d },
+    { x: 51, z: 23.5, w: 9, d: 6.5, h: 11, c: 0x252c2e },
+    { x: 18, z: 50, w: 8, d: 7, h: 17, c: 0x20272b },
+    { x: 35, z: 51, w: 10, d: 7.5, h: 22, c: 0x1b2226 },
+    { x: 56, z: 51, w: 11, d: 7, h: 18, c: 0x20262a },
+    { x: 86, z: 49, w: 7, d: 8, h: 14, c: 0x242a2d },
   ];
-  for (const building of buildings) {
+  const visibleBuildings = S.quality.lowPower ? buildings.slice(0, 8) : buildings;
+  const windows = [];
+  for (const building of visibleBuildings) {
     const mat = std({ color: building.c, roughness: .95 });
     omesh(new THREE.BoxGeometry(building.w, building.h, building.d), mat, [building.x, building.h / 2, building.z]);
     addCollider(building.x, building.z, building.w, building.d);
     const rows = Math.max(2, Math.floor(building.h / 2.1));
     for (let row = 0; row < rows; row++) for (let col = -1; col <= 1; col++) {
       if ((row + col + Math.round(building.x)) % 4 === 0) continue;
-      omesh(new THREE.PlaneGeometry(.65, .42), new THREE.MeshBasicMaterial({ color: 0x8a8565, transparent: true, opacity: .35, fog: true }),
-        [building.x + col * building.w * .22, 1.3 + row * 1.85, building.z - building.d / 2 - .012], { cast: false });
+      windows.push([building.x + col * building.w * .22, 1.3 + row * 1.85, building.z - building.d / 2 - .012]);
     }
   }
+  const windowBatch = new THREE.InstancedMesh(new THREE.PlaneGeometry(.65, .42),
+    new THREE.MeshBasicMaterial({ color: 0x8a8565, transparent: true, opacity: .35, fog: true }), windows.length);
+  const windowDummy = new THREE.Object3D();
+  windows.forEach((position, index) => { windowDummy.position.set(...position); windowDummy.updateMatrix(); windowBatch.setMatrixAt(index, windowDummy.matrix); });
+  windowBatch.instanceMatrix.needsUpdate = true; windowBatch.computeBoundingSphere(); windowBatch.userData.outdoor = true; S.scene.add(windowBatch);
 
-  for (let x = 12; x <= 66; x += 9) {
+  const wheelMat = std({ color: 0x090b0b, roughness: 1 });
+  const cityCar = (x, z, yaw, color) => {
+    const car = new THREE.Group(); car.position.set(x, 0, z); car.rotation.y = yaw; S.scene.add(car);
+    const paint = std({ color, metalness: .18, roughness: .78 });
+    mesh(new THREE.BoxGeometry(1.9, .5, 4), paint, [0, .55, 0], { parent: car, cast: false });
+    mesh(new THREE.BoxGeometry(1.62, .62, 1.75), paint, [0, 1.05, -.12], { parent: car, cast: false });
+    for (const side of [-1, 1]) for (const axle of [-1.25, 1.25]) {
+      const wheel = mesh(new THREE.CylinderGeometry(.32, .32, .18, 8), wheelMat, [side * .98, .34, axle], { parent: car, cast: false });
+      wheel.rotation.z = Math.PI / 2;
+    }
+    outdoor(car);
+    addRotCollider(x, z, 2.1, 4.2, yaw);
+  };
+  const cars = [
+    [16, 32.4, Math.PI / 2, 0x475b58], [30, 36.5, Math.PI / 2, 0x6b4037],
+    [49, 32.3, Math.PI / 2, 0x3e4d62], [63, 36.6, Math.PI / 2, 0x655d42],
+    [84, 32.5, Math.PI / 2, 0x4e3d48], [74.8, 47, 0, 0x3f5450],
+    [79.2, 58, 0, 0x62463b], [74.8, 64, 0, 0x394554],
+  ];
+  cars.slice(0, S.quality.lowPower ? 5 : cars.length).forEach(args => cityCar(...args));
+
+  for (let x = 12; x <= 93; x += 9) {
     omesh(new THREE.CylinderGeometry(.045, .065, 3.8, 7), rust, [x, 1.9, roadZ - 3.55]);
     omesh(new THREE.BoxGeometry(.3, .2, .22), new THREE.MeshBasicMaterial({ color: 0x776d53, fog: true }), [x, 3.72, roadZ - 3.55], { cast: false });
     addCollider(x, roadZ - 3.55, .3, .3);
