@@ -89,10 +89,17 @@ const NPC_SPEED = {
   aggressionFar: .14,
   aggressionClose: .12,
 };
+const NPC_CLEARANCE = 1.2;
+const NPC_CATCH_DISTANCE = 1.5;
+const NAV_CELL = 2;
+const NAV_MIN_X = SURFACE.x - SURFACE.radius + 5;
+const NAV_MIN_Z = SURFACE.z - SURFACE.radius + 5;
+const NAV_SIZE = Math.floor((SURFACE.radius * 2 - 10) / NAV_CELL) + 1;
 const npc = {
   id: "slender", name: "Slender", skin: "Slender", x: 62, y: 0, z: -8,
   yaw: Math.PI, moving: false, state: "wandering", targetId: null,
   patrol: 0, revision: 0, aggression: 1, beamCount: 0, preferredTargetId: null,
+  navPath: [], navTargetX: null, navTargetZ: null, navAt: 0,
 };
 const npcPublic = () => ({
   id: npc.id, name: npc.name, skin: npc.skin, x: npc.x, y: npc.y, z: npc.z,
@@ -102,12 +109,18 @@ const npcPublic = () => ({
 });
 const insideHouse = (x, z) => x > -13.5 && x < 13.5 && z > -13.5 && z < 13.5;
 const insideBunker = (x, z) => x > -11.5 && x < -4.5 && z > 10.5 && z < 21;
-const insideSewerOpening = (x, z) =>
-  (x > 16 && x < 25 && z > -23 && z < -17) ||
-  (x > 55 && x < 61 && z > 14.5 && z < 24);
+const insideNpcHouseClearance = (x, z) =>
+  x > -13.5 - NPC_CLEARANCE && x < 13.5 + NPC_CLEARANCE &&
+  z > -13.5 - NPC_CLEARANCE && z < 13.5 + NPC_CLEARANCE;
+const insideNpcBunkerClearance = (x, z) =>
+  x > -11.5 - NPC_CLEARANCE && x < -4.5 + NPC_CLEARANCE &&
+  z > 10.5 - NPC_CLEARANCE && z < 21 + NPC_CLEARANCE;
+const insideNpcSewerClearance = (x, z) =>
+  (x > 16 - NPC_CLEARANCE && x < 25 + NPC_CLEARANCE && z > -23 - NPC_CLEARANCE && z < -17 + NPC_CLEARANCE) ||
+  (x > 55 - NPC_CLEARANCE && x < 61 + NPC_CLEARANCE && z > 14.5 - NPC_CLEARANCE && z < 24 + NPC_CLEARANCE);
 const npcPositionValid = (x, z) =>
   Math.hypot(x - SURFACE.x, z - SURFACE.z) < SURFACE.radius - 5 &&
-  !insideHouse(x, z) && !insideBunker(x, z) && !insideSewerOpening(x, z);
+  !insideNpcHouseClearance(x, z) && !insideNpcBunkerClearance(x, z) && !insideNpcSewerClearance(x, z);
 const sewerPosition = (x, z) =>
   (x >= 17.5 && x <= 58.5 && z >= -21.5 && z <= -18.5) ||
   (x >= 56.5 && x <= 59.5 && z >= -20.5 && z <= 22.5);
@@ -381,19 +394,133 @@ const chooseTarget = (eligible) =>
     return { player, score: support * 9 + distance * .08 + Math.random() * 1.5 };
   }).sort((a, b) => a.score - b.score)[0]?.player || null;
 
+const segmentValidForNpc = (x0, z0, x1, z1) => {
+  const distance = Math.hypot(x1 - x0, z1 - z0);
+  const steps = Math.max(1, Math.ceil(distance / .45));
+  for (let i = 1; i <= steps; i++) {
+    const k = i / steps;
+    if (!npcPositionValid(x0 + (x1 - x0) * k, z0 + (z1 - z0) * k)) return false;
+  }
+  return true;
+};
+
+const nearestNavCell = (x, z, requireReachable = false) => {
+  const baseX = Math.max(0, Math.min(NAV_SIZE - 1, Math.round((x - NAV_MIN_X) / NAV_CELL)));
+  const baseZ = Math.max(0, Math.min(NAV_SIZE - 1, Math.round((z - NAV_MIN_Z) / NAV_CELL)));
+  let best = null;
+  for (let radius = 0; radius <= 5; radius++) {
+    for (let dz = -radius; dz <= radius; dz++) for (let dx = -radius; dx <= radius; dx++) {
+      if (radius && Math.abs(dx) !== radius && Math.abs(dz) !== radius) continue;
+      const gx = baseX + dx, gz = baseZ + dz;
+      if (gx < 0 || gz < 0 || gx >= NAV_SIZE || gz >= NAV_SIZE) continue;
+      const wx = NAV_MIN_X + gx * NAV_CELL, wz = NAV_MIN_Z + gz * NAV_CELL;
+      if (!npcPositionValid(wx, wz)) continue;
+      if (requireReachable && !segmentValidForNpc(x, z, wx, wz)) continue;
+      const distance = Math.hypot(wx - x, wz - z);
+      if (!best || distance < best.distance) best = { gx, gz, wx, wz, distance };
+    }
+    if (best) return best;
+  }
+  return null;
+};
+
+const planNpcPath = (targetX, targetZ) => {
+  const start = nearestNavCell(npc.x, npc.z, true), goal = nearestNavCell(targetX, targetZ);
+  if (!start || !goal) return [];
+  const total = NAV_SIZE * NAV_SIZE, startId = start.gz * NAV_SIZE + start.gx, goalId = goal.gz * NAV_SIZE + goal.gx;
+  if (startId === goalId) return [];
+  const costs = new Float64Array(total); costs.fill(Infinity);
+  const cameFrom = new Int32Array(total); cameFrom.fill(-1);
+  const closed = new Uint8Array(total), heap = [];
+  const push = item => {
+    heap.push(item);
+    for (let i = heap.length - 1; i > 0;) {
+      const parent = (i - 1) >> 1;
+      if (heap[parent].score <= heap[i].score) break;
+      [heap[parent], heap[i]] = [heap[i], heap[parent]]; i = parent;
+    }
+  };
+  const pop = () => {
+    const first = heap[0], last = heap.pop();
+    if (heap.length) {
+      heap[0] = last;
+      for (let i = 0;;) {
+        const left = i * 2 + 1, right = left + 1;
+        if (left >= heap.length) break;
+        const next = right < heap.length && heap[right].score < heap[left].score ? right : left;
+        if (heap[i].score <= heap[next].score) break;
+        [heap[i], heap[next]] = [heap[next], heap[i]]; i = next;
+      }
+    }
+    return first;
+  };
+  costs[startId] = 0; push({ id: startId, score: Math.hypot(goal.gx - start.gx, goal.gz - start.gz) });
+  const directions = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  while (heap.length) {
+    const current = pop(), id = current.id;
+    if (closed[id]) continue;
+    if (id === goalId) break;
+    closed[id] = 1;
+    const gx = id % NAV_SIZE, gz = Math.floor(id / NAV_SIZE);
+    for (const [dx, dz] of directions) {
+      const nx = gx + dx, nz = gz + dz;
+      if (nx < 0 || nz < 0 || nx >= NAV_SIZE || nz >= NAV_SIZE) continue;
+      const wx = NAV_MIN_X + nx * NAV_CELL, wz = NAV_MIN_Z + nz * NAV_CELL;
+      if (!npcPositionValid(wx, wz)) continue;
+      if (dx && dz) {
+        const sideAX = NAV_MIN_X + nx * NAV_CELL, sideAZ = NAV_MIN_Z + gz * NAV_CELL;
+        const sideBX = NAV_MIN_X + gx * NAV_CELL, sideBZ = NAV_MIN_Z + nz * NAV_CELL;
+        if (!npcPositionValid(sideAX, sideAZ) || !npcPositionValid(sideBX, sideBZ)) continue;
+      }
+      const nextId = nz * NAV_SIZE + nx, nextCost = costs[id] + (dx && dz ? Math.SQRT2 : 1);
+      if (nextCost >= costs[nextId]) continue;
+      costs[nextId] = nextCost; cameFrom[nextId] = id;
+      push({ id: nextId, score: nextCost + Math.hypot(goal.gx - nx, goal.gz - nz) });
+    }
+  }
+  if (cameFrom[goalId] < 0) return [];
+  const raw = [];
+  for (let id = goalId; id !== startId; id = cameFrom[id]) {
+    const gx = id % NAV_SIZE, gz = Math.floor(id / NAV_SIZE);
+    raw.push({ x: NAV_MIN_X + gx * NAV_CELL, z: NAV_MIN_Z + gz * NAV_CELL });
+  }
+  raw.reverse();
+  raw.unshift({ x: start.wx, z: start.wz });
+  // Collapse the grid path into long visible segments for smooth, inexpensive movement.
+  const path = [];
+  let fromX = npc.x, fromZ = npc.z;
+  for (let index = 0; index < raw.length;) {
+    let farthest = index;
+    if (!segmentValidForNpc(fromX, fromZ, raw[farthest].x, raw[farthest].z)) return [];
+    while (farthest + 1 < raw.length && segmentValidForNpc(fromX, fromZ, raw[farthest + 1].x, raw[farthest + 1].z)) farthest++;
+    const point = raw[farthest]; path.push(point); fromX = point.x; fromZ = point.z; index = farthest + 1;
+  }
+  return path;
+};
+
 const moveNpc = (dx, dz, speed, dt) => {
   const distance = Math.hypot(dx, dz);
   if (distance < .001) { npc.moving = false; return; }
-  const nx = npc.x + dx / distance * speed * dt;
-  const nz = npc.z + dz / distance * speed * dt;
-  npc.yaw = Math.atan2(dx, dz);
-  npc.moving = speed > .05;
-  if (npcPositionValid(nx, nz)) { npc.x = nx; npc.z = nz; return; }
-  // Slide around protected structures instead of entering the lodge, bunker or sewer stairs.
-  const sideX = npc.x + dz / distance * speed * dt;
-  const sideZ = npc.z - dx / distance * speed * dt;
-  if (npcPositionValid(sideX, sideZ)) { npc.x = sideX; npc.z = sideZ; }
-  else npc.moving = false;
+  const targetX = npc.x + dx, targetZ = npc.z + dz, now = Date.now();
+  let destination = { x: targetX, z: targetZ };
+  if (segmentValidForNpc(npc.x, npc.z, targetX, targetZ)) {
+    npc.navPath = [];
+  } else {
+    const targetMoved = npc.navTargetX === null || Math.hypot(targetX - npc.navTargetX, targetZ - npc.navTargetZ) > 3;
+    if (!npc.navPath.length || targetMoved || now - npc.navAt > 2500) {
+      npc.navPath = planNpcPath(targetX, targetZ);
+      npc.navTargetX = targetX; npc.navTargetZ = targetZ; npc.navAt = now;
+    }
+    while (npc.navPath.length && Math.hypot(npc.navPath[0].x - npc.x, npc.navPath[0].z - npc.z) < .12) npc.navPath.shift();
+    if (npc.navPath.length) destination = npc.navPath[0];
+  }
+  const moveX = destination.x - npc.x, moveZ = destination.z - npc.z, moveDistance = Math.hypot(moveX, moveZ);
+  if (moveDistance < .001) { npc.moving = false; return; }
+  const step = Math.min(moveDistance, speed * dt), heading = Math.atan2(moveX, moveZ);
+  const nx = npc.x + moveX / moveDistance * step, nz = npc.z + moveZ / moveDistance * step;
+  npc.yaw = heading;
+  if (npcPositionValid(nx, nz)) { npc.x = nx; npc.z = nz; npc.moving = speed > .05; }
+  else { npc.navAt = 0; npc.moving = false; }
 };
 
 let npcLastTick = Date.now();
@@ -421,7 +548,7 @@ setInterval(() => {
     ? NPC_SPEED.close + npc.aggression * NPC_SPEED.aggressionClose
     : NPC_SPEED.far + npc.aggression * NPC_SPEED.aggressionFar;
   moveNpc(target.x - npc.x, target.z - npc.z, speed, dt);
-  if (Math.hypot(target.x - npc.x, target.z - npc.z) < .85) {
+  if (Math.hypot(target.x - npc.x, target.z - npc.z) < NPC_CATCH_DISTANCE) {
     target.deadUntil = now + 10_000;
     broadcast({ type: "npc-game-over", playerId: target.id, name: target.name, ts: now });
     npc.aggression = Math.max(1, npc.aggression - .45); npc.preferredTargetId = null;
