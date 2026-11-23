@@ -32,17 +32,35 @@ export function buildSewer() {
 
   // Main L-shaped network: far east of the house, then north to a second exit.
   addPart(new THREE.BoxGeometry(34, .16, HALF * 2), wet, [41, FLOOR - .08, A.z]);
-  addPart(new THREE.BoxGeometry(34, .16, HALF * 2), concrete, [41, CEILING, A.z]);
-  for (const z of [A.z - HALF, A.z + HALF]) {
-    addPart(new THREE.BoxGeometry(34, CEILING - FLOOR, .18), concrete, [41, (FLOOR + CEILING) / 2, z]);
-    addCollider(41, z, 34, .24, wallOpts);
-  }
+  addPart(new THREE.BoxGeometry(34, .16, HALF * 2 + 3), concrete, [41, CEILING, A.z]);
+  // Fill the complete turning square. The two straight slabs only overlap in half
+  // of it, which previously left the outer corner open to the surface. The roof
+  // deliberately overhangs the walls so the outdoor scene cannot leak through
+  // the seam at shallow first-person viewing angles.
+  addPart(new THREE.BoxGeometry(HALF * 2, .16, HALF * 2), wet, [B.x, FLOOR - .08, A.z]);
+  addPart(new THREE.BoxGeometry(HALF * 2 + 2.4, .16, HALF * 2 + 2.4), concrete, [B.x, CEILING, A.z]);
+  const horizontalOuterLength = B.x + HALF - A.x1;
+  const horizontalInnerLength = B.x - HALF - A.x1;
+  const horizontalOuterX = (A.x1 + B.x + HALF) / 2;
+  const horizontalInnerX = (A.x1 + B.x - HALF) / 2;
+  addPart(new THREE.BoxGeometry(horizontalOuterLength, CEILING - FLOOR, .18), concrete,
+    [horizontalOuterX, (FLOOR + CEILING) / 2, A.z - HALF]);
+  addCollider(horizontalOuterX, A.z - HALF, horizontalOuterLength, .24, wallOpts);
+  addPart(new THREE.BoxGeometry(horizontalInnerLength, CEILING - FLOOR, .18), concrete,
+    [horizontalInnerX, (FLOOR + CEILING) / 2, A.z + HALF]);
+  addCollider(horizontalInnerX, A.z + HALF, horizontalInnerLength, .24, wallOpts);
   addPart(new THREE.BoxGeometry(HALF * 2, .16, 36), wet, [B.x, FLOOR - .08, -2]);
-  addPart(new THREE.BoxGeometry(HALF * 2, .16, 36), concrete, [B.x, CEILING, -2]);
-  for (const x of [B.x - HALF, B.x + HALF]) {
-    addPart(new THREE.BoxGeometry(.18, CEILING - FLOOR, 36), concrete, [x, (FLOOR + CEILING) / 2, -2]);
-    addCollider(x, -2, .24, 36, wallOpts);
-  }
+  addPart(new THREE.BoxGeometry(HALF * 2 + 3, .16, 36), concrete, [B.x, CEILING, -2]);
+  const verticalOuterLength = B.z0 - (A.z - HALF);
+  const verticalInnerLength = B.z0 - (A.z + HALF);
+  const verticalOuterZ = (B.z0 + A.z - HALF) / 2;
+  const verticalInnerZ = (B.z0 + A.z + HALF) / 2;
+  addPart(new THREE.BoxGeometry(.18, CEILING - FLOOR, verticalOuterLength), concrete,
+    [B.x + HALF, (FLOOR + CEILING) / 2, verticalOuterZ]);
+  addCollider(B.x + HALF, verticalOuterZ, .24, verticalOuterLength, wallOpts);
+  addPart(new THREE.BoxGeometry(.18, CEILING - FLOOR, verticalInnerLength), concrete,
+    [B.x - HALF, (FLOOR + CEILING) / 2, verticalInnerZ]);
+  addCollider(B.x - HALF, verticalInnerZ, .24, verticalInnerLength, wallOpts);
 
   buildStairsA(addPart, concrete, retaining, rail, hazard, sign, wallOpts);
   buildStairsB(addPart, concrete, retaining, rail, hazard, sign, wallOpts);
@@ -80,7 +98,8 @@ export function buildSewer() {
     const below = currentY < -.45;
     const horizontal = x >= A.x1 && x <= B.x && z >= A.z - 1.35 && z <= A.z + 1.35;
     const vertical = x >= B.x - 1.35 && x <= B.x + 1.35 && z >= A.z && z <= B.z0;
-    return below && (horizontal || vertical) ? FLOOR : 0;
+    const turn = x >= B.x - 1.35 && x <= B.x + 1.35 && z >= A.z - 1.35 && z <= A.z + 1.35;
+    return below && (horizontal || vertical || turn) ? FLOOR : 0;
   };
   S.sewer = { floor: FLOOR, isUnderground: (x, z, y) => y < -.45 && S.groundHeightAt(x, z, y) < -.45 };
 }

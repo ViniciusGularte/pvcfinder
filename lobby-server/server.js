@@ -128,8 +128,8 @@ const npcPositionValid = (x, z) =>
   !insideNpcHouseClearance(x, z) && !insideNpcBunkerClearance(x, z) &&
   !insideNpcCabinClearance(x, z) && !insideNpcSewerClearance(x, z);
 const sewerPosition = (x, z) =>
-  (x >= 17.5 && x <= 58.5 && z >= -21.5 && z <= -18.5) ||
-  (x >= 56.5 && x <= 59.5 && z >= -20.5 && z <= 22.5);
+  (x >= 17.5 && x <= 59.5 && z >= -21.55 && z <= -18.45) ||
+  (x >= 56.45 && x <= 59.55 && z >= -21.55 && z <= 22.5);
 const publicPlayer = (player) => ({
   id: player.id,
   name: player.name,
