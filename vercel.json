@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/legacy.html"
+      "destination": "/legacy/"
     },
     {
       "source": "/lobby/skin/:name.png",
