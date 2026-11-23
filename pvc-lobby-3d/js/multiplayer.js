@@ -68,6 +68,7 @@ function applyShared(shared = {}) {
   S.shared = { ...(S.shared || {}), ...shared };
   if (shared.weather) setGlobalWeather(shared.weather);
   if (shared.mapView) S.mapScreen?.applyShared(shared.mapView);
+  if (typeof shared.cabinOpen === 'boolean') S.cabinDoor?.apply(shared.cabinOpen);
   if (shared.jukebox) audioFX.applyJukebox(shared.jukebox);
   else if (typeof shared.jukeboxPlaying === 'boolean') {
     // Compatibility with the previous VPS protocol until every node is upgraded.
@@ -98,6 +99,7 @@ function handle(message) {
   else if (message.type === 'player-leave') removeRemote(message.id);
   else if (message.type === 'chat') S.chat?.receive(message.row);
   else if (message.type === 'bunker-open') S.bunker?.openDoor(message.until);
+  else if (message.type === 'cabin-door') S.cabinDoor?.apply(message.open);
   else if (message.type === 'shared') applyShared(message.shared);
   else if (message.type === 'emote') {
     const row = remotes.get(message.id);
@@ -170,6 +172,7 @@ export function initMultiplayer() {
     clearBoard() { send({ type: 'board-clear' }); },
     chat(message) { send({ type: 'chat', message }); },
     openBunker() { send({ type: 'bunker-open' }); },
+    setCabinDoor(open) { send({ type: 'cabin-door', open: !!open }); },
     setJukebox(state) { send({ type: 'jukebox', ...state }); },
     respawnNPC() { send({ type: 'npc-respawn' }); },
   };

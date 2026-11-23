@@ -190,28 +190,6 @@ function buildAbandonedExterior() {
   const path = omesh(new THREE.PlaneGeometry(60, 3.4), oldConcrete, [x0 + 29.5, -.018, SURFACE_DOOR_Z + 1.5], { cast: false });
   path.rotation.x = -Math.PI / 2;
 
-  // Concrete stairway into the shell of an unfinished building.
-  const stairZ = SURFACE_DOOR_Z + 8.2, stairX = x0 + 17;
-  for (let i = 0; i < 8; i++) {
-    const h = .16 + i * .16;
-    omesh(new THREE.BoxGeometry(.58, h, 2.25), concrete, [stairX + i * .5, h / 2, stairZ]);
-  }
-  omesh(new THREE.BoxGeometry(2.7, .18, 2.7), concrete, [stairX + 4.1, 1.38, stairZ]);
-  addCollider(stairX + 1.75, stairZ, 4.2, 2.4);
-
-  const buildX = x0 + 27, buildZ = SURFACE_DOOR_Z + 11;
-  for (const x of [buildX - 2.6, buildX + 2.6]) for (const z of [buildZ - 2.7, buildZ + 2.7]) {
-    omesh(new THREE.BoxGeometry(.34, 5.2, .34), oldConcrete, [x, 2.6, z]); addCollider(x, z, .5, .5);
-  }
-  for (const y of [2.45, 4.75]) {
-    omesh(new THREE.BoxGeometry(5.55, .22, 5.8), concrete, [buildX, y, buildZ]);
-    for (const z of [buildZ - 2.7, buildZ + 2.7]) omesh(new THREE.BoxGeometry(5.7, .32, .3), oldConcrete, [buildX, y + .32, z]);
-  }
-  omesh(new THREE.BoxGeometry(.22, 2.2, 3.2), oldConcrete, [buildX + 2.55, 3.65, buildZ + .6]);
-  addCollider(buildX + 2.55, buildZ + .6, .34, 3.25);
-  for (let i = 0; i < 5; i++) omesh(new THREE.CylinderGeometry(.025, .025, 1.25 + i * .16, 6), rust,
-    [buildX - 2.3 + i * .42, 5.38 + i * .08, buildZ - 2.25]);
-
   // Repeating concrete frames form a maintenance tunnel directly beyond the viewing slot.
   const tunnelX = x0 + 40, tunnelZ = SURFACE_DOOR_Z + 2;
   omesh(new THREE.BoxGeometry(7.4, .12, 3.35), oldConcrete, [tunnelX + 3.2, .02, tunnelZ]);
@@ -276,8 +254,178 @@ function buildAbandonedExterior() {
   const workLight = new THREE.PointLight(0xdca35e, 2.2, 9, 2); workLight.position.set(x0 + 2.35, 2.5, SURFACE_DOOR_Z - .7); S.scene.add(workLight);
   S.onFrame((_dt, t) => { workLight.intensity = 1.65 + Math.sin(t * 7.7) * .22 + Math.sin(t * 19.3) * .12; });
 
+  buildBackwoods(omesh, outdoor);
   buildDistantDistrict(omesh, oldConcrete, rust);
   buildMountainBarrier();
+}
+
+function buildBackwoods(omesh, outdoor) {
+  const CABIN = { x: -23, z: -34, w: 7.2, d: 5.8, h: 3.05, doorW: 1.5 };
+  const dirt = std({ color: 0x604a32, roughness: 1 });
+  const placeTrail = (x0, z0, x1, z1, width) => {
+    const dx = x1 - x0, dz = z1 - z0, length = Math.hypot(dx, dz);
+    const trail = omesh(new THREE.BoxGeometry(width, .035, length), dirt, [(x0 + x1) / 2, .008, (z0 + z1) / 2], { cast: false });
+    trail.rotation.y = Math.atan2(dx, dz); trail.receiveShadow = true;
+  };
+  // A forked dirt route fills the previously empty rear field and leads to the cabin.
+  placeTrail(-1, -14, -10, -22, 2.9);
+  placeTrail(-10, -22, CABIN.x, CABIN.z + CABIN.d / 2 + 1.1, 2.65);
+  placeTrail(-10, -22, 8, -39, 2.15);
+
+  const trees = [
+    [-17, -18, 1.15, 0], [-23, -19, 1.4, 1], [-31, -18, 1.05, 0], [-38, -22, 1.55, 0],
+    [-44, -29, 1.25, 1], [-41, -39, 1.6, 0], [-35, -45, 1.25, 1], [-27, -47, 1.45, 0],
+    [-18, -44, 1.1, 1], [-11, -47, 1.5, 0], [-3, -45, 1.2, 1], [7, -48, 1.55, 0],
+    [15, -43, 1.15, 1], [18, -34, 1.5, 0], [13, -27, 1.05, 1], [6, -22, 1.35, 0],
+    [-34, -31, 1.0, 1], [-35, -36, 1.2, 0], [-30, -40, .95, 1], [-15, -34, 1.1, 0],
+    [-12, -29, .9, 1], [1, -31, 1.25, 0], [5, -37, 1.0, 1], [-7, -39, 1.2, 0],
+  ].map(([x, z, s, type]) => ({ x, z, s, type }));
+  const pineTrees = trees.filter(tree => tree.type === 0), broadTrees = trees.filter(tree => tree.type === 1);
+  const trunkMat = std({ color: 0x49301f, roughness: 1 });
+  const pineMat = std({ color: 0x213d2a, roughness: 1 });
+  const leafMat = std({ color: 0x34552e, roughness: 1 });
+  const dummy = new THREE.Object3D();
+  const batch = (geometry, material, items, place) => {
+    const object = new THREE.InstancedMesh(geometry, material, items.length);
+    items.forEach((item, index) => { place(dummy, item); dummy.updateMatrix(); object.setMatrixAt(index, dummy.matrix); });
+    object.instanceMatrix.needsUpdate = true; object.castShadow = false; object.receiveShadow = true; object.computeBoundingSphere();
+    S.scene.add(object); outdoor(object); return object;
+  };
+  batch(new THREE.CylinderGeometry(.17, .25, 1.6, 6), trunkMat, trees, (d, tree) => {
+    d.position.set(tree.x, .8 * tree.s, tree.z); d.rotation.set(0, 0, 0); d.scale.setScalar(tree.s);
+  });
+  batch(new THREE.ConeGeometry(1.35, 2.5, 7), pineMat, pineTrees, (d, tree) => {
+    d.position.set(tree.x, 2.25 * tree.s, tree.z); d.rotation.set(0, tree.x * .13, 0); d.scale.set(tree.s, tree.s, tree.s);
+  });
+  batch(new THREE.IcosahedronGeometry(1.25, 1), leafMat, broadTrees, (d, tree) => {
+    d.position.set(tree.x, 2.45 * tree.s, tree.z); d.rotation.set(0, tree.z * .11, 0); d.scale.set(1.1 * tree.s, .9 * tree.s, tree.s);
+  });
+  trees.forEach(tree => addCollider(tree.x, tree.z, .55 * tree.s, .55 * tree.s));
+
+  const undergrowth = [
+    [-14, -20, .7], [-20, -22, .55], [-28, -21, .8], [-37, -27, .65], [-38, -35, .9],
+    [-32, -43, .6], [-22, -45, .75], [-14, -41, .9], [-5, -42, .65], [4, -44, .8],
+    [12, -39, .7], [14, -31, .9], [9, -25, .6], [1, -24, .75], [-8, -27, .55],
+    [-31, -27, .65], [-30, -34, .5], [-16, -39, .7], [-9, -35, .6], [7, -34, .8],
+  ].map(([x, z, s]) => ({ x, z, s }));
+  batch(new THREE.DodecahedronGeometry(.7, 0), std({ color: 0x426437, roughness: 1 }), undergrowth, (d, bush) => {
+    d.position.set(bush.x, .38 * bush.s, bush.z); d.rotation.set(0, bush.x + bush.z, 0); d.scale.set(1.3 * bush.s, .7 * bush.s, bush.s);
+  });
+
+  buildForestCabin(CABIN, omesh, outdoor);
+}
+
+function buildForestCabin(cabin, omesh, outdoor) {
+  const { x, z, w, d, h, doorW } = cabin, wallT = .28, frontZ = z + d / 2;
+  const plankTexture = canvasTex(256, 256, (g, tw, th) => {
+    g.fillStyle = '#5b3824'; g.fillRect(0, 0, tw, th);
+    for (let row = 0; row < 8; row++) {
+      const y = row * 32;
+      g.fillStyle = row % 2 ? '#68412a' : '#5e3925'; g.fillRect(0, y + 2, tw, 28);
+      g.strokeStyle = '#291a14'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, y); g.lineTo(tw, y); g.stroke();
+      g.strokeStyle = 'rgba(255,190,120,.13)'; g.lineWidth = 1;
+      for (let line = 0; line < 3; line++) { g.beginPath(); g.moveTo(0, y + 8 + line * 6); g.bezierCurveTo(60, y + 4 + line * 6, 170, y + 13 + line * 5, tw, y + 7 + line * 6); g.stroke(); }
+      const knotX = 28 + (row * 67) % 190; g.strokeStyle = '#3b2419'; g.beginPath(); g.ellipse(knotX, y + 16, 8, 4, 0, 0, Math.PI * 2); g.stroke();
+    }
+  }, [2, 2]);
+  const timber = std({ map: plankTexture, color: 0xffffff, roughness: .95 });
+  const darkTimber = std({ color: 0x2b1b15, roughness: 1 });
+  const floorMat = std({ color: 0x4a3023, roughness: .86 });
+  const roofMat = std({ color: 0x211b19, roughness: 1 });
+  const walls = [];
+  const cabinMesh = (geometry, material, position, options = {}) => {
+    const object = omesh(geometry, material, position, options); walls.push(object); return object;
+  };
+  const floor = omesh(new THREE.BoxGeometry(w - .3, .1, d - .3), floorMat, [x, .035, z], { cast: false });
+  floor.userData.walkable = true;
+  cabinMesh(new THREE.BoxGeometry(w, h, wallT), timber, [x, h / 2, z - d / 2]);
+  cabinMesh(new THREE.BoxGeometry(wallT, h, d), timber, [x - w / 2, h / 2, z]);
+  cabinMesh(new THREE.BoxGeometry(wallT, h, d), timber, [x + w / 2, h / 2, z]);
+  const frontPart = (w - doorW) / 2;
+  cabinMesh(new THREE.BoxGeometry(frontPart, h, wallT), timber, [x - doorW / 2 - frontPart / 2, h / 2, frontZ]);
+  cabinMesh(new THREE.BoxGeometry(frontPart, h, wallT), timber, [x + doorW / 2 + frontPart / 2, h / 2, frontZ]);
+  cabinMesh(new THREE.BoxGeometry(doorW, .65, wallT), timber, [x, h - .325, frontZ]);
+  addCollider(x, z - d / 2, w, wallT + .12);
+  addCollider(x - w / 2, z, wallT + .12, d);
+  addCollider(x + w / 2, z, wallT + .12, d);
+  addCollider(x - doorW / 2 - frontPart / 2, frontZ, frontPart, wallT + .12);
+  addCollider(x + doorW / 2 + frontPart / 2, frontZ, frontPart, wallT + .12);
+
+  const rise = 1.28, run = w / 2 + .42, slope = Math.hypot(run, rise);
+  const gableShape = new THREE.Shape();
+  gableShape.moveTo(-w / 2, 0); gableShape.lineTo(0, rise); gableShape.lineTo(w / 2, 0); gableShape.closePath();
+  const gableMat = std({ map: plankTexture, color: 0xffffff, roughness: .95, side: THREE.DoubleSide });
+  for (const faceZ of [z - d / 2, z + d / 2]) cabinMesh(new THREE.ShapeGeometry(gableShape), gableMat, [x, h, faceZ]);
+  for (const side of [-1, 1]) {
+    const roof = cabinMesh(new THREE.BoxGeometry(slope, .2, d + .8), roofMat,
+      [x + side * run / 2, h + rise / 2, z]);
+    roof.rotation.z = side * -Math.atan2(rise, run);
+  }
+  S.camBlockers.push(...walls);
+
+  // Heavy corner posts and doorway trim break up the silhouette and sell the log-built structure.
+  for (const cornerX of [x - w / 2, x + w / 2]) for (const cornerZ of [z - d / 2, z + d / 2])
+    omesh(new THREE.BoxGeometry(.24, h + .18, .24), darkTimber, [cornerX, (h + .18) / 2, cornerZ]);
+  for (const trimX of [x - doorW / 2 - .1, x + doorW / 2 + .1])
+    omesh(new THREE.BoxGeometry(.18, 2.55, .36), darkTimber, [trimX, 1.275, frontZ + .03]);
+  omesh(new THREE.BoxGeometry(doorW + .38, .2, .36), darkTimber, [x, 2.48, frontZ + .03]);
+
+  // Door swings inward and moves its collision out of the doorway while open.
+  const hinge = new THREE.Group(); hinge.position.set(x - doorW / 2, 0, frontZ - .02); S.scene.add(hinge);
+  const door = omesh(new THREE.BoxGeometry(doorW, 2.35, .16), darkTimber, [doorW / 2, 1.175, 0], { parent: hinge });
+  const brace = omesh(new THREE.BoxGeometry(doorW * .78, .12, .18), timber, [doorW / 2, 1.25, -.01], { parent: hinge });
+  brace.rotation.z = -.45;
+  const knob = omesh(new THREE.SphereGeometry(.065, 10, 8), std({ color: 0xa7864f, metalness: .7, roughness: .3 }), [doorW - .16, 1.15, .1], { parent: hinge });
+  outdoor(hinge);
+  const doorCollider = addCollider(x, frontZ, doorW, .38);
+  let open = false, targetOpen = false, doorRun = 0;
+  const setDoorState = (nextOpen, sound = false) => {
+    nextOpen = !!nextOpen;
+    if (nextOpen === targetOpen && open === nextOpen) return;
+    targetOpen = nextOpen; const run = ++doorRun, start = hinge.rotation.y, target = nextOpen ? Math.PI / 2 : 0;
+    if (nextOpen) Object.assign(doorCollider, { minX: 9999, maxX: 10000, minZ: 9999, maxZ: 10000 });
+    if (sound) sfx.door();
+    animate(.55, k => {
+      if (run !== doorRun) return;
+      const eased = k * k * (3 - 2 * k); hinge.rotation.y = start + (target - start) * eased;
+    }, () => {
+      if (run !== doorRun) return;
+      open = nextOpen;
+      if (!open) Object.assign(doorCollider, { minX: x - doorW / 2, maxX: x + doorW / 2, minZ: frontZ - .19, maxZ: frontZ + .19 });
+    });
+  };
+  const toggleDoor = () => {
+    const nextOpen = !targetOpen;
+    setDoorState(nextOpen, true);
+    S.multiplayer?.setCabinDoor(nextOpen);
+  };
+  S.cabinDoor = { apply: nextOpen => setDoorState(nextOpen, false), get open() { return targetOpen; } };
+  addInteractable([door, brace, knob], { verb: () => targetOpen ? 'Close' : 'Open', name: 'the forest cabin door', anchor: V(x, 0, frontZ + .3), range: 2.1, action: toggleDoor });
+
+  // Warm interior and porch lights make the cabin readable through dense fog.
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffc56c, fog: true });
+  omesh(new THREE.CylinderGeometry(.035, .035, .55, 7), darkTimber, [x, h - .28, z], { cast: false });
+  omesh(new THREE.SphereGeometry(.12, 12, 8), bulbMat, [x, h - .58, z], { cast: false });
+  const interiorLight = new THREE.PointLight(0xffa94f, 4.8, 10, 1.7); interiorLight.position.set(x, 2.15, z); S.scene.add(interiorLight);
+  const windowGlow = omesh(new THREE.PlaneGeometry(1.25, .9), new THREE.MeshBasicMaterial({ color: 0xd58c42, fog: true }),
+    [x + w / 2 + .015, 1.55, z - .45], { cast: false });
+  windowGlow.rotation.y = Math.PI / 2;
+  for (const dy of [-.52, .52]) omesh(new THREE.BoxGeometry(.12, .12, 1.45), darkTimber,
+    [x + w / 2 + .04, 1.55 + dy, z - .45]);
+  for (const dz of [-.72, .72]) omesh(new THREE.BoxGeometry(.12, 1.16, .12), darkTimber,
+    [x + w / 2 + .04, 1.55, z - .45 + dz]);
+  omesh(new THREE.BoxGeometry(.2, .28, .16), darkTimber, [x + 1.7, 2.35, frontZ + .12], { cast: false });
+  omesh(new THREE.SphereGeometry(.09, 10, 8), bulbMat, [x + 1.7, 2.27, frontZ + .23], { cast: false });
+  const porchLight = new THREE.PointLight(0xffb45c, 2.8, 8, 1.8); porchLight.position.set(x + 1.7, 2.2, frontZ + .45); S.scene.add(porchLight);
+
+  // Sparse furniture gives the interior scale without blocking the entrance.
+  omesh(new THREE.BoxGeometry(2.35, .38, 1.05), darkTimber, [x - 1.55, .28, z - 1.55]);
+  omesh(new THREE.BoxGeometry(2.15, .16, .88), std({ color: 0x736650, roughness: 1 }), [x - 1.55, .54, z - 1.55]);
+  addCollider(x - 1.55, z - 1.55, 2.35, 1.05);
+  omesh(new THREE.BoxGeometry(1.05, .12, .8), timber, [x + 1.8, .78, z - 1.25]);
+  for (const [dx, dz] of [[1.42, -1.5], [2.18, -1.5], [1.42, -1], [2.18, -1]])
+    omesh(new THREE.BoxGeometry(.1, .72, .1), darkTimber, [x + dx, .4, z + dz]);
+  addCollider(x + 1.8, z - 1.25, 1.15, .9);
 }
 
 function buildDistantDistrict(omesh, concrete, rust) {

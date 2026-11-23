@@ -39,6 +39,7 @@ const weatherPresets = new Set(["clear", "cloudy", "rain", "storm", "snow", "fog
 const weatherTimes = new Set(["night", "sunset", "day"]);
 const shared = {
   jukebox: { playing: false, track: 0, startedAt: null },
+  cabinOpen: false,
   mapWorld: "overworld",
   mapView: { x: 256, z: 256, zoom: 1 },
   weather: {
@@ -109,18 +110,23 @@ const npcPublic = () => ({
 });
 const insideHouse = (x, z) => x > -13.5 && x < 13.5 && z > -13.5 && z < 13.5;
 const insideBunker = (x, z) => x > -11.5 && x < -4.5 && z > 10.5 && z < 21;
+const insideCabin = (x, z) => x > -26.6 && x < -19.4 && z > -36.9 && z < -31.1;
 const insideNpcHouseClearance = (x, z) =>
   x > -13.5 - NPC_CLEARANCE && x < 13.5 + NPC_CLEARANCE &&
   z > -13.5 - NPC_CLEARANCE && z < 13.5 + NPC_CLEARANCE;
 const insideNpcBunkerClearance = (x, z) =>
   x > -11.5 - NPC_CLEARANCE && x < -4.5 + NPC_CLEARANCE &&
   z > 10.5 - NPC_CLEARANCE && z < 21 + NPC_CLEARANCE;
+const insideNpcCabinClearance = (x, z) =>
+  x > -26.6 - NPC_CLEARANCE && x < -19.4 + NPC_CLEARANCE &&
+  z > -36.9 - NPC_CLEARANCE && z < -31.1 + NPC_CLEARANCE;
 const insideNpcSewerClearance = (x, z) =>
   (x > 16 - NPC_CLEARANCE && x < 25 + NPC_CLEARANCE && z > -23 - NPC_CLEARANCE && z < -17 + NPC_CLEARANCE) ||
   (x > 55 - NPC_CLEARANCE && x < 61 + NPC_CLEARANCE && z > 14.5 - NPC_CLEARANCE && z < 24 + NPC_CLEARANCE);
 const npcPositionValid = (x, z) =>
   Math.hypot(x - SURFACE.x, z - SURFACE.z) < SURFACE.radius - 5 &&
-  !insideNpcHouseClearance(x, z) && !insideNpcBunkerClearance(x, z) && !insideNpcSewerClearance(x, z);
+  !insideNpcHouseClearance(x, z) && !insideNpcBunkerClearance(x, z) &&
+  !insideNpcCabinClearance(x, z) && !insideNpcSewerClearance(x, z);
 const sewerPosition = (x, z) =>
   (x >= 17.5 && x <= 58.5 && z >= -21.5 && z <= -18.5) ||
   (x >= 56.5 && x <= 59.5 && z >= -20.5 && z <= 22.5);
@@ -173,6 +179,7 @@ wss.on("connection", (socket) => {
     lastChat: 0,
     lastEmote: 0,
     lastBunker: 0,
+    lastCabinDoor: 0,
     lastJukebox: 0,
     deadUntil: 0,
   };
@@ -275,6 +282,15 @@ wss.on("connection", (socket) => {
       if (now - player.lastBunker < 1200) return;
       player.lastBunker = now;
       broadcast({ type: "bunker-open", name: player.name, until: now + 2500 });
+      return;
+    }
+
+    if (message.type === "cabin-door") {
+      const now = Date.now();
+      if (now - player.lastCabinDoor < 500) return;
+      player.lastCabinDoor = now;
+      shared.cabinOpen = !!message.open;
+      broadcast({ type: "cabin-door", open: shared.cabinOpen, playerId: id });
       return;
     }
 
@@ -528,7 +544,7 @@ setInterval(() => {
   const now = Date.now(), dt = Math.min(.2, (now - npcLastTick) / 1000); npcLastTick = now;
   const eligible = [...players.values()].filter((player) =>
     player.joined && now >= player.deadUntil && player.y > -.45 &&
-    !insideHouse(player.x, player.z) && !insideBunker(player.x, player.z));
+    !insideHouse(player.x, player.z) && !insideBunker(player.x, player.z) && !insideCabin(player.x, player.z));
   if (!eligible.length) {
     npc.targetId = null; npc.preferredTargetId = null; npc.beamCount = 0;
     const [tx, tz] = NPC_PATROL[npc.patrol % NPC_PATROL.length];

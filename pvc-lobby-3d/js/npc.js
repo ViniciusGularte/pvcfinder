@@ -4,6 +4,8 @@ import { audioFX } from './audio.js';
 import { $, V } from './util.js';
 
 const HOME = { minX: -13.5, maxX: 13.5, minZ: -13.5, maxZ: 13.5 };
+const CABIN = { minX: -26.6, maxX: -19.4, minZ: -36.9, maxZ: -31.1 };
+const inside = (bounds, x, z) => x > bounds.minX && x < bounds.maxX && z > bounds.minZ && z < bounds.maxZ;
 
 function createSlenderModel() {
   const root = new THREE.Group(); root.name = 'SlenderNPC';
@@ -139,8 +141,7 @@ export function initNPC() {
   function onRoar() {
     const player = S.player;
     if (!player || !state.ready || !avatar.root.visible) return;
-    const indoors = player.pos.y < -.45 ||
-      (player.pos.x > HOME.minX && player.pos.x < HOME.maxX && player.pos.z > HOME.minZ && player.pos.z < HOME.maxZ);
+    const indoors = player.pos.y < -.45 || inside(HOME, player.pos.x, player.pos.z) || inside(CABIN, player.pos.x, player.pos.z);
     const distance = Math.hypot(player.pos.x - avatar.root.position.x, player.pos.z - avatar.root.position.z);
     audioFX.playSlenderRoar(distance, indoors);
   }
@@ -169,7 +170,7 @@ export function initNPC() {
     }
     const player = S.player;
     const indoors = !player || player.pos.y < -.45 ||
-      (player.pos.x > HOME.minX && player.pos.x < HOME.maxX && player.pos.z > HOME.minZ && player.pos.z < HOME.maxZ);
+      inside(HOME, player.pos.x, player.pos.z) || inside(CABIN, player.pos.x, player.pos.z);
     const distance = player ? Math.hypot(player.pos.x - avatar.root.position.x, player.pos.z - avatar.root.position.z) : 99;
     audioFX.updateSlenderFootsteps(distance, !indoors && avatar.root.visible && state.moving);
     audioFX.updateSlenderRoar(distance, indoors);
