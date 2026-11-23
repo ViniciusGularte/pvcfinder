@@ -260,19 +260,26 @@ function buildAbandonedExterior() {
 }
 
 function buildBackwoods(omesh, outdoor) {
-  const CABIN = { x: -23, z: -34, w: 7.2, d: 5.8, h: 3.05, doorW: 1.5 };
+  const CABIN = { id: 'west', x: -23, z: -34, w: 7.2, d: 5.8, h: 3.05, doorW: 1.5 };
+  const EAST_CABIN = { id: 'east', x: 38, z: -48, w: 6.8, d: 5.5, h: 2.95, doorW: 1.45 };
   const dirt = std({ color: 0x604a32, roughness: 1 });
   const placeTrail = (x0, z0, x1, z1, width) => {
     const dx = x1 - x0, dz = z1 - z0, length = Math.hypot(dx, dz);
     const trail = omesh(new THREE.BoxGeometry(width, .035, length), dirt, [(x0 + x1) / 2, .008, (z0 + z1) / 2], { cast: false });
     trail.rotation.y = Math.atan2(dx, dz); trail.receiveShadow = true;
   };
-  // A forked dirt route fills the previously empty rear field and leads to the cabin.
-  placeTrail(-1, -14, -10, -22, 2.9);
-  placeTrail(-10, -22, CABIN.x, CABIN.z + CABIN.d / 2 + 1.1, 2.65);
-  placeTrail(-10, -22, 8, -39, 2.15);
+  // A branching dirt route keeps the dense forest navigable and joins both cabins.
+  const trails = [
+    [-1, -14, -10, -22, 2.9],
+    [-10, -22, CABIN.x, CABIN.z + CABIN.d / 2 + 1.1, 2.65],
+    [-10, -22, 8, -39, 2.25],
+    [8, -39, 22, -45, 2.15],
+    [22, -45, EAST_CABIN.x, EAST_CABIN.z + EAST_CABIN.d / 2 + 1.1, 2.45],
+    [8, -39, -5, -52, 1.85],
+  ];
+  trails.forEach(args => placeTrail(...args));
 
-  const trees = [
+  const anchorTrees = [
     [-17, -18, 1.15, 0], [-23, -19, 1.4, 1], [-31, -18, 1.05, 0], [-38, -22, 1.55, 0],
     [-44, -29, 1.25, 1], [-41, -39, 1.6, 0], [-35, -45, 1.25, 1], [-27, -47, 1.45, 0],
     [-18, -44, 1.1, 1], [-11, -47, 1.5, 0], [-3, -45, 1.2, 1], [7, -48, 1.55, 0],
@@ -280,6 +287,33 @@ function buildBackwoods(omesh, outdoor) {
     [-34, -31, 1.0, 1], [-35, -36, 1.2, 0], [-30, -40, .95, 1], [-15, -34, 1.1, 0],
     [-12, -29, .9, 1], [1, -31, 1.25, 0], [5, -37, 1.0, 1], [-7, -39, 1.2, 0],
   ].map(([x, z, s, type]) => ({ x, z, s, type }));
+  const distanceToSegment = (x, z, segment) => {
+    const [x0, z0, x1, z1, width] = segment, dx = x1 - x0, dz = z1 - z0;
+    const t = THREE.MathUtils.clamp(((x - x0) * dx + (z - z0) * dz) / (dx * dx + dz * dz), 0, 1);
+    return Math.hypot(x - (x0 + dx * t), z - (z0 + dz * t)) - width / 2;
+  };
+  const nearCabin = (x, z, cabin) =>
+    Math.abs(x - cabin.x) < cabin.w / 2 + 2.1 && Math.abs(z - cabin.z) < cabin.d / 2 + 2.1;
+  const generatedTrees = [];
+  const wantedTrees = S.quality.lowPower ? 58 : 104;
+  for (let row = 0; row < 10 && generatedTrees.length < wantedTrees; row++) {
+    for (let col = 0; col < 21 && generatedTrees.length < wantedTrees; col++) {
+      const seed = row * 31 + col * 17;
+      const x = -48 + col * 4.85 + Math.sin(seed * 1.73) * 1.45;
+      const z = -59 + row * 4.75 + Math.cos(seed * 1.19) * 1.25;
+      if (Math.hypot(x - SURFACE_AREA.centerX, z - SURFACE_AREA.centerZ) > SURFACE_AREA.radius - 7) continue;
+      if (trails.some(segment => distanceToSegment(x, z, segment) < 1.65)) continue;
+      if (nearCabin(x, z, CABIN) || nearCabin(x, z, EAST_CABIN)) continue;
+      if (x > 15 && x < 26 && z > -24 && z < -16) continue; // first sewer entrance
+      if (S.quality.lowPower && (row + col) % 3 === 0) continue;
+      generatedTrees.push({
+        x, z,
+        s: .88 + ((seed * 13) % 46) / 100,
+        type: (row * 3 + col) % 5 === 0 ? 1 : 0,
+      });
+    }
+  }
+  const trees = anchorTrees.concat(generatedTrees);
   const pineTrees = trees.filter(tree => tree.type === 0), broadTrees = trees.filter(tree => tree.type === 1);
   const trunkMat = std({ color: 0x49301f, roughness: 1 });
   const pineMat = std({ color: 0x213d2a, roughness: 1 });
@@ -297,6 +331,9 @@ function buildBackwoods(omesh, outdoor) {
   batch(new THREE.ConeGeometry(1.35, 2.5, 7), pineMat, pineTrees, (d, tree) => {
     d.position.set(tree.x, 2.25 * tree.s, tree.z); d.rotation.set(0, tree.x * .13, 0); d.scale.set(tree.s, tree.s, tree.s);
   });
+  batch(new THREE.ConeGeometry(1.02, 1.85, 7), pineMat, pineTrees, (d, tree) => {
+    d.position.set(tree.x, 3.28 * tree.s, tree.z); d.rotation.set(0, tree.z * .11, 0); d.scale.set(tree.s, tree.s, tree.s);
+  });
   batch(new THREE.IcosahedronGeometry(1.25, 1), leafMat, broadTrees, (d, tree) => {
     d.position.set(tree.x, 2.45 * tree.s, tree.z); d.rotation.set(0, tree.z * .11, 0); d.scale.set(1.1 * tree.s, .9 * tree.s, tree.s);
   });
@@ -313,10 +350,11 @@ function buildBackwoods(omesh, outdoor) {
   });
 
   buildForestCabin(CABIN, omesh, outdoor);
+  buildForestCabin(EAST_CABIN, omesh, outdoor);
 }
 
 function buildForestCabin(cabin, omesh, outdoor) {
-  const { x, z, w, d, h, doorW } = cabin, wallT = .28, frontZ = z + d / 2;
+  const { id = 'west', x, z, w, d, h, doorW } = cabin, wallT = .28, frontZ = z + d / 2;
   const plankTexture = canvasTex(256, 256, (g, tw, th) => {
     g.fillStyle = '#5b3824'; g.fillRect(0, 0, tw, th);
     for (let row = 0; row < 8; row++) {
@@ -397,10 +435,13 @@ function buildForestCabin(cabin, omesh, outdoor) {
   const toggleDoor = () => {
     const nextOpen = !targetOpen;
     setDoorState(nextOpen, true);
-    S.multiplayer?.setCabinDoor(nextOpen);
+    S.multiplayer?.setCabinDoor(id, nextOpen);
   };
-  S.cabinDoor = { apply: nextOpen => setDoorState(nextOpen, false), get open() { return targetOpen; } };
-  addInteractable([door, brace, knob], { verb: () => targetOpen ? 'Close' : 'Open', name: 'the forest cabin door', anchor: V(x, 0, frontZ + .3), range: 2.1, action: toggleDoor });
+  const controller = { apply: nextOpen => setDoorState(nextOpen, false), get open() { return targetOpen; } };
+  if (!S.cabinDoors) S.cabinDoors = new Map();
+  S.cabinDoors.set(id, controller);
+  if (id === 'west') S.cabinDoor = controller; // compatibility with older server snapshots
+  addInteractable([door, brace, knob], { verb: () => targetOpen ? 'Close' : 'Open', name: `the ${id} forest cabin door`, anchor: V(x, 0, frontZ + .3), range: 2.1, action: toggleDoor });
 
   // Warm interior and porch lights make the cabin readable through dense fog.
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffc56c, fog: true });
